@@ -5,8 +5,13 @@ using System.Text;
 
 namespace Server
 {
-    class Program
+
+    class Server
     {
+
+        //Server
+        public void CopyTable();
+
         static void Main(string[] args)
         {
         }

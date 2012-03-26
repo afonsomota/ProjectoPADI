@@ -34,6 +34,7 @@ namespace CommonInterfaces
         public int Txid;
         public Dictionary<int, Operation> Operations;
         public Dictionary<string, List<Node>> NodesLocation;
+        
     }
 
 
@@ -44,7 +45,8 @@ namespace CommonInterfaces
 
         //Cliente
         public bool RegisterClient(string ip, int port);
-        public Dictionary<string, List<Node>> GetServers(List<string> keys);
+        //public Dictionary<string, List<Node>> GetServers(List<string> keys);
+        public TransactionContext GetServers(List<string> keys);
         public void ServerDown(Node server);
     }
 

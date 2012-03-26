@@ -46,8 +46,9 @@ namespace CommonInterfaces
 
         //Cliente
         bool RegisterClient(string ip, int port);
-        Dictionary<string, List<Node>> GetServers(List<string> keys);
-        void ServerDown(Node server);
+        //public Dictionary<string, List<Node>> GetServers(List<string> keys);
+        public TransactionContext GetServers(List<string> keys);
+        public void ServerDown(Node server);
     }
 
 

@@ -32,10 +32,17 @@ namespace CommonInterfaces
     }
 
     public class TransactionContext {
+<<<<<<< HEAD
         int Txid;
         enum states { initiated, tentatively, commited, aborted };
         Dictionary<int, Operation> Operations;
         Dictionary<string, List<Node>> NodesLocation;
+=======
+        public int Txid;
+        public Dictionary<int, Operation> Operations;
+        public Dictionary<string, List<Node>> NodesLocation;
+        
+>>>>>>> 6ae3276c33206bed7fccc8d92ede3dcae636a7eb
     }
 
 
@@ -45,10 +52,16 @@ namespace CommonInterfaces
         bool RegisterServer(Node server);
 
         //Cliente
+<<<<<<< HEAD
         bool RegisterClient(string ip, int port);
-        //public Dictionary<string, List<Node>> GetServers(List<string> keys);
-        TransactionContext GetServers(List<string> keys);
+        Dictionary<string, List<Node>> GetServers(List<string> keys);
         void ServerDown(Node server);
+=======
+        public bool RegisterClient(string ip, int port);
+        //public Dictionary<string, List<Node>> GetServers(List<string> keys);
+        public TransactionContext GetServers(List<string> keys);
+        public void ServerDown(Node server);
+>>>>>>> 6ae3276c33206bed7fccc8d92ede3dcae636a7eb
     }
 
 

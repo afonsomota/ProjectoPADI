@@ -22,8 +22,15 @@ namespace Client
 
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
+            string host = new System.Uri(channelData.ChannelUris[0]).Host;
 
-            System.Console.WriteLine(port);
+            
+
+            IPuppetMaster ligacao = (IPuppetMaster)Activator.GetObject(
+               typeof(IPuppetMaster),
+               "tcp://localhost:8090/PseudoNodeReg");
+            ligacao.RegisterPseudoNode(new Node(host, port, NodeType.Client));
+            System.Console.WriteLine(host + ":" + port.ToString());
             System.Console.ReadLine();
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
@@ -44,13 +51,15 @@ namespace Client
 
     }
 
-    class ClientRemoting : IClient {
+    class ClientRemoting : MarshalByRefObject, IClient
+    {
         public void GetNetworkUpdate(List<Node> network) { 
             //TODO
         }
     }
 
-    class ClientPuppet : IClientPuppet {
+    class ClientPuppet : MarshalByRefObject, IClientPuppet
+    {
 
         public bool StartClient()
         {

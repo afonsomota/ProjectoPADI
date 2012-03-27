@@ -8,7 +8,9 @@ namespace CommonInterfaces
 
     public enum NodeType { Server, Client }
 
-    public class Node{
+    [Serializable]
+    public class Node
+    {
         public string IP;
         public int Port;
         public NodeType Type;
@@ -18,10 +20,16 @@ namespace CommonInterfaces
             Port = port;
             Type = clientOrServer;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{1}@{2}:{3}", (Type==NodeType.Client?"client":"server"),IP,Port.ToString());
+        }
     }
 
-
-    public class Operation{
+    [Serializable]
+    public class Operation 
+    {
         public string Type;
         public string Key;
 
@@ -29,9 +37,15 @@ namespace CommonInterfaces
             Type = type;
             Key = key;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{1}({2})",Type, Key);
+        }
     }
 
-    public class TransactionContext {
+    public class TransactionContext : MarshalByRefObject
+    {
         int Txid;
         enum states { initiated, tentatively, commited, aborted };
         Dictionary<int, Operation> Operations;
@@ -40,7 +54,8 @@ namespace CommonInterfaces
 
 
 
-    public interface ICentralDirectory { 
+    public interface ICentralDirectory {
+
         //Servidor
         bool RegisterServer(Node server);
 
@@ -83,5 +98,9 @@ namespace CommonInterfaces
 
     public interface IClient {
         void GetNetworkUpdate(List<Node> network);
+    }
+
+    public interface IPuppetMaster {
+        void RegisterPseudoNode(Node node);
     }
 }

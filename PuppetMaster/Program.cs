@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using System.Runtime.Remoting.Channels.Tcp;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting;
+using CommonInterfaces;
 
 namespace PuppetMaster
 {
@@ -18,4 +22,6 @@ namespace PuppetMaster
             Application.Run(new Form1());
         }
     }
+
+    
 }

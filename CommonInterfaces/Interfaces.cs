@@ -46,10 +46,10 @@ namespace CommonInterfaces
 
     public class TransactionContext
     {
-        int Txid;
-        enum states { initiated, tentatively, commited, aborted };
-        Dictionary<int, Operation> Operations;
-        Dictionary<string, List<Node>> NodesLocation;
+        public int Txid;
+        public enum states { initiated, tentatively, commited, aborted };
+        public Dictionary<int, Operation> Operations;
+        public Dictionary<string, List<Node>> NodesLocation;
     }
 
 

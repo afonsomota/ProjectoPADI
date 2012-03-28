@@ -44,7 +44,7 @@ namespace CommonInterfaces
         }
     }
 
-    public class TransactionContext : MarshalByRefObject
+    public class TransactionContext
     {
         int Txid;
         enum states { initiated, tentatively, commited, aborted };

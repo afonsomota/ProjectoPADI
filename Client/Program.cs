@@ -74,7 +74,7 @@ namespace Client
         public void StartClient()
         {
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "ClientRemoting", WellKnownObjectMode.Singleton);
-
+            //TODO Register in Central Directory
             Console.WriteLine("Client Online");
         }
 

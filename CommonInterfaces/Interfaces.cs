@@ -60,7 +60,7 @@ namespace CommonInterfaces
         bool RegisterServer(Node server);
 
         //Cliente
-        bool RegisterClient(string ip, int port);
+        bool RegisterClient(Node client);
         //public Dictionary<string, List<Node>> GetServers(List<string> keys);
         TransactionContext GetServers(List<string> keys);
         void ServerDown(Node server);

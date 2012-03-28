@@ -33,7 +33,7 @@ namespace CentralDirectory
         }
     }
 
-    class CentralDirectory : CommonInterfaces.ICentralDirectory
+    class CentralDirectory : CommonInterfaces.ICentralDirectory: MarshalByRefObject
     {
        public struct interval{
           public int min;

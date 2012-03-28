@@ -7,6 +7,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using System.Collections;
+using System.Threading;
 
 namespace Client
 {
@@ -24,29 +25,37 @@ namespace Client
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
 
-            
 
+
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
             IPuppetMaster ligacao = (IPuppetMaster)Activator.GetObject(
                typeof(IPuppetMaster),
                "tcp://localhost:8090/PseudoNodeReg");
-            ligacao.RegisterPseudoNode(new Node(host, port, NodeType.Client));
+            Node node = new Node(host, port, NodeType.Client);
+            Client clt = new Client(node,channel);
+            ClientPuppet.ctx = clt;
+
+            ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             System.Console.ReadLine();
 
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
             
         }
     }
 
     class Client {
-        string[] registers;
+        public string[] Registers;
+        public Node Info;
+        public TcpChannel Channel;
 
-        public Client(){
-            registers = new string[10];
+        public Client(Node info,TcpChannel channel){
+            Registers = new string[10];
+            Info = info;
+            Channel = channel;
         }
 
         public void StoreValue(int reg, string value){
-            registers[reg] = value;
+            Registers[reg] = value;
         }
 
     }
@@ -60,15 +69,30 @@ namespace Client
 
     class ClientPuppet : MarshalByRefObject, IClientPuppet
     {
+        public static Client ctx;
 
-        public bool StartClient()
+        public void StartClient()
         {
-            throw new NotImplementedException();
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "ClientRemoting", WellKnownObjectMode.Singleton);
+
+            Console.WriteLine("Client Online");
         }
 
-        public bool KillClient()
+
+        public void KillClient()
         {
-            throw new NotImplementedException();
+            ThreadStart ts = delegate() { KillClientThread(); };
+            Thread t = new Thread(ts);
+            t.Start();
+        }
+
+        public void KillClientThread()
+        {
+            ChannelServices.UnregisterChannel(ctx.Channel);
+            ctx.Channel = new TcpChannel(ctx.Info.Port);
+            ChannelServices.RegisterChannel(ctx.Channel, true);
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "ClientRemoting", WellKnownObjectMode.Singleton);
+            Console.WriteLine("Client Offline");
         }
     }
 

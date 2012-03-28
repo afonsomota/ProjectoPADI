@@ -92,8 +92,8 @@ namespace CommonInterfaces
 
     public interface IClientPuppet
     {
-        bool StartClient();
-        bool KillClient();
+        void StartClient();
+        void KillClient();
     }
 
     public interface IClient {

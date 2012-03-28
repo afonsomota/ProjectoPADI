@@ -38,13 +38,13 @@ namespace CentralDirectory
        public struct interval{
           public int min;
           public int max;
-          public List<string> IP = new List<string>();
+          public List<string> IP;
         };
 
         List<CommonInterfaces.Node> listClient = new List<CommonInterfaces.Node>();
         List<CommonInterfaces.Node> listServer = new List<CommonInterfaces.Node>();
         List<interval> tableOfLocation = new List<interval>();
-        int max = 1500;
+        int max = Int32.MaxValue;
         
         
         public CentralDirectory()
@@ -52,6 +52,7 @@ namespace CentralDirectory
             listServer = new List<CommonInterfaces.Node>();
             listClient = new List<CommonInterfaces.Node>();
             tableOfLocation = new List<interval>();
+            
         }
 
         public List<interval> Location
@@ -144,8 +145,9 @@ namespace CentralDirectory
             int aux3 = 0;
             result = max / numberofServer;
             interval st = new interval();
+            st.IP = new List<string> ();
             List<string> aux4 = new List<string>();
-
+            
             for (int i = 0; i < numberofServer; i++)
             {
                 st.min = aux1;
@@ -164,6 +166,7 @@ namespace CentralDirectory
                 aux1 = aux1 + result;
                 aux2 = aux2 + result;
                 aux3 = aux3 + 1;
+                st.IP.Clear();
 
             }
          }
@@ -218,7 +221,7 @@ namespace CentralDirectory
             Random rd = new Random();
 
             CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
-            transactionsContext.Txid = rd.Next();
+            transactionsContext.Txid=rd.Next();
 
             for (int i = 0; i < keys.Count(); i++)
             {

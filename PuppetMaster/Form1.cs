@@ -71,11 +71,11 @@ namespace PuppetMaster
 
         private void button4_Click(object sender, EventArgs e)
         {
-            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-              typeof(IClientPuppet),
+            IServerPuppet ligacao = (IServerPuppet)Activator.GetObject(
+              typeof(IServerPuppet),
               "tcp://" + (string)listServOnline.SelectedItem + "/ServerPuppet");
 
-            ligacao.StartClient();
+            ligacao.StartServer();
             string item = (string)listServOnline.SelectedItem;
             listServOnline.Items.Remove(item);
             listServOffline.Items.Add(item);
@@ -83,10 +83,10 @@ namespace PuppetMaster
 
         private void button3_Click(object sender, EventArgs e)
         {
-            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-              typeof(IClientPuppet),
+            IServerPuppet ligacao = (IServerPuppet)Activator.GetObject(
+              typeof(IServerPuppet),
               "tcp://" + (string)listServOffline.SelectedItem + "/ServerPuppet");
-            ligacao.KillClient();
+            ligacao.KillServer();
             string item = (string)listServOffline.SelectedItem;
             listServOffline.Items.Remove(item);
             listServOnline.Items.Add(item);

@@ -23,7 +23,7 @@ namespace CommonInterfaces
 
         public override string ToString()
         {
-            return string.Format("{1}@{2}:{3}", (Type==NodeType.Client?"client":"server"),IP,Port.ToString());
+            return string.Format("{0}@{1}:{2}", (Type==NodeType.Client?"client":"server"),IP,Port.ToString());
         }
     }
 
@@ -40,7 +40,7 @@ namespace CommonInterfaces
 
         public override string ToString()
         {
-            return string.Format("{1}({2})",Type, Key);
+            return string.Format("{0}({1})",Type, Key);
         }
     }
 

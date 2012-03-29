@@ -81,8 +81,14 @@ namespace Client
 
         public void StartClient()
         {
+            ThreadStart ts = delegate() { KillClientThread(); };
+            Thread t = new Thread(ts);
+            t.Start();
+        }
+
+        public void StartClientThread()
+        {
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);
-            //TODO Register in Central Directory
             ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
                typeof(ICentralDirectory),
                "tcp://localhost:9090/CentralDirectory");

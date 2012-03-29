@@ -108,6 +108,7 @@ namespace PuppetMaster
             }
             else {
                 ctx.Servers.Add(node);
+                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.IP + ":" + node.Port.ToString() });
             }
         }
     }

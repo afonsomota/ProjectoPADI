@@ -34,7 +34,7 @@ namespace Client
             Node node = new Node(host, port, NodeType.Client);
             Client clt = new Client(node,channel);
             ClientPuppet.ctx = clt;
-
+            ClientRemoting.ctx = clt;
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             System.Console.ReadLine();
@@ -47,6 +47,7 @@ namespace Client
         public string[] Registers;
         public Node Info;
         public TcpChannel Channel;
+        public List<Node> NetworkTopology;
 
         public Client(Node info,TcpChannel channel){
             Registers = new string[10];
@@ -62,8 +63,15 @@ namespace Client
 
     class ClientRemoting : MarshalByRefObject, IClient
     {
-        public void GetNetworkUpdate(List<Node> network) { 
-            //TODO
+
+        public static Client ctx;
+
+        public void GetNetworkUpdate(List<Node> network) {
+            ctx.NetworkTopology = network;
+            Console.WriteLine("\nNetwork Topology Update!");
+            foreach (Node n in ctx.NetworkTopology) {
+                Console.WriteLine(n);
+            }
         }
     }
 
@@ -95,7 +103,7 @@ namespace Client
             ChannelServices.UnregisterChannel(ctx.Channel);
             ctx.Channel = new TcpChannel(ctx.Info.Port);
             ChannelServices.RegisterChannel(ctx.Channel, true);
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "ClientRemoting", WellKnownObjectMode.Singleton);
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
             Console.WriteLine("Client Offline");
         }
     }

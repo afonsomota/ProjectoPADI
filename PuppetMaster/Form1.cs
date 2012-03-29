@@ -34,9 +34,9 @@ namespace PuppetMaster
 
         public void WriteHostMethod(NodeType type,string url){
             if(type==NodeType.Client){
-                listBox1.Items.Add(url);
+                listCliOnline.Items.Add(url);
             }else{
-            
+                listServOnline.Items.Add(url);
             }
         }
 
@@ -45,28 +45,51 @@ namespace PuppetMaster
         {
             IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
               typeof(IClientPuppet),
-              "tcp://" + (string)listBox1.SelectedItem + "/ClientPuppet");
+              "tcp://" + (string)listCliOnline.SelectedItem + "/ClientPuppet");
             
             ligacao.StartClient();
-            string item = (string)listBox1.SelectedItem;
-            listBox1.Items.Remove(item);
-            listBox2.Items.Add(item);
+            string item = (string)listCliOnline.SelectedItem;
+            listCliOnline.Items.Remove(item);
+            listCliOffline.Items.Add(item);
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
             IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
               typeof(IClientPuppet),
-              "tcp://" + (string)listBox2.SelectedItem + "/ClientPuppet");
+              "tcp://" + (string)listCliOffline.SelectedItem + "/ClientPuppet");
             ligacao.KillClient();
-            string item = (string)listBox2.SelectedItem;
-            listBox2.Items.Remove(item);
-            listBox1.Items.Add(item);
+            string item = (string)listCliOffline.SelectedItem;
+            listCliOffline.Items.Remove(item);
+            listCliOnline.Items.Add(item);
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            label1.Text = (string)listBox1.SelectedItem;
+            label1.Text = (string)listCliOnline.SelectedItem;
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+              typeof(IClientPuppet),
+              "tcp://" + (string)listServOnline.SelectedItem + "/ServerPuppet");
+
+            ligacao.StartClient();
+            string item = (string)listServOnline.SelectedItem;
+            listServOnline.Items.Remove(item);
+            listServOffline.Items.Add(item);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+              typeof(IClientPuppet),
+              "tcp://" + (string)listServOffline.SelectedItem + "/ServerPuppet");
+            ligacao.KillClient();
+            string item = (string)listServOffline.SelectedItem;
+            listServOffline.Items.Remove(item);
+            listServOnline.Items.Add(item);
         }
 
        
@@ -85,6 +108,7 @@ namespace PuppetMaster
             }
             else {
                 ctx.Servers.Add(node);
+                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.IP + ":" + node.Port.ToString() });
             }
         }
     }

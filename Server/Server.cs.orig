@@ -14,6 +14,11 @@ namespace Server
     class Program
     {
 
+<<<<<<< HEAD
+=======
+        //Server
+        
+>>>>>>> 7b1f7b74217d7b5e8e3adfeb30d5a1902562ebd5
 
         static void Main(string[] args)
         {

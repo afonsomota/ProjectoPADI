@@ -89,8 +89,8 @@ namespace CommonInterfaces
     }
 
     public interface IServerPuppet {
-        bool KillServer();
-        bool StartServer();
+        void KillServer();
+        void StartServer();
     }
 
 

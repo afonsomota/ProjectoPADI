@@ -38,8 +38,10 @@ namespace CentralDirectory
 
             foreach (CentralDirectory.interval n in central.Location)
             {
-                Console.WriteLine(n.min+" - "+n.max + ":" + n.IP[0] + ";" + n.IP[1]);
+                Console.WriteLine(n.min+" - "+n.max + ":  " + n.IP[0] + ";  " + n.IP[1]);
             }
+
+            
 
             System.Console.WriteLine("<enter> para sair...");
             System.Console.ReadLine();
@@ -115,7 +117,7 @@ namespace CentralDirectory
 
            for (int i = 0; i < listServer.Count(); i++)
            {
-               if (listServer[i].IP == IP)
+               if (listServer[i].IP + ":" + listServer[i].Port.ToString() == IP)
                {
                    return listServer[i];
                }
@@ -272,7 +274,6 @@ namespace CentralDirectory
         public CommonInterfaces.TransactionContext GetServers(List<string> keys)
         {
             Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
-            List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
             Random rd = new Random();
 
             CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
@@ -280,19 +281,19 @@ namespace CentralDirectory
 
             for (int i = 0; i < keys.Count(); i++)
             {
-                string aux2 = keys[i];
-                uint aux = ctx.SHA1Hash(keys[i]);
-                Console.WriteLine(aux);
+                string key = keys[i];
+                uint hash = ctx.SHA1Hash(keys[i]);
                 
                 
                 for (int j = 0; j < ctx.Location.Count(); j++)
                 {
-                    if (ctx.Location[i].max > aux && ctx.Location[i].min < aux)
+                    if (ctx.Location[j].max > hash && ctx.Location[j].min <= hash)
                     {
-                        listaux.Add(ctx.getNode(ctx.Location[i].IP[0]));
-                        listaux.Add(ctx.getNode(ctx.Location[i].IP[1]));
-                        server.Add(aux2, listaux);
-
+                        List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
+                        listaux.Add(ctx.getNode(ctx.Location[j].IP[0]));
+                        listaux.Add(ctx.getNode(ctx.Location[j].IP[1]));
+                        Console.WriteLine("For key " + key + " hash is " + hash );
+                        server.Add(key, listaux);
                     }
                 }
             }

@@ -44,6 +44,7 @@ namespace CommonInterfaces
         }
     }
 
+    [Serializable]
     public class TransactionContext
     {
         public int Txid;

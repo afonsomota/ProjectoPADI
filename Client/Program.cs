@@ -81,7 +81,7 @@ namespace Client
 
         public void StartClient()
         {
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "ClientRemoting", WellKnownObjectMode.Singleton);
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);
             //TODO Register in Central Directory
             ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
                typeof(ICentralDirectory),

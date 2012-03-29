@@ -266,7 +266,12 @@ namespace CentralDirectory
             listUpDate.AddRange(servers);
             foreach (CommonInterfaces.Node node in clients)
             {
-                IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:" + node.Port.ToString() + "/Client");
+                IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://"+node.IP+":" + node.Port.ToString() + "/Client");
+                link.GetNetworkUpdate(listUpDate);
+            }
+            foreach (CommonInterfaces.Node node in servers)
+            {
+                IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
                 link.GetNetworkUpdate(listUpDate);
             }
         }

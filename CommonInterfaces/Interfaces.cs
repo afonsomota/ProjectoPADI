@@ -74,6 +74,10 @@ namespace CommonInterfaces
         void CopyAndCleanTable(int semiTableToClean);
         void GetNetworkUpdate(List<Node> network);
 
+
+        //Server
+        public void CopyTable();
+
         //Cliente
         bool CanLock(int txid, List<string> keys);
         bool Lock(int txid);

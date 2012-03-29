@@ -75,10 +75,10 @@ namespace Client
         {
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "ClientRemoting", WellKnownObjectMode.Singleton);
             //TODO Register in Central Directory
-            /*ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
+            ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
                typeof(ICentralDirectory),
                "tcp://localhost:9090/CentralDirectory");
-            ligacao.RegisterClient(ctx.Info);*/
+            ligacao.RegisterClient(ctx.Info);
             Console.WriteLine("Client Online");
         }
 

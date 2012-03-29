@@ -10,7 +10,7 @@ namespace Server
     {
 
         //Server
-        public void CopyTable();
+        
 
         static void Main(string[] args)
         {

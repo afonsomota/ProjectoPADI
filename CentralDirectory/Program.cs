@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text;
 
 using System.Security.Cryptography;
+using System.Threading;
+using CommonInterfaces;
 
 
 
@@ -33,7 +35,7 @@ namespace CentralDirectory
         }
     }
 
-    class CentralDirectory : CommonInterfaces.ICentralDirectory, MarshalByRefObject
+    class CentralDirectory : MarshalByRefObject, CommonInterfaces.ICentralDirectory 
     {
        public struct interval{
           public int min;
@@ -249,8 +251,24 @@ namespace CentralDirectory
            listServer.Remove(node);
         }
 
+        public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
+        {
+            ThreadStart ts = delegate() { UpDate(clients, servers); };
+            Thread t = new Thread(ts);
+            t.Start();
+        }
 
-        
+        public void UpDate(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
+        {
+            List<Node> listUpDate = new List<Node>();
+            listUpDate.AddRange(clients);
+            listUpDate.AddRange(servers);
+            foreach (CommonInterfaces.Node node in clients)
+            {
+                IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:" + node.Port.ToString() + "/Client");
+                link.GetNetworkUpdate(listUpDate);
+            }
+        }
 
     }
 

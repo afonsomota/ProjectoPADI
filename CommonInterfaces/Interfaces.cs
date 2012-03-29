@@ -76,7 +76,7 @@ namespace CommonInterfaces
 
 
         //Server
-        public void CopyTable();
+        void CopyTable();
 
         //Cliente
         bool CanLock(int txid, List<string> keys);
@@ -89,8 +89,8 @@ namespace CommonInterfaces
     }
 
     public interface IServerPuppet {
-        bool KillServer();
-        bool StartServer();
+        void KillServer();
+        void StartServer();
     }
 
 

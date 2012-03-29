@@ -230,7 +230,9 @@ namespace CentralDirectory
             {
                 string aux2 = keys[i];
                 string aux = SHA1Hash(keys[i]);
+                Console.WriteLine(aux);
                 int aux5 = Convert.ToInt32(aux); //verificar
+                Console.WriteLine(aux5);
                 for (int j = 0; j < tableOfLocation.Count(); j++)
                 {
                     if (tableOfLocation[i].max > aux5 && tableOfLocation[i].min < aux5)
@@ -271,7 +273,7 @@ namespace CentralDirectory
             }
             foreach (CommonInterfaces.Node node in servers)
             {
-                IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
+                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
                 link.GetNetworkUpdate(listUpDate);
             }
         }

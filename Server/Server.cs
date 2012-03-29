@@ -130,7 +130,7 @@ namespace Server
             ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
                typeof(ICentralDirectory),
                "tcp://localhost:9090/CentralDirectory");
-            ligacao.RegisterClient(ctx.Info);
+            ligacao.RegisterServer(ctx.Info);
             Console.WriteLine("Server Online");
         }
 

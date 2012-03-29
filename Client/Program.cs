@@ -81,13 +81,6 @@ namespace Client
 
         public void StartClient()
         {
-            ThreadStart ts = delegate() { KillClientThread(); };
-            Thread t = new Thread(ts);
-            t.Start();
-        }
-
-        public void StartClientThread()
-        {
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);
             ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
                typeof(ICentralDirectory),
@@ -95,6 +88,7 @@ namespace Client
             ligacao.RegisterClient(ctx.Info);
             Console.WriteLine("Client Online");
         }
+
 
 
         public void KillClient()

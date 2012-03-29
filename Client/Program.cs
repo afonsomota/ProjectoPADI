@@ -37,7 +37,27 @@ namespace Client
             ClientRemoting.ctx = clt;
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
+            Console.WriteLine("Press Enter to Test...");
             System.Console.ReadLine();
+            List<string> testList = new List<string>();
+            testList.Add("Afonso");
+            testList.Add("Rui");
+            testList.Add("Chinchila");
+            testList.Add("Power Ranger");
+            testList.Add("Pokemon");
+            testList.Add("Mais uma string qualquer");
+            ICentralDirectory central = (ICentralDirectory)Activator.GetObject(
+               typeof(ICentralDirectory),
+               "tcp://localhost:9090/CentralDirectory");
+            TransactionContext txctx = central.GetServers(testList);
+            Console.WriteLine("Transaction no: "+txctx.Txid);
+            foreach (KeyValuePair<string, List<Node>> pair in txctx.NodesLocation) {
+                Console.WriteLine(pair.Key + "is in: " + pair.Value[0] + " and " + pair.Value[1]);
+            }
+
+            System.Console.ReadLine();
+
+
 
             
         }

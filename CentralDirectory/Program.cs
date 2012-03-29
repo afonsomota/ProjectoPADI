@@ -122,6 +122,7 @@ namespace CentralDirectory
             }
             
             Client = node;
+            Send(listClient, listServer);
             return true;
         }
 
@@ -133,7 +134,7 @@ namespace CentralDirectory
             }
 
             Server = node;
-
+            Send(listClient, listServer);
             return true;
         }
 

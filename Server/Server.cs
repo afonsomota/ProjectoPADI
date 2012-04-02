@@ -109,6 +109,19 @@ namespace Server
             Semitables[1] = new Semitable(minST2, maxST2);
         }
 
+        public void CleanTable(uint div) {
+            foreach (Semitable st in Semitables) {
+                if (div >= st.MinInterval && div <= st.MaxInterval) {
+                    foreach (string key in st.Keys) {
+                        if (SHA1Hash(key) >= div) {
+                            st.Remove(key);
+                            Console.WriteLine("Removed Key: " + key);
+                        }
+                    }
+                }
+            }
+        }
+
         public static uint SHA1Hash(string input)
         {
             SHA1 sha = new SHA1CryptoServiceProvider();
@@ -222,7 +235,7 @@ namespace Server
 
         public void CleanSemiTable(uint semiTableToClean)
         {
-            throw new NotImplementedException();
+            ctx.CleanTable(semiTableToClean);
         }
 
         public void CopyAndCleanTable(uint semiTableToClean)
@@ -230,7 +243,7 @@ namespace Server
             throw new NotImplementedException();
         }
 
-        public void CopyTable()
+        public void CopyTable(Semitable st1, Semitable st2)
         {
             throw new NotImplementedException();
         }

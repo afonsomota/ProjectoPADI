@@ -42,6 +42,7 @@ namespace Server
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             System.Console.ReadLine();
+            srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2, UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
             srv.Put("Afonso", "Teste1");
             Console.WriteLine(srv.Get("Afonso"));
             srv.Put("Francisco", "OutroTeste");
@@ -77,8 +78,8 @@ namespace Server
 
     public class Semitable : Dictionary<string, List<TableValue>>
     {
-        uint MinInterval;
-        uint MaxInterval;
+        public uint MinInterval;
+        public uint MaxInterval;
 
         public Semitable(uint min, uint max): base() {
             MinInterval = min;
@@ -98,10 +99,14 @@ namespace Server
         {
             Info = info;
             Channel = channel;
-            Semitables = new Semitable[2];
-            Semitables[0] = new Semitable(UInt32.MinValue, UInt32.MaxValue/2);
-            Semitables[1] = new Semitable(UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
             K = k;
+        }
+
+        public void InitializeSemitables(uint minST1, uint maxST1, uint minST2, uint maxST2)
+        {
+            Semitables = new Semitable[2];
+            Semitables[0] = new Semitable(minST1, maxST1);
+            Semitables[1] = new Semitable(minST2, maxST2);
         }
 
         public static uint SHA1Hash(string input)
@@ -156,7 +161,7 @@ namespace Server
 
         public string Put(string key, string value)
         {
-            foreach (Dictionary<string, List<TableValue>> st in Semitables)
+            foreach (Semitable st in Semitables)
                 if (st.ContainsKey(key))
                 {
                     int max_timestamp = 0;
@@ -177,13 +182,16 @@ namespace Server
                     newtv.Value = value;
                     st[key].Add(newtv);
                 }
-                else { 
-                    TableValue tv = new TableValue();
-                    tv.Timestamp = 0;
-                    tv.Value = value;
-                    List<TableValue> values = new List<TableValue>();
-                    values.Add(tv);
-                    st.Add(key, values);
+                else {
+                    uint hash = SHA1Hash(key);
+                    if (hash >= st.MinInterval && hash <= st.MaxInterval){
+                        TableValue tv = new TableValue();
+                        tv.Timestamp = 0;
+                        tv.Value = value;
+                        List<TableValue> values = new List<TableValue>();
+                        values.Add(tv);
+                        st.Add(key, values);
+                    }
                 }
             return null;
         }
@@ -200,6 +208,11 @@ namespace Server
             {
                 Console.WriteLine(n);
             }
+        }
+
+
+        public void GetInitialIntervals(uint minST1, uint maxST1, uint minST2, uint maxST2) {
+            ctx.InitializeSemitables(minST1, maxST1, minST2, maxST2);
         }
 
         public Dictionary<uint, int> GetSemiTablesCount()

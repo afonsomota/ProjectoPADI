@@ -72,13 +72,9 @@ namespace CommonInterfaces
         //Central Directory
         Dictionary<uint, int> GetSemiTablesCount();
         void CleanSemiTable(uint semiTableToClean);
-        void CopyAndCleanTable(uint semiTableToClean);
+        void CopyAndCleanTable(uint semiTableToClean,Node nodeToCopy);
         void GetInitialIntervals(uint minST1, uint maxST1, uint minST2, uint maxST2);
         void GetNetworkUpdate(List<Node> network);
-
-
-        //Server
-        void CopyTable();
 
         //Cliente
         bool CanLock(int txid, List<string> keys);

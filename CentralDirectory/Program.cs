@@ -36,7 +36,7 @@ namespace CentralDirectory
 
             CentralDirectoryRemoting.ctx.division();
 
-            foreach (CentralDirectory.interval n in central.Location)
+            foreach (CentralDirectory.Interval n in central.Location)
             {
                 Console.WriteLine(n.min+" - "+n.max + ":  " + n.IP[0] + ";  " + n.IP[1]);
             }
@@ -49,7 +49,7 @@ namespace CentralDirectory
     }
 
     class CentralDirectory{
-       public struct interval{
+       public class Interval{
           public uint min;
           public uint max;
           public List<string> IP;
@@ -57,7 +57,7 @@ namespace CentralDirectory
 
        List<CommonInterfaces.Node> listClient = new List<CommonInterfaces.Node>();
        List<CommonInterfaces.Node> listServer = new List<CommonInterfaces.Node>();
-       List<interval> tableOfLocation = new List<interval>();
+       List<Interval> tableOfLocation = new List<Interval>();
        uint max = UInt32.MaxValue;
 
 
@@ -65,11 +65,11 @@ namespace CentralDirectory
        {
            listServer = new List<CommonInterfaces.Node>();
            listClient = new List<CommonInterfaces.Node>();
-           tableOfLocation = new List<interval>();
+           tableOfLocation = new List<Interval>();
 
        }
 
-       public List<interval> Location
+       public List<Interval> Location
        {
            get
            {
@@ -119,6 +119,7 @@ namespace CentralDirectory
            {
                if (listServer[i].IP + ":" + listServer[i].Port.ToString() == IP)
                {
+                   
                    return listServer[i];
                }
            }
@@ -140,7 +141,7 @@ namespace CentralDirectory
            for (int i = 0; i < numberofServer; i++)
            {
 
-               interval st = new interval();
+               Interval st = new Interval();
                st.IP = new List<string>();
                st.min = aux1;
                st.max = aux2;
@@ -163,6 +164,27 @@ namespace CentralDirectory
            }
        }
 
+       public int MaxServers(Dictionary<int, int> table)
+       {
+           
+           int max = 0;
+
+
+           int semitableint = 0;
+           
+           foreach (KeyValuePair<int, int> pair in table)
+           {
+               if (max < pair.Value)
+               {
+                   max = pair.Value;
+                   semitableint = pair.Key;
+                    break;
+               }
+           }
+            
+            return semitableint;
+          }
+
        public uint SHA1Hash(string input)
        {
            SHA1 sha = new SHA1CryptoServiceProvider();
@@ -183,6 +205,24 @@ namespace CentralDirectory
            return interval;
        }
 
+        public void Restructure(uint semiTable,Node d){
+            uint max_aux = 0;
+            for (int i = 0;i<Location.Count();i++){
+                
+                if (Location[i].min < semiTable && Location[i].max > semiTable)
+                {
+                    Interval st = new Interval();
+                    max_aux = Location[i].max;
+                    Location[i].max = semiTable-1;
+                    st.min = semiTable;
+                    st.max = max_aux;
+                    st.IP.Add(d.IP + ":" + d.Port.ToString());
+                    st.IP.Add(Location[i + 1].IP[0]);
+                    tableOfLocation.Add(st);
+                    break;
+                }
+            }
+        }
 
        public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
        {
@@ -208,11 +248,29 @@ namespace CentralDirectory
            }
        }
 
+       public void SendDimension(List<CommonInterfaces.Node> servers)
+       {
+           ThreadStart ts = delegate() { DimensionOfServers(servers); };
+           Thread t = new Thread(ts);
+           t.Start();
+       }
+
+
+       public void DimensionOfServers(List<CommonInterfaces.Node> servers)
+       {
+           
+            foreach (CommonInterfaces.Node node in servers)
+           {
+               IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
+               link.GetSemiTablesCount(); ;
+           }
+       }
     }
     class CentralDirectoryRemoting : MarshalByRefObject, CommonInterfaces.ICentralDirectory 
     {
 
         public static CentralDirectory ctx;
+        
         
         public bool RegisterClient(CommonInterfaces.Node node)
         {
@@ -233,7 +291,7 @@ namespace CentralDirectory
             if(ctx.ListServer.Contains(node)){
                 return false;
             }
-
+           
             ctx.Server = node;
             ctx.Send(ctx.ListClient, ctx.ListServer);
             return true;
@@ -294,6 +352,7 @@ namespace CentralDirectory
                         listaux.Add(ctx.getNode(ctx.Location[j].IP[1]));
                         Console.WriteLine("For key " + key + " hash is " + hash );
                         server.Add(key, listaux);
+                        
                     }
                 }
             }

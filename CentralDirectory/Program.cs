@@ -52,7 +52,7 @@ namespace CentralDirectory
        public class Interval{
           public uint min;
           public uint max;
-          public List<string> IP;
+          public List<Node> IP;
         };
 
        List<CommonInterfaces.Node> listClient = new List<CommonInterfaces.Node>();
@@ -142,18 +142,36 @@ namespace CentralDirectory
            {
 
                Interval st = new Interval();
-               st.IP = new List<string>();
+               st.IP = new List<Node>();
                st.min = aux1;
                st.max = aux2;
+              
+               
                if (i == numberofServer - 1)
                {
-                   st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
-                   st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
+                   Node node1 = new Node(listServer[i].IP, listServer[i].Port, NodeType.Server);
+                   Node a = new Node (listServer[0].IP,listServer[0].Port, NodeType.Server);
+                   //node1.IP = listServer[i].IP;
+                   //node1.Port = listServer[i].Port;
+                   //node2.IP = listServer[0].IP;
+                   //node2.Port = listServer[0].Port;
+                   st.IP.Add(node1);
+                   st.IP.Add(a);
+                   //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
+                   //st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
                }
                else
                {
-                   st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
-                   st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
+                   Node node1 = new Node(listServer[i].IP, listServer[i].Port, NodeType.Server);
+                   Node a = new Node(listServer[i+1].IP, listServer[i+1].Port, NodeType.Server);
+                   //node1.IP = listServer[i].IP;
+                   //node1.Port = listServer[i].Port;
+                   //node2.IP = listServer[i + 1].IP;
+                   //node2.Port = listServer[i + 1].Port;
+                   st.IP.Add(node1);
+                   st.IP.Add(a);
+                   //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
+                   //st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
                }
 
                tableOfLocation.Add(st);
@@ -164,15 +182,15 @@ namespace CentralDirectory
            }
        }
 
-       public int MaxServers(Dictionary<int, int> table)
+       public uint MaxSemiTable(Dictionary<uint, int> table)
        {
            
            int max = 0;
 
 
-           int semitableint = 0;
+           uint semitableint = 0;
            
-           foreach (KeyValuePair<int, int> pair in table)
+           foreach (KeyValuePair<uint, int> pair in table)
            {
                if (max < pair.Value)
                {
@@ -216,12 +234,18 @@ namespace CentralDirectory
                     Location[i].max = semiTable-1;
                     st.min = semiTable;
                     st.max = max_aux;
-                    st.IP.Add(d.IP + ":" + d.Port.ToString());
+                    st.IP.Add(d);
                     st.IP.Add(Location[i + 1].IP[0]);
                     tableOfLocation.Add(st);
+                    IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
+                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
                     break;
                 }
             }
+            
+               //link.GetNetworkUpdate(listUpDate);
+             //CleanSemiTable(uint semiTableToClean);
+            //CopyAndCleanTable(uint semiTableToClean);
         }
 
        public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
@@ -348,8 +372,8 @@ namespace CentralDirectory
                     if (ctx.Location[j].max > hash && ctx.Location[j].min <= hash)
                     {
                         List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
-                        listaux.Add(ctx.getNode(ctx.Location[j].IP[0]));
-                        listaux.Add(ctx.getNode(ctx.Location[j].IP[1]));
+                        listaux.Add(ctx.getNode(ctx.Location[j].IP[0].IP));
+                        listaux.Add(ctx.getNode(ctx.Location[j].IP[1].IP));
                         Console.WriteLine("For key " + key + " hash is " + hash );
                         server.Add(key, listaux);
                         

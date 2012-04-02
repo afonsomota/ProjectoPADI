@@ -70,9 +70,10 @@ namespace CommonInterfaces
 
     public interface IServer {
         //Central Directory
-        Dictionary<int, int> GetSemiTablesCount();
-        void CleanSemiTable(int semiTableToClean);
-        void CopyAndCleanTable(int semiTableToClean);
+        Dictionary<uint, int> GetSemiTablesCount();
+        void CleanSemiTable(uint semiTableToClean);
+        void CopyAndCleanTable(uint semiTableToClean);
+        void GetInitialIntervals(uint minST1, uint maxST1, uint minST2, uint maxST2);
         void GetNetworkUpdate(List<Node> network);
 
 

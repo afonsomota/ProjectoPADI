@@ -8,6 +8,7 @@ using System.Runtime.Remoting;
 using CommonInterfaces;
 using System.Threading;
 using System.Collections;
+using System.Security.Cryptography;
 
 namespace Server
 {
@@ -41,6 +42,48 @@ namespace Server
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             System.Console.ReadLine();
+            srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2, UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
+            srv.Put("Afonso", "Teste1");
+            Console.WriteLine(srv.Get("Afonso"));
+            srv.Put("Francisco", "OutroTeste");
+            Console.WriteLine(srv.Get("Francisco"));
+            srv.Put("Ines","nãotenho");
+            Console.WriteLine(srv.Get("Ines"));
+            srv.Put("Afonso", "Teste2");
+            Console.WriteLine(srv.Get("Afonso"));
+            srv.Put("Ines", "continuo a nao ter!!!");
+            Console.WriteLine(srv.Get("Ines"));
+            srv.Put("Afonso", "Eu tenho um Charizard!!!");
+            srv.Put("Hitler", "I'm a PokeMaster!!!");
+            Console.WriteLine(srv.Get("Hitler"));
+            srv.Put("Afonso", "Eu tenho um Charizard!!! Por isso ganho-te!");
+            Console.WriteLine(srv.Get("Afonso",2));
+            Console.WriteLine(srv.Get("Afonso"));
+            srv.Put("Afonso", "Também tenho coisas fixes");
+            srv.Put("Afonso", "Que brilham no escuro e tal");
+            srv.Put("Afonso", "E trolteiam");
+            srv.Put("Afonso", "E catam coisas parvas");
+            Dictionary<string, List<TableValue>> all = srv.GetAll();
+            foreach (string key in all.Keys) {
+                Console.Write(key + ": ");
+                foreach (TableValue tv in all[key]) {
+                    Console.Write(tv.Value + " (" + tv.Timestamp + "); ");
+                }
+                Console.WriteLine();
+            }
+            Console.ReadLine();
+
+        }
+    }
+
+    public class Semitable : Dictionary<string, List<TableValue>>
+    {
+        public uint MinInterval;
+        public uint MaxInterval;
+
+        public Semitable(uint min, uint max): base() {
+            MinInterval = min;
+            MaxInterval = max;
         }
     }
 
@@ -49,21 +92,37 @@ namespace Server
         public Node Info;
         public TcpChannel Channel;
         public List<Node> NetworkTopology;
-        private Dictionary<string, List<TableValue>>[] Semitables;
+        private Semitable[] Semitables;
         public int K;
 
         public Server(Node info, TcpChannel channel, int k)
         {
             Info = info;
             Channel = channel;
-            Semitables = new Dictionary<string, List<TableValue>>[2];
-            Semitables[0] = new Dictionary<string, List<TableValue>>();
-            Semitables[1] = new Dictionary<string, List<TableValue>>();
             K = k;
         }
 
+        public void InitializeSemitables(uint minST1, uint maxST1, uint minST2, uint maxST2)
+        {
+            Semitables = new Semitable[2];
+            Semitables[0] = new Semitable(minST1, maxST1);
+            Semitables[1] = new Semitable(minST2, maxST2);
+        }
+
+        public static uint SHA1Hash(string input)
+        {
+            SHA1 sha = new SHA1CryptoServiceProvider();
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(input);
+            byte[] hash = sha.ComputeHash(data);
+            uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12] ^ hash[16]) << 24) +
+                                   (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13] ^ hash[17]) << 16) +
+                                  (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14] ^ hash[18]) << 8) +
+                                  (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15] ^ hash[19]);
+            return interval;
+        }
+
         public string Get(string key, int timestamp) {
-            foreach (Dictionary<string, List<TableValue>> st in Semitables)
+            foreach (Semitable st in Semitables)
                 if(st.ContainsKey(key))
                     foreach (TableValue tv in st[key]) 
                         if (tv.Timestamp == timestamp)
@@ -71,10 +130,28 @@ namespace Server
             return null;
         }
 
+        public string Get(string key)
+        {
+            foreach (Semitable st in Semitables)
+                if (st.ContainsKey(key)){
+                    int max_timestamp = 0;
+                    TableValue max_tv = st[key][0];
+                    foreach (TableValue tv in st[key]){
+                        if (tv.Timestamp > max_timestamp){
+                            max_timestamp = tv.Timestamp;
+                            max_tv = tv;
+                        }
+                    }
+                    return max_tv.Value;
+                }
+            return null;
+        }
+
         public Dictionary<string, List<TableValue>> GetAll() { 
 
             Dictionary<string, List<TableValue>> all = new Dictionary<string, List<TableValue>>();
-            foreach (Dictionary<string, List<TableValue>> st in Semitables) { 
+            foreach (Semitable st in Semitables)
+            { 
                 foreach(string key in st.Keys){
                     all.Add(key, st[key]);
                 }
@@ -84,31 +161,37 @@ namespace Server
 
         public string Put(string key, string value)
         {
-            foreach (Dictionary<string, List<TableValue>> st in Semitables)
+            foreach (Semitable st in Semitables)
                 if (st.ContainsKey(key))
                 {
                     int max_timestamp = 0;
+                    int min_timestamp = Int32.MaxValue;
+                    TableValue min_tv = st[key][0];
                     foreach (TableValue tv in st[key]){
-                        max_timestamp = tv.Timestamp;
+                        if (tv.Timestamp > max_timestamp)
+                            max_timestamp = tv.Timestamp;
+                        else if (tv.Timestamp < min_timestamp){
+                            min_timestamp = tv.Timestamp;
+                            min_tv = tv;
+                        }
                     }
                     if (st[key].Count == K)
-                        foreach (TableValue tv in st[key])
-                            if (tv.Timestamp == max_timestamp){
-                                st[key].Remove(tv);
-                                break;
-                            }
+                            st[key].Remove(min_tv);
                     TableValue newtv = new TableValue();
                     newtv.Timestamp = max_timestamp + 1;
                     newtv.Value = value;
                     st[key].Add(newtv);
                 }
-                else { 
-                    TableValue tv = new TableValue();
-                    tv.Timestamp = 0;
-                    tv.Value = value;
-                    List<TableValue> values = new List<TableValue>();
-                    values.Add(tv);
-                    st.Add(key, values);
+                else {
+                    uint hash = SHA1Hash(key);
+                    if (hash >= st.MinInterval && hash <= st.MaxInterval){
+                        TableValue tv = new TableValue();
+                        tv.Timestamp = 0;
+                        tv.Value = value;
+                        List<TableValue> values = new List<TableValue>();
+                        values.Add(tv);
+                        st.Add(key, values);
+                    }
                 }
             return null;
         }
@@ -127,17 +210,22 @@ namespace Server
             }
         }
 
-        public Dictionary<int, int> GetSemiTablesCount()
+
+        public void GetInitialIntervals(uint minST1, uint maxST1, uint minST2, uint maxST2) {
+            ctx.InitializeSemitables(minST1, maxST1, minST2, maxST2);
+        }
+
+        public Dictionary<uint, int> GetSemiTablesCount()
         {
             throw new NotImplementedException();
         }
 
-        public void CleanSemiTable(int semiTableToClean)
+        public void CleanSemiTable(uint semiTableToClean)
         {
             throw new NotImplementedException();
         }
 
-        public void CopyAndCleanTable(int semiTableToClean)
+        public void CopyAndCleanTable(uint semiTableToClean)
         {
             throw new NotImplementedException();
         }

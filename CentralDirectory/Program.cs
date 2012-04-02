@@ -238,7 +238,9 @@ namespace CentralDirectory
                     st.IP.Add(Location[i + 1].IP[0]);
                     tableOfLocation.Add(st);
                     IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
-                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
+                    link1.CleanSemiTable(semiTable);
+                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[1].Port.ToString() + "/Server");
+                    link2.CopyAndCleanTable(semiTable, d);
                     break;
                 }
             }

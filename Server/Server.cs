@@ -109,6 +109,12 @@ namespace Server
             Semitables[1] = new Semitable(minST2, maxST2);
         }
 
+        public void CopySemitables(Semitable st1, Semitable st2) {  
+            Semitables = new Semitable[2];
+            Semitables[0] = st1;
+            Semitables[1] = st2;
+        }
+
         public void CleanTable(uint div,int side) {
             foreach (Semitable st in Semitables) {
                 if (div >= st.MinInterval && div <= st.MaxInterval) {
@@ -132,6 +138,15 @@ namespace Server
                 if (div >= st.MinInterval && div <= st.MaxInterval) {
                     new_semitables[0] = new Semitable(st.MinInterval,div-1);
                     new_semitables[1] = new Semitable(div, st.MaxInterval); 
+                    foreach(string key in st.Keys){
+                        uint hash = SHA1Hash(key);
+                        if (hash < div){
+                            new_semitables[0].Add(key, st[key]);
+                        }
+                        else {
+                            new_semitables[1].Add(key, st[key]);
+                        }
+                    }
                 }
             }
             return new_semitables;
@@ -253,8 +268,11 @@ namespace Server
             ctx.CleanTable(semiTableToClean,0);
         }
 
-        public void CopyAndCleanTable(uint semiTableToClean)
+        public void CopyAndCleanTable(uint semiTableToClean, Node node)
         {
+            Semitable[] tables = ctx.DivideSemiTable(semiTableToClean);
+            ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
+            link.CopyTable(tables[0],tables[1]);
             ctx.CleanTable(semiTableToClean, 1);
         }
 

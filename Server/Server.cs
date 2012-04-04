@@ -238,7 +238,7 @@ namespace Server
             ctx.CleanTable(semiTableToClean);
         }
 
-        public void CopyAndCleanTable(uint semiTableToClean)
+        public void CopyAndCleanTable(uint semiTableToClean,Node d)
         {
             throw new NotImplementedException();
         }

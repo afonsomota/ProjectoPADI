@@ -55,6 +55,7 @@ namespace CentralDirectory
           public List<Node> IP;
         };
 
+        public  bool firstPut = false;
        List<CommonInterfaces.Node> listClient = new List<CommonInterfaces.Node>();
        List<CommonInterfaces.Node> listServer = new List<CommonInterfaces.Node>();
        List<Interval> tableOfLocation = new List<Interval>();
@@ -128,6 +129,7 @@ namespace CentralDirectory
 
        public void division()
        {
+           firstPut = true;
            uint numberofServer = (uint)listServer.Count();
            uint result = 0;
            uint aux1 = 0;
@@ -274,22 +276,24 @@ namespace CentralDirectory
            }
        }
 
-       public void SendDimension(List<CommonInterfaces.Node> servers)
+       public Dictionary<uint,int> SendDimension(List<CommonInterfaces.Node> servers)
        {
            ThreadStart ts = delegate() { DimensionOfServers(servers); };
            Thread t = new Thread(ts);
            t.Start();
+           return null;
        }
 
 
-       public void DimensionOfServers(List<CommonInterfaces.Node> servers)
+       public Dictionary<uint,int>  DimensionOfServers(List<CommonInterfaces.Node> servers)
        {
-           
+          
             foreach (CommonInterfaces.Node node in servers)
            {
                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-               link.GetSemiTablesCount(); ;
+               return link.GetSemiTablesCount(); 
            }
+            return null;
        }
     }
     class CentralDirectoryRemoting : MarshalByRefObject, CommonInterfaces.ICentralDirectory 
@@ -305,6 +309,7 @@ namespace CentralDirectory
             {
                 return false;
             }
+
             
             ctx.Client = node;
             ctx.Send(ctx.ListClient, ctx.ListServer);
@@ -314,8 +319,12 @@ namespace CentralDirectory
         public bool RegisterServer(CommonInterfaces.Node node)
         {
             Console.WriteLine("Registred" + node.IP + "on port" + node.Port);
-            if(ctx.ListServer.Contains(node)){
-                return false;
+            Dictionary<uint, int> aux = new Dictionary<uint, int>();
+
+            if (ctx.firstPut == true)
+            {
+                aux = ctx.SendDimension(ctx.ListServer);
+                ctx.Restructure(ctx.MaxSemiTable(aux), node);
             }
            
             ctx.Server = node;

@@ -40,12 +40,16 @@
             this.label3 = new System.Windows.Forms.Label();
             this.listServOnline = new System.Windows.Forms.ListBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 13);
+            this.label1.Location = new System.Drawing.Point(267, 13);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(71, 13);
             this.label1.TabIndex = 0;
@@ -54,7 +58,7 @@
             // listCliOnline
             // 
             this.listCliOnline.FormattingEnabled = true;
-            this.listCliOnline.Location = new System.Drawing.Point(16, 30);
+            this.listCliOnline.Location = new System.Drawing.Point(270, 30);
             this.listCliOnline.Name = "listCliOnline";
             this.listCliOnline.Size = new System.Drawing.Size(116, 82);
             this.listCliOnline.TabIndex = 1;
@@ -63,7 +67,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 127);
+            this.label2.Location = new System.Drawing.Point(267, 127);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(71, 13);
             this.label2.TabIndex = 2;
@@ -72,14 +76,14 @@
             // listCliOffline
             // 
             this.listCliOffline.FormattingEnabled = true;
-            this.listCliOffline.Location = new System.Drawing.Point(16, 143);
+            this.listCliOffline.Location = new System.Drawing.Point(270, 143);
             this.listCliOffline.Name = "listCliOffline";
             this.listCliOffline.Size = new System.Drawing.Size(116, 82);
             this.listCliOffline.TabIndex = 3;
             // 
             // startCliButton
             // 
-            this.startCliButton.Location = new System.Drawing.Point(139, 30);
+            this.startCliButton.Location = new System.Drawing.Point(393, 30);
             this.startCliButton.Name = "startCliButton";
             this.startCliButton.Size = new System.Drawing.Size(40, 82);
             this.startCliButton.TabIndex = 4;
@@ -89,7 +93,7 @@
             // 
             // stopCliButton
             // 
-            this.stopCliButton.Location = new System.Drawing.Point(139, 143);
+            this.stopCliButton.Location = new System.Drawing.Point(393, 143);
             this.stopCliButton.Name = "stopCliButton";
             this.stopCliButton.Size = new System.Drawing.Size(40, 82);
             this.stopCliButton.TabIndex = 5;
@@ -151,11 +155,51 @@
             this.label4.TabIndex = 6;
             this.label4.Text = "Servers Offline";
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(132, 190);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(104, 35);
+            this.button1.TabIndex = 12;
+            this.button1.Text = "Run New Script";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(22, 190);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(104, 35);
+            this.button2.TabIndex = 13;
+            this.button2.Text = "Run Selected Script";
+            this.button2.UseVisualStyleBackColor = true;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(22, 13);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(64, 13);
+            this.label5.TabIndex = 14;
+            this.label5.Text = "User Scripts";
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(25, 30);
+            this.textBox1.Multiline = true;
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(211, 154);
+            this.textBox1.TabIndex = 15;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(645, 273);
+            this.ClientSize = new System.Drawing.Size(645, 234);
+            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.button2);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.stopServButton);
             this.Controls.Add(this.startServButton);
             this.Controls.Add(this.listServOffline);
@@ -170,6 +214,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "PADITable PuppetMaster";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -189,6 +234,10 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ListBox listServOnline;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox textBox1;
     }
 }
 

@@ -161,6 +161,12 @@ namespace CentralDirectory
                    st.IP.Add(a);
                    //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
                    //st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
+
+                   IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
+                   link1.GetInitialIntervals(aux1, aux2);
+
+                   IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[0].IP + ":" + listServer[0].Port.ToString() + "/Server");
+                   link2.GetInitialIntervals(aux1, aux2);
                }
                else
                {
@@ -174,38 +180,56 @@ namespace CentralDirectory
                    st.IP.Add(a);
                    //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
                    //st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
+
+                   IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
+                   link1.GetInitialIntervals(aux1, aux2);
+
+                   IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString() + "/Server");
+                   link2.GetInitialIntervals(aux1, aux2);
                }
 
                tableOfLocation.Add(st);
 
-               aux1 = aux1 + result;
+
+               if (aux1 == 0)
+                   aux1 = aux1 + result + 1;
+               else aux1 = aux1 + result;
+               
                aux2 = aux2 + result;
 
            }
+
+           
        }
 
-       public uint MaxSemiTable(Dictionary<uint, int> table)
+       public uint MaxSemiTable(List<Dictionary<uint, int>> table)
        {
            
            int max = 0;
-
-
-           uint semitableint = 0;
-           
-           foreach (KeyValuePair<uint, int> pair in table)
+           for (int i = 0; i < table.Count; i++)
            {
-               if (max < pair.Value)
+               foreach (KeyValuePair<uint, int> pair in table[i])
+                   Console.WriteLine("Valor Maximo: " + pair.Value + "Key: " + pair.Key);
+           }
+           uint semitableint = 0;
+
+           for (int i = 0; i < table.Count; i++)
+           {
+               foreach (KeyValuePair<uint, int> pair in table[i])
                {
-                   max = pair.Value;
-                   semitableint = pair.Key;
-                    break;
+                   if (max < pair.Value)
+                   {
+                       max = pair.Value;
+                       semitableint = pair.Key;
+                       break;
+                   }
                }
            }
-            
+           Console.WriteLine("resultado:" + semitableint); 
             return semitableint;
           }
 
-       public uint SHA1Hash(string input)
+       /*public uint SHA1Hash(string input)
        {
            SHA1 sha = new SHA1CryptoServiceProvider();
            byte[] data = System.Text.Encoding.ASCII.GetBytes(input);
@@ -221,38 +245,59 @@ namespace CentralDirectory
            {
                sb.Append(hash[i].ToString("X2"));
            }
-           return sb.ToString();*/
+           return sb.ToString();
+           return interval;
+       }*/
+
+       public static uint MD5Hash(string input)
+       {
+           System.Security.Cryptography.MD5CryptoServiceProvider x = new System.Security.Cryptography.MD5CryptoServiceProvider();
+           byte[] bs = System.Text.Encoding.UTF8.GetBytes(input);
+           byte[] hash = x.ComputeHash(bs);
+           uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12]) << 24) +
+                                  (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13]) << 16) +
+                                 (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14]) << 8) +
+                                 (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15]);
            return interval;
        }
 
         public void Restructure(uint semiTable,Node d){
             uint max_aux = 0;
-            for (int i = 0;i<Location.Count();i++){
-                
+            for (int i = 0; i < Location.Count(); i++)
+            {
+
                 if (Location[i].min < semiTable && Location[i].max > semiTable)
                 {
+
                     Interval st = new Interval();
+                    st.IP = new List<Node>();
                     max_aux = Location[i].max;
-                    Location[i].max = semiTable-1;
+                    Location[i].max = semiTable - 1;
                     st.min = semiTable;
                     st.max = max_aux;
                     st.IP.Add(d);
-                    st.IP.Add(Location[i + 1].IP[0]);
+                    st.IP.Add(Location[i].IP[1]);
+
                     tableOfLocation.Add(st);
                     IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
                     link1.CleanSemiTable(semiTable);
                     IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[1].Port.ToString() + "/Server");
                     link2.CopyAndCleanTable(semiTable, d);
+                    Location[i].IP[1] = d;
                     break;
                 }
             }
-            
+
+            for (int i = 0; i < Location.Count; i++)
+            {
+                Console.WriteLine("min: " + Location[i].min + " max: " + Location[i].max + "   IP1: " + Location[i].IP[0].Port + "  IP2: " + Location[i].IP[1].Port);
+            }
                //link.GetNetworkUpdate(listUpDate);
              //CleanSemiTable(uint semiTableToClean);
             //CopyAndCleanTable(uint semiTableToClean);
         }
 
-       public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
+        public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
        {
            ThreadStart ts = delegate() { UpDate(clients, servers); };
            Thread t = new Thread(ts);
@@ -285,22 +330,22 @@ namespace CentralDirectory
        }
 
 
-       public Dictionary<uint,int>  DimensionOfServers(List<CommonInterfaces.Node> servers)
+       public List<Dictionary<uint,int>>  DimensionOfServers(List<CommonInterfaces.Node> servers)
        {
-          
+           List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
             foreach (CommonInterfaces.Node node in servers)
            {
                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-               return link.GetSemiTablesCount(); 
+               listAux.Add(link.GetSemiTablesCount()); 
            }
-            return null;
+            return listAux;
        }
     }
     class CentralDirectoryRemoting : MarshalByRefObject, CommonInterfaces.ICentralDirectory 
     {
 
         public static CentralDirectory ctx;
-        
+        public int txid = 0;        
         
         public bool RegisterClient(CommonInterfaces.Node node)
         {
@@ -319,12 +364,12 @@ namespace CentralDirectory
         public bool RegisterServer(CommonInterfaces.Node node)
         {
             Console.WriteLine("Registred" + node.IP + "on port" + node.Port);
-            Dictionary<uint, int> aux = new Dictionary<uint, int>();
+            List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
 
             if (ctx.firstPut == true)
             {
-                aux = ctx.SendDimension(ctx.ListServer);
-                ctx.Restructure(ctx.MaxSemiTable(aux), node);
+                listAux = ctx.DimensionOfServers(ctx.ListServer);
+                ctx.Restructure(ctx.MaxSemiTable(listAux), node);
             }
            
             ctx.Server = node;
@@ -348,7 +393,7 @@ namespace CentralDirectory
             for (int i = 0; i < keys.Count(); i++)
             {   
                 string aux2 = keys[i];
-                string aux = SHA1Hash(keys[i]);
+                string aux = MD5Hash(keys[i]);
                 int aux5 = Convert.ToInt32(aux); //verificar
                 for(int j = 0; j < tableOfLocation.Count(); j++){
                     if(tableOfLocation[i].max > aux5 && tableOfLocation[i].min < aux5){
@@ -367,15 +412,15 @@ namespace CentralDirectory
         public CommonInterfaces.TransactionContext GetServers(List<string> keys)
         {
             Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
-            Random rd = new Random();
+            //Random rd = new Random();
 
             CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
-            transactionsContext.Txid=rd.Next();
-
+            transactionsContext.Txid=txid;
+            txid++;
             for (int i = 0; i < keys.Count(); i++)
             {
                 string key = keys[i];
-                uint hash = ctx.SHA1Hash(keys[i]);
+                uint hash = CentralDirectory.MD5Hash(keys[i]);
                 
                 
                 for (int j = 0; j < ctx.Location.Count(); j++)

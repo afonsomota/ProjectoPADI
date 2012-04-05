@@ -241,6 +241,18 @@ namespace CentralDirectory
            return interval;
        }
 
+       public static uint MD5Hash(string input)
+       {
+           System.Security.Cryptography.MD5CryptoServiceProvider x = new System.Security.Cryptography.MD5CryptoServiceProvider();
+           byte[] bs = System.Text.Encoding.UTF8.GetBytes(input);
+           byte[] hash = x.ComputeHash(bs);
+           uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12]) << 24) +
+                                  (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13]) << 16) +
+                                 (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14]) << 8) +
+                                 (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15]);
+           return interval;
+       }
+
         public void Restructure(uint semiTable,Node d){
             uint max_aux = 0;
             for (int i = 0;i<Location.Count();i++){
@@ -367,7 +379,7 @@ namespace CentralDirectory
             for (int i = 0; i < keys.Count(); i++)
             {   
                 string aux2 = keys[i];
-                string aux = SHA1Hash(keys[i]);
+                string aux = MD5Hash(keys[i]);
                 int aux5 = Convert.ToInt32(aux); //verificar
                 for(int j = 0; j < tableOfLocation.Count(); j++){
                     if(tableOfLocation[i].max > aux5 && tableOfLocation[i].min < aux5){
@@ -394,7 +406,7 @@ namespace CentralDirectory
             for (int i = 0; i < keys.Count(); i++)
             {
                 string key = keys[i];
-                uint hash = ctx.SHA1Hash(keys[i]);
+                uint hash = CentralDirectory.MD5Hash(keys[i]);
                 
                 
                 for (int j = 0; j < ctx.Location.Count(); j++)

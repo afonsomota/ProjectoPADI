@@ -9,14 +9,34 @@ using CommonInterfaces;
 using System.Threading;
 using System.Collections;
 using System.Security.Cryptography;
+using System.Runtime.Serialization;
 
 namespace Server
 {
+    [Serializable]
     public struct TableValue
     {
         public string Value;
         public int Timestamp;
     } ;
+
+    [Serializable]
+    public class Semitable : Dictionary<string, List<TableValue>>, ISerializable
+    {
+        public uint MinInterval;
+        public uint MaxInterval;
+
+        public Semitable(uint min, uint max)
+            : base()
+        {
+            MinInterval = min;
+            MaxInterval = max;
+        }
+
+        protected Semitable(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {}
+    }
 
     class Program
     {
@@ -57,51 +77,28 @@ namespace Server
             srv.Put("Afonso", "Eu tenho um Charizard!!!");
             srv.Put("Hitler", "I'm a PokeMaster!!!");
             //Console.WriteLine(srv.Get("Hitler"));
-            srv.Put("Afonso", "Eu tenho um Charizard!!! Por isso ganho-te!");
+            srv.Put("Bernardo", "Eu tenho um Charizard!!! Por isso ganho-te!");
             //Console.WriteLine(srv.Get("Afonso",2));
             //Console.WriteLine(srv.Get("Afonso"));
-            srv.Put("olaggggggggggggggggggggggggggggg", "Também tenho coisas fixes");
-            srv.Put("olejjjjjjjjj", "Que brilham no escuro e tal");
-            srv.Put("olipppppppppppppppppppppppppppppppppppppppppppppppppp", "E trolteiam");
-            srv.Put("olummmmmmmmmmmmmmmmm", "E catam coisas parvas");
+            srv.Put("ola", "Também tenho coisas fixes");
+            srv.Put("ole", "Que brilham no escuro e tal");
+            srv.Put("oli", "E trolteiam");
+            srv.Put("olu", "E catam coisas parvas");
             //srv.CleanTable(UInt32.MaxValue / 2, 0);
             Dictionary<string, List<TableValue>> all = srv.GetAll();
-            foreach (string key in all.Keys) {
-                Console.Write(key + ": ");
-                foreach (TableValue tv in all[key]) {
-                    Console.Write(tv.Value + " (" + tv.Timestamp + "); ");
-                }
-                Console.WriteLine();
-            }
-            srv.CleanTable(UInt32.MaxValue / 4, 1);
-            all = srv.GetAll();
+            Console.Write("Keys: ");
             foreach (string key in all.Keys)
             {
-                Console.Write(key + ": ");
-                foreach (TableValue tv in all[key])
-                {
-                    Console.Write(tv.Value + " (" + tv.Timestamp + "); ");
-                }
-                Console.WriteLine();
+                Console.Write(key + "; ");
             }
+            Console.WriteLine();
+           
 
 
 
             Console.ReadLine();
 
 
-        }
-    }
-
-    [Serializable]
-    public class Semitable : Dictionary<string, List<TableValue>>
-    {
-        public uint MinInterval;
-        public uint MaxInterval;
-
-        public Semitable(uint min, uint max): base() {
-            MinInterval = min;
-            MaxInterval = max;
         }
     }
 
@@ -139,28 +136,42 @@ namespace Server
             Semitables = new Semitable[2];
             Semitables[0] = st1;
             Semitables[1] = st2;
+            Dictionary<string, List<TableValue>> all = GetAll();
+            Console.Write("Keys: ");
+            foreach (string key in all.Keys)
+            {
+                Console.Write(key + "; ");
+            }
+            Console.WriteLine();
         }
 
         public void CleanTable(uint div,int side) {
+            Console.WriteLine("Cleaning Table: " + side.ToString());
             foreach (Semitable st in Semitables) {
                 if (div >= st.MinInterval || div <= st.MaxInterval) {
                     List<string> keysToDelete = new List<string>();
                     foreach (string key in st.Keys) {
                         uint hash = MD5Hash(key);
-                        Console.WriteLine("HASH for " + key + " is " + hash.ToString());
                         if ((side == 0 && hash >= div) || (side == 1 && hash < div))
                         {
                             keysToDelete.Add(key);
-                            Console.WriteLine("Removed Key: " + key);
                         }
                         if (side == 0) st.MaxInterval = div - 1;
                         if (side == 1) st.MinInterval = div;
                     }
                     foreach (string k in keysToDelete){
                         st.Remove(k);
+                        Console.WriteLine("Removed Key: " + k);
                     }
                 }
             }
+            Dictionary<string, List<TableValue>> all = GetAll();
+            Console.Write("Keys: ");
+            foreach (string key in all.Keys)
+            {
+                Console.Write(key + "; ");
+            }
+            Console.WriteLine();
         }
 
         public Semitable[] DivideSemiTable(uint div) {
@@ -211,7 +222,7 @@ namespace Server
             foreach (Semitable st in Semitables) {
                 List<uint> hashs = new List<uint>();
                 foreach (string key in st.Keys) {
-                    uint hash = SHA1Hash(key);
+                    uint hash = MD5Hash(key);
                     hashs.Add(hash);
                 }
                 hashs.Sort();
@@ -262,7 +273,6 @@ namespace Server
         {
             foreach (Semitable st in Semitables)
             {
-                Console.WriteLine(st.Count);
                 if (st.ContainsKey(key))
                 {
                     int max_timestamp = 0;
@@ -343,7 +353,7 @@ namespace Server
 
         public void CopyTable(Semitable st1, Semitable st2)
         {
-            throw new NotImplementedException();
+            ctx.CopySemitables(st1, st2);
         }
 
         public bool CanLock(int txid, List<string> keys)

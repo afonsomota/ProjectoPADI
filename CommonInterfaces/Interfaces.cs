@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace CommonInterfaces
 {
@@ -96,6 +97,17 @@ namespace CommonInterfaces
     {
         void StartClient();
         void KillClient();
+        void BeginTx();
+        void Store(int register, string value);
+        void Put(int register, string key);
+        void Get(int register, string key);
+        void PutVAl(string key, int value);
+        void ToLower(int register);
+        void ToUpper(int register);
+        void Concat(int register1, int register2);
+        void CommitTx();
+        string[] Dump();
+        void ExeScript(File file);
     }
 
     public interface IClient {

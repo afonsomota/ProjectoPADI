@@ -82,7 +82,7 @@ namespace Client
         //Inicia a transacção
         public void BeginTxInternal()
         {
-
+           
 
         }
 

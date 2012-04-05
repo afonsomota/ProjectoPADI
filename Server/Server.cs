@@ -44,25 +44,26 @@ namespace Server
             System.Console.ReadLine();
             srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2, UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
             srv.Put("Afonso", "Teste1");
-            Console.WriteLine(srv.Get("Afonso"));
+            //Console.WriteLine(srv.Get("Afonso"));
             srv.Put("Francisco", "OutroTeste");
-            Console.WriteLine(srv.Get("Francisco"));
+            //Console.WriteLine(srv.Get("Francisco"));
             srv.Put("Ines","nãotenho");
-            Console.WriteLine(srv.Get("Ines"));
+            //Console.WriteLine(srv.Get("Ines"));
             srv.Put("Afonso", "Teste2");
-            Console.WriteLine(srv.Get("Afonso"));
+            //Console.WriteLine(srv.Get("Afonso"));
             srv.Put("Ines", "continuo a nao ter!!!");
-            Console.WriteLine(srv.Get("Ines"));
+            //Console.WriteLine(srv.Get("Ines"));
             srv.Put("Afonso", "Eu tenho um Charizard!!!");
             srv.Put("Hitler", "I'm a PokeMaster!!!");
-            Console.WriteLine(srv.Get("Hitler"));
+            //Console.WriteLine(srv.Get("Hitler"));
             srv.Put("Afonso", "Eu tenho um Charizard!!! Por isso ganho-te!");
-            Console.WriteLine(srv.Get("Afonso",2));
-            Console.WriteLine(srv.Get("Afonso"));
-            srv.Put("Afonso", "Também tenho coisas fixes");
-            srv.Put("Afonso", "Que brilham no escuro e tal");
-            srv.Put("Afonso", "E trolteiam");
-            srv.Put("Afonso", "E catam coisas parvas");
+            //Console.WriteLine(srv.Get("Afonso",2));
+            //Console.WriteLine(srv.Get("Afonso"));
+            srv.Put("olaggggggggggggggggggggggggggggg", "Também tenho coisas fixes");
+            srv.Put("olejjjjjjjjj", "Que brilham no escuro e tal");
+            srv.Put("olipppppppppppppppppppppppppppppppppppppppppppppppppp", "E trolteiam");
+            srv.Put("olummmmmmmmmmmmmmmmm", "E catam coisas parvas");
+            srv.CleanTable(UInt32.MaxValue / 2, 0);
             Dictionary<string, List<TableValue>> all = srv.GetAll();
             foreach (string key in all.Keys) {
                 Console.Write(key + ": ");
@@ -71,7 +72,22 @@ namespace Server
                 }
                 Console.WriteLine();
             }
+            srv.CleanTable(UInt32.MaxValue / 4, 1);
+            all = srv.GetAll();
+            foreach (string key in all.Keys)
+            {
+                Console.Write(key + ": ");
+                foreach (TableValue tv in all[key])
+                {
+                    Console.Write(tv.Value + " (" + tv.Timestamp + "); ");
+                }
+                Console.WriteLine();
+            }
+
+
+
             Console.ReadLine();
+
 
         }
     }
@@ -117,16 +133,21 @@ namespace Server
 
         public void CleanTable(uint div,int side) {
             foreach (Semitable st in Semitables) {
-                if (div >= st.MinInterval && div <= st.MaxInterval) {
+                if (div >= st.MinInterval || div <= st.MaxInterval) {
+                    List<string> keysToDelete = new List<string>();
                     foreach (string key in st.Keys) {
-                        uint hash = SHA1Hash(key);
+                        uint hash = MD5Hash(key);
+                        Console.WriteLine("HASH for " + key + " is " + hash.ToString());
                         if ((side == 0 && hash >= div) || (side == 1 && hash < div))
                         {
-                            st.Remove(key);
+                            keysToDelete.Add(key);
                             Console.WriteLine("Removed Key: " + key);
                         }
                         if (side == 0) st.MaxInterval = div - 1;
                         if (side == 1) st.MinInterval = div;
+                    }
+                    foreach (string k in keysToDelete){
+                        st.Remove(k);
                     }
                 }
             }
@@ -139,7 +160,7 @@ namespace Server
                     new_semitables[0] = new Semitable(st.MinInterval,div-1);
                     new_semitables[1] = new Semitable(div, st.MaxInterval); 
                     foreach(string key in st.Keys){
-                        uint hash = SHA1Hash(key);
+                        uint hash =  MD5Hash(key);
                         if (hash < div){
                             new_semitables[0].Add(key, st[key]);
                         }
@@ -161,6 +182,17 @@ namespace Server
                                    (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13] ^ hash[17]) << 16) +
                                   (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14] ^ hash[18]) << 8) +
                                   (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15] ^ hash[19]);
+            return interval;
+        }
+
+        public static uint MD5Hash(string input) {
+            System.Security.Cryptography.MD5CryptoServiceProvider x = new System.Security.Cryptography.MD5CryptoServiceProvider();
+            byte[] bs = System.Text.Encoding.UTF8.GetBytes(input);
+            byte[] hash = x.ComputeHash(bs);
+            uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12]) << 24) +
+                                   (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13]) << 16) +
+                                  (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14]) << 8) +
+                                  (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15]);
             return interval;
         }
 
@@ -202,7 +234,7 @@ namespace Server
             return all;
         }
 
-        public string Put(string key, string value)
+        public void Put(string key, string value)
         {
             foreach (Semitable st in Semitables)
                 if (st.ContainsKey(key))
@@ -226,7 +258,7 @@ namespace Server
                     st[key].Add(newtv);
                 }
                 else {
-                    uint hash = SHA1Hash(key);
+                    uint hash = MD5Hash(key);
                     if (hash >= st.MinInterval && hash <= st.MaxInterval){
                         TableValue tv = new TableValue();
                         tv.Timestamp = 0;
@@ -234,9 +266,9 @@ namespace Server
                         List<TableValue> values = new List<TableValue>();
                         values.Add(tv);
                         st.Add(key, values);
+                        Console.WriteLine("Inserted Key: " + key);
                     }
                 }
-            return null;
         }
     }
 

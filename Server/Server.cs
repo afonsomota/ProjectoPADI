@@ -235,7 +235,7 @@ namespace Server
                 hashs.Sort();
                 if (hashs.Count != 0)
                 {
-                    if (hashs.Count == 1) semiCount.Add(0, hashs.Count);
+                    if (hashs.Count == 1) semiCount.Add(hashs[0], hashs.Count);
                     else semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], hashs.Count);
                 }
             }

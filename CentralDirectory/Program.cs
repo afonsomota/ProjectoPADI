@@ -202,24 +202,30 @@ namespace CentralDirectory
            
        }
 
-       public uint MaxSemiTable(Dictionary<uint, int> table)
+       public uint MaxSemiTable(List<Dictionary<uint, int>> table)
        {
            
            int max = 0;
-
-
-           uint semitableint = 0;
-           
-           foreach (KeyValuePair<uint, int> pair in table)
+           for (int i = 0; i < table.Count; i++)
            {
-               if (max < pair.Value)
+               foreach (KeyValuePair<uint, int> pair in table[i])
+                   Console.WriteLine("Valor Maximo: " + pair.Value + "Key: " + pair.Key);
+           }
+           uint semitableint = 0;
+
+           for (int i = 0; i < table.Count; i++)
+           {
+               foreach (KeyValuePair<uint, int> pair in table[i])
                {
-                   max = pair.Value;
-                   semitableint = pair.Key;
-                    break;
+                   if (max < pair.Value)
+                   {
+                       max = pair.Value;
+                       semitableint = pair.Key;
+                       break;
+                   }
                }
            }
-            
+           Console.WriteLine("resultado:" + semitableint); 
             return semitableint;
           }
 
@@ -257,32 +263,34 @@ namespace CentralDirectory
 
         public void Restructure(uint semiTable,Node d){
             uint max_aux = 0;
-            for (int i = 0;i<Location.Count();i++){
-                
+            for (int i = 0; i < Location.Count(); i++)
+            {
+
                 if (Location[i].min < semiTable && Location[i].max > semiTable)
                 {
+
                     Interval st = new Interval();
-                    st.IP = new List<Node> ();
+                    st.IP = new List<Node>();
                     max_aux = Location[i].max;
-                    Location[i].max = semiTable-1;
+                    Location[i].max = semiTable - 1;
                     st.min = semiTable;
                     st.max = max_aux;
                     st.IP.Add(d);
-                    if (i == Location.Count - 1) st.IP.Add(Location[0].IP[0]);
-                    else st.IP.Add(Location[i + 1].IP[0]); 
-                    
+                    st.IP.Add(Location[i].IP[1]);
+
                     tableOfLocation.Add(st);
                     IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
                     link1.CleanSemiTable(semiTable);
                     IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[1].Port.ToString() + "/Server");
                     link2.CopyAndCleanTable(semiTable, d);
+                    Location[i].IP[1] = d;
                     break;
                 }
             }
 
             for (int i = 0; i < Location.Count; i++)
             {
-                Console.WriteLine("min:" + Location[i].min + "max:" +  Location[i].max);
+                Console.WriteLine("min: " + Location[i].min + " max: " + Location[i].max + "   IP1: " + Location[i].IP[0].Port + "  IP2: " + Location[i].IP[1].Port);
             }
                //link.GetNetworkUpdate(listUpDate);
              //CleanSemiTable(uint semiTableToClean);
@@ -322,15 +330,15 @@ namespace CentralDirectory
        }
 
 
-       public Dictionary<uint,int>  DimensionOfServers(List<CommonInterfaces.Node> servers)
+       public List<Dictionary<uint,int>>  DimensionOfServers(List<CommonInterfaces.Node> servers)
        {
-          
+           List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
             foreach (CommonInterfaces.Node node in servers)
            {
                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-               return link.GetSemiTablesCount(); 
+               listAux.Add(link.GetSemiTablesCount()); 
            }
-            return null;
+            return listAux;
        }
     }
     class CentralDirectoryRemoting : MarshalByRefObject, CommonInterfaces.ICentralDirectory 
@@ -356,12 +364,12 @@ namespace CentralDirectory
         public bool RegisterServer(CommonInterfaces.Node node)
         {
             Console.WriteLine("Registred" + node.IP + "on port" + node.Port);
-            Dictionary<uint, int> aux = new Dictionary<uint, int>();
+            List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
 
             if (ctx.firstPut == true)
             {
-                aux = ctx.DimensionOfServers(ctx.ListServer);
-                ctx.Restructure(ctx.MaxSemiTable(aux), node);
+                listAux = ctx.DimensionOfServers(ctx.ListServer);
+                ctx.Restructure(ctx.MaxSemiTable(listAux), node);
             }
            
             ctx.Server = node;

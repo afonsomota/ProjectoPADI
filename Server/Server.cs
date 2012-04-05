@@ -40,9 +40,9 @@ namespace Server
             MaxInterval = info.GetUInt32("b");
         }
 
-        public virtual void GetObjectData(SerializationInfo info,
-StreamingContext context)
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
+            base.GetObjectData(info, context);
             info.AddValue("a", MinInterval);
             info.AddValue("b", MaxInterval);
         }
@@ -159,7 +159,7 @@ StreamingContext context)
         public void CleanTable(uint div,int side) {
             foreach (Semitable st in Semitables)
             {
-                if (div >= st.MinInterval || div <= st.MaxInterval)
+                if (div >= st.MinInterval && div <= st.MaxInterval)
                 {
                     Console.WriteLine("Cleaning Table: " + side.ToString());
                     List<string> keysToDelete = new List<string>();

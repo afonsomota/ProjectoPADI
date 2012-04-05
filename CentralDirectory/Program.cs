@@ -190,9 +190,11 @@ namespace CentralDirectory
 
                tableOfLocation.Add(st);
 
-              
 
-               aux1 = aux1 + result;
+               if (aux1 == 0)
+                   aux1 = aux1 + result + 1;
+               else aux1 = aux1 + result;
+               
                aux2 = aux2 + result;
 
            }
@@ -221,7 +223,7 @@ namespace CentralDirectory
             return semitableint;
           }
 
-       public uint SHA1Hash(string input)
+       /*public uint SHA1Hash(string input)
        {
            SHA1 sha = new SHA1CryptoServiceProvider();
            byte[] data = System.Text.Encoding.ASCII.GetBytes(input);
@@ -237,9 +239,9 @@ namespace CentralDirectory
            {
                sb.Append(hash[i].ToString("X2"));
            }
-           return sb.ToString();*/
+           return sb.ToString();
            return interval;
-       }
+       }*/
 
        public static uint MD5Hash(string input)
        {
@@ -277,13 +279,17 @@ namespace CentralDirectory
                     break;
                 }
             }
-            
+
+            for (int i = 0; i < Location.Count; i++)
+            {
+                Console.WriteLine("min:" + Location[i].min + "max:" +  Location[i].max);
+            }
                //link.GetNetworkUpdate(listUpDate);
              //CleanSemiTable(uint semiTableToClean);
             //CopyAndCleanTable(uint semiTableToClean);
         }
 
-       public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
+        public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
        {
            ThreadStart ts = delegate() { UpDate(clients, servers); };
            Thread t = new Thread(ts);

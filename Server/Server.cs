@@ -35,7 +35,17 @@ namespace Server
 
         protected Semitable(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        {}
+        {
+            MinInterval = info.GetUInt32("a");
+            MaxInterval = info.GetUInt32("b");
+        }
+
+        public virtual void GetObjectData(SerializationInfo info,
+StreamingContext context)
+        {
+            info.AddValue("a", MinInterval);
+            info.AddValue("b", MaxInterval);
+        }
     }
 
     class Program
@@ -85,14 +95,7 @@ namespace Server
             srv.Put("oli", "E trolteiam");
             srv.Put("olu", "E catam coisas parvas");
             //srv.CleanTable(UInt32.MaxValue / 2, 0);
-            Dictionary<string, List<TableValue>> all = srv.GetAll();
-            Console.Write("Keys: ");
-            foreach (string key in all.Keys)
-            {
-                Console.Write(key + "; ");
-            }
-            Console.WriteLine();
-           
+            srv.PrintSemiTables();
 
 
 
@@ -132,23 +135,33 @@ namespace Server
             }
         }
 
+        public void PrintSemiTables() {
+            Console.Write("SemiTable 0: ");
+            foreach(string key in Semitables[0].Keys){
+                Console.Write(key+"; ");
+            }
+            Console.WriteLine("Min: " + Semitables[0].MinInterval + "; Max: " + Semitables[0].MaxInterval);
+            Console.Write("SemiTable 1: ");
+            foreach (string key in Semitables[1].Keys)
+            {
+                Console.Write(key + "; ");
+            }
+            Console.WriteLine("Min: " + Semitables[1].MinInterval + "; Max: " + Semitables[1].MaxInterval);
+        }
+
         public void CopySemitables(Semitable st1, Semitable st2) {  
             Semitables = new Semitable[2];
             Semitables[0] = st1;
             Semitables[1] = st2;
-            Dictionary<string, List<TableValue>> all = GetAll();
-            Console.Write("Keys: ");
-            foreach (string key in all.Keys)
-            {
-                Console.Write(key + "; ");
-            }
-            Console.WriteLine();
+            PrintSemiTables();
         }
 
         public void CleanTable(uint div,int side) {
-            Console.WriteLine("Cleaning Table: " + side.ToString());
-            foreach (Semitable st in Semitables) {
-                if (div >= st.MinInterval || div <= st.MaxInterval) {
+            foreach (Semitable st in Semitables)
+            {
+                if (div >= st.MinInterval || div <= st.MaxInterval)
+                {
+                    Console.WriteLine("Cleaning Table: " + side.ToString());
                     List<string> keysToDelete = new List<string>();
                     foreach (string key in st.Keys) {
                         uint hash = MD5Hash(key);
@@ -165,13 +178,7 @@ namespace Server
                     }
                 }
             }
-            Dictionary<string, List<TableValue>> all = GetAll();
-            Console.Write("Keys: ");
-            foreach (string key in all.Keys)
-            {
-                Console.Write(key + "; ");
-            }
-            Console.WriteLine();
+            PrintSemiTables();
         }
 
         public Semitable[] DivideSemiTable(uint div) {
@@ -226,7 +233,11 @@ namespace Server
                     hashs.Add(hash);
                 }
                 hashs.Sort();
-                if (hashs.Count != 0) semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], hashs.Count);
+                if (hashs.Count != 0)
+                {
+                    if (hashs.Count == 1) semiCount.Add(0, hashs.Count);
+                    else semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], hashs.Count);
+                }
             }
             return semiCount;
         }

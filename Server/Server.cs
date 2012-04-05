@@ -42,7 +42,8 @@ namespace Server
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             System.Console.ReadLine();
-            srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2, UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
+            //srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2);
+            //srv.InitializeSemitables(UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
             srv.Put("Afonso", "Teste1");
             //Console.WriteLine(srv.Get("Afonso"));
             srv.Put("Francisco", "OutroTeste");
@@ -63,7 +64,7 @@ namespace Server
             srv.Put("olejjjjjjjjj", "Que brilham no escuro e tal");
             srv.Put("olipppppppppppppppppppppppppppppppppppppppppppppppppp", "E trolteiam");
             srv.Put("olummmmmmmmmmmmmmmmm", "E catam coisas parvas");
-            srv.CleanTable(UInt32.MaxValue / 2, 0);
+            //srv.CleanTable(UInt32.MaxValue / 2, 0);
             Dictionary<string, List<TableValue>> all = srv.GetAll();
             foreach (string key in all.Keys) {
                 Console.Write(key + ": ");
@@ -92,6 +93,7 @@ namespace Server
         }
     }
 
+    [Serializable]
     public class Semitable : Dictionary<string, List<TableValue>>
     {
         public uint MinInterval;
@@ -110,19 +112,27 @@ namespace Server
         public List<Node> NetworkTopology;
         private Semitable[] Semitables;
         public int K;
+        private int tableToInit = 0; 
 
         public Server(Node info, TcpChannel channel, int k)
         {
             Info = info;
             Channel = channel;
             K = k;
+            Semitables = new Semitable[2];
         }
 
-        public void InitializeSemitables(uint minST1, uint maxST1, uint minST2, uint maxST2)
+        public void InitializeSemitables(uint minST1, uint maxST1)
         {
-            Semitables = new Semitable[2];
-            Semitables[0] = new Semitable(minST1, maxST1);
-            Semitables[1] = new Semitable(minST2, maxST2);
+            if (tableToInit < 2)
+            {
+                Semitables[tableToInit] = new Semitable(minST1, maxST1);
+                Console.WriteLine("Initialized SemiTable: " + tableToInit.ToString());
+                tableToInit ++;
+            }
+            else {
+                Console.WriteLine("InitializeSemitables() called too many times");
+            }
         }
 
         public void CopySemitables(Semitable st1, Semitable st2) {  
@@ -200,14 +210,12 @@ namespace Server
             Dictionary<uint, int> semiCount = new Dictionary<uint, int>();
             foreach (Semitable st in Semitables) {
                 List<uint> hashs = new List<uint>();
-                int count = 0;
                 foreach (string key in st.Keys) {
                     uint hash = SHA1Hash(key);
                     hashs.Add(hash);
-                    count ++;
                 }
                 hashs.Sort();
-                semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], count);
+                if (hashs.Count != 0) semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], hashs.Count);
             }
             return semiCount;
         }
@@ -253,29 +261,35 @@ namespace Server
         public void Put(string key, string value)
         {
             foreach (Semitable st in Semitables)
+            {
+                Console.WriteLine(st.Count);
                 if (st.ContainsKey(key))
                 {
                     int max_timestamp = 0;
                     int min_timestamp = Int32.MaxValue;
                     TableValue min_tv = st[key][0];
-                    foreach (TableValue tv in st[key]){
+                    foreach (TableValue tv in st[key])
+                    {
                         if (tv.Timestamp > max_timestamp)
                             max_timestamp = tv.Timestamp;
-                        else if (tv.Timestamp < min_timestamp){
+                        else if (tv.Timestamp < min_timestamp)
+                        {
                             min_timestamp = tv.Timestamp;
                             min_tv = tv;
                         }
                     }
                     if (st[key].Count == K)
-                            st[key].Remove(min_tv);
+                        st[key].Remove(min_tv);
                     TableValue newtv = new TableValue();
                     newtv.Timestamp = max_timestamp + 1;
                     newtv.Value = value;
                     st[key].Add(newtv);
                 }
-                else {
+                else
+                {
                     uint hash = MD5Hash(key);
-                    if (hash >= st.MinInterval && hash <= st.MaxInterval){
+                    if (hash >= st.MinInterval && hash <= st.MaxInterval)
+                    {
                         TableValue tv = new TableValue();
                         tv.Timestamp = 0;
                         tv.Value = value;
@@ -285,6 +299,7 @@ namespace Server
                         Console.WriteLine("Inserted Key: " + key);
                     }
                 }
+            }
         }
     }
 
@@ -302,8 +317,8 @@ namespace Server
         }
 
 
-        public void GetInitialIntervals(uint minST1, uint maxST1, uint minST2, uint maxST2) {
-            ctx.InitializeSemitables(minST1, maxST1, minST2, maxST2);
+        public void GetInitialIntervals(uint minST1, uint maxST1) {
+            ctx.InitializeSemitables(minST1, maxST1);
         }
 
         public Dictionary<uint, int> GetSemiTablesCount()
@@ -320,7 +335,9 @@ namespace Server
         {
             Semitable[] tables = ctx.DivideSemiTable(semiTableToClean);
             ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-            link.CopyTable(tables[0],tables[1]);
+            Semitable st1 = tables[0];
+            Semitable st2 = tables[1];
+            link.CopyTable(st1,st2);
             ctx.CleanTable(semiTableToClean, 1);
         }
 

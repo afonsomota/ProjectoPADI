@@ -161,6 +161,12 @@ namespace CentralDirectory
                    st.IP.Add(a);
                    //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
                    //st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
+
+                   IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
+                   link1.GetInitialIntervals(aux1, aux2);
+
+                   IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[0].IP + ":" + listServer[0].Port.ToString() + "/Server");
+                   link2.GetInitialIntervals(aux1, aux2);
                }
                else
                {
@@ -174,14 +180,24 @@ namespace CentralDirectory
                    st.IP.Add(a);
                    //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
                    //st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
+
+                   IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
+                   link1.GetInitialIntervals(aux1, aux2);
+
+                   IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString() + "/Server");
+                   link2.GetInitialIntervals(aux1, aux2);
                }
 
                tableOfLocation.Add(st);
+
+              
 
                aux1 = aux1 + result;
                aux2 = aux2 + result;
 
            }
+
+           
        }
 
        public uint MaxSemiTable(Dictionary<uint, int> table)
@@ -232,12 +248,15 @@ namespace CentralDirectory
                 if (Location[i].min < semiTable && Location[i].max > semiTable)
                 {
                     Interval st = new Interval();
+                    st.IP = new List<Node> ();
                     max_aux = Location[i].max;
                     Location[i].max = semiTable-1;
                     st.min = semiTable;
                     st.max = max_aux;
                     st.IP.Add(d);
-                    st.IP.Add(Location[i + 1].IP[0]);
+                    if (i == Location.Count - 1) st.IP.Add(Location[0].IP[0]);
+                    else st.IP.Add(Location[i + 1].IP[0]); 
+                    
                     tableOfLocation.Add(st);
                     IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
                     link1.CleanSemiTable(semiTable);

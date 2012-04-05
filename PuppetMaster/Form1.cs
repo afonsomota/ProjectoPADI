@@ -36,7 +36,7 @@ namespace PuppetMaster
             Clients = new List<Node>();
             Servers = new List<Node>();
             WriteHostDelegate = new WriteHost(WriteHostMethod);
-            WriteUserScriptsDelegate = new WriteUserScripts(WriteUserScriptsMethod);
+           // WriteUserScriptsDelegate = new WriteUserScripts(WriteUserScriptsMethod);
             
         }
 
@@ -105,6 +105,16 @@ namespace PuppetMaster
             listServOnline.Items.Add(item);
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button2_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
         private void button1_Click_1(object sender, EventArgs e)
         {
             // Displays an OpenFileDialog so the user can select a Cursor.
@@ -160,13 +170,6 @@ namespace PuppetMaster
                }
             }
         }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
-       
     }
 
     public class PuppetMaster : MarshalByRefObject, IPuppetMaster

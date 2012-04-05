@@ -300,7 +300,7 @@ namespace CentralDirectory
     {
 
         public static CentralDirectory ctx;
-        
+        public int txid = 0;        
         
         public bool RegisterClient(CommonInterfaces.Node node)
         {
@@ -323,7 +323,7 @@ namespace CentralDirectory
 
             if (ctx.firstPut == true)
             {
-                aux = ctx.SendDimension(ctx.ListServer);
+                aux = ctx.DimensionOfServers(ctx.ListServer);
                 ctx.Restructure(ctx.MaxSemiTable(aux), node);
             }
            
@@ -367,11 +367,11 @@ namespace CentralDirectory
         public CommonInterfaces.TransactionContext GetServers(List<string> keys)
         {
             Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
-            Random rd = new Random();
+            //Random rd = new Random();
 
             CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
-            transactionsContext.Txid=rd.Next();
-
+            transactionsContext.Txid=txid;
+            txid++;
             for (int i = 0; i < keys.Count(); i++)
             {
                 string key = keys[i];

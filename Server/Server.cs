@@ -196,6 +196,22 @@ namespace Server
             return interval;
         }
 
+        public Dictionary<uint, int> SemiTablesCount() {
+            Dictionary<uint, int> semiCount = new Dictionary<uint, int>();
+            foreach (Semitable st in Semitables) {
+                List<uint> hashs = new List<uint>();
+                int count = 0;
+                foreach (string key in st.Keys) {
+                    uint hash = SHA1Hash(key);
+                    hashs.Add(hash);
+                    count ++;
+                }
+                hashs.Sort();
+                semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], count);
+            }
+            return semiCount;
+        }
+
         public string Get(string key, int timestamp) {
             foreach (Semitable st in Semitables)
                 if(st.ContainsKey(key))
@@ -292,7 +308,7 @@ namespace Server
 
         public Dictionary<uint, int> GetSemiTablesCount()
         {
-            throw new NotImplementedException();
+            return ctx.SemiTablesCount();
         }
 
         public void CleanSemiTable(uint semiTableToClean)

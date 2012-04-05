@@ -8,6 +8,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using System.Collections;
 using System.Threading;
+using System.IO;
 
 namespace Client
 {
@@ -38,6 +39,8 @@ namespace Client
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             Console.WriteLine("Press Enter to Test...");
+           
+            //Testes
             System.Console.ReadLine();
             List<string> testList = new List<string>();
             testList.Add("Afonso");
@@ -55,11 +58,7 @@ namespace Client
                 Console.WriteLine(pair.Key + " is in: " + pair.Value[0] + " and " + pair.Value[1]);
             }
 
-            System.Console.ReadLine();
-
-
-
-            
+            System.Console.ReadLine();            
         }
     }
 
@@ -79,6 +78,67 @@ namespace Client
             Registers[reg] = value;
         }
 
+
+        //Inicia a transacção
+        public void BeginTxInternal()
+        {
+
+
+        }
+
+        //Adiciona o valor ao registo
+        public void StoreInternal(int register, string value)
+        {
+            Registers[register]=value;
+        }
+
+        //Executa um Put com o conteudo do registo "register" na key "key"
+        public void PutInternal(int register, string key)
+        {
+
+        }
+
+        //Executa um get na key "key" e guarda o conteudo no register
+        public void GetInternal(int register, string key)
+        {
+
+        }
+
+        //mete o valor "value" na key "key"
+        public void PutVAlInternal(string key, int value)
+        {
+
+        }
+
+        //change the value of the key in the register number to lower case
+        public void ToLowerInternal(int register)
+        {
+            Registers[register].ToLower();
+
+        }
+
+        public void ToUpperInternal(int register)
+        {
+            Registers[register].ToUpper();
+        }
+
+        //concata a string do registo 2 no registo 1
+        public void ConcatInternal(int register1, int register2)
+        {
+            Registers[register1] = Registers[register1] + Registers[register2];
+        }
+
+        //faz commit da transacção
+        public void CommitTxInternal()
+        {
+
+        }
+
+        public void ExeScriptInternal(File file)
+        {
+
+        }
+
     }
 
     class ClientRemoting : MarshalByRefObject, IClient
@@ -93,6 +153,9 @@ namespace Client
                 Console.WriteLine(n);
             }
         }
+
+
+
     }
 
     class ClientPuppet : MarshalByRefObject, IClientPuppet
@@ -125,6 +188,58 @@ namespace Client
             ChannelServices.RegisterChannel(ctx.Channel, true);
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
             Console.WriteLine("Client Offline");
+        }
+
+        //Inicia a transacção
+        public void BeginTx() {
+            ctx.BeginTxInternal();
+        }
+
+        //Adiciona o valor ao registo
+        public void Store(int register, string value) {
+            ctx.StoreInternal(register, value);
+        }
+
+        //Executa um Put com o conteudo do registo "register" na key "key"
+        public void Put(int register, string key) {
+            ctx.PutInternal(register, key);
+        }
+
+        //Executa um get na key "key" e guarda o conteudo no register
+        public void Get(int register, string key) {
+            ctx.GetInternal(register, key);
+        }
+
+        //mete o valor "value" na key "key"
+        public void PutVAl(string key, int value) {
+            ctx.PutVAlInternal(key, value);
+        }
+
+        //change the value of the key in the register number to lower case
+        public void ToLower(int register) {
+            ctx.ToLowerInternal(register);
+        }
+
+        public void ToUpper(int register) {
+            ctx.ToUpperInternal(register);
+        }
+
+        //concata a string do registo 2 no registo 1
+        public void Concat(int register1, int register2) {
+            ctx.ConcatInternal(register1, register2);
+        }
+
+        //faz commit da transacção
+        public void CommitTx() {
+            ctx.CommitTxInternal();
+        }
+
+        public string[] Dump() {
+            return ctx.Registers;
+        }
+
+        public void ExeScript(File file){
+            ctx.ExeScriptInternal(file);
         }
     }
 

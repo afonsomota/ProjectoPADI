@@ -95,7 +95,7 @@ namespace Client
         //Executa um Put com o conteudo do registo "register" na key "key"
         public void PutInternal(int register, string key)
         {
-
+            
         }
 
         //Executa um get na key "key" e guarda o conteudo no register

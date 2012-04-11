@@ -107,7 +107,7 @@ namespace CommonInterfaces
         void Concat(int register1, int register2);
         void CommitTx();
         string[] Dump();
-        void ExeScript(File file);
+        void ExeScript(string[] operations);
     }
 
     public interface IClient {

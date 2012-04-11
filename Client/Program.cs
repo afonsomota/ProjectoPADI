@@ -134,7 +134,7 @@ namespace Client
 
         }
 
-        public void ExeScriptInternal(File file)
+        public void ExeScriptInternal(string[] instructions)
         {
 
         }
@@ -238,9 +238,10 @@ namespace Client
             return ctx.Registers;
         }
 
-        public void ExeScript(File file){
-            ctx.ExeScriptInternal(file);
+        public void ExeScript(string[] operations){
+            ctx.ExeScriptInternal(operations);
         }
+
     }
 
 }

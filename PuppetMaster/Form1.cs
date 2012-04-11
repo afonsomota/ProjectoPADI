@@ -25,6 +25,7 @@ namespace PuppetMaster
         public List<Node> Clients;
         public List<Node> Servers;
         public string[] userScriptList;
+        public string[] testes;
 
         public Form1()
         {
@@ -123,10 +124,14 @@ namespace PuppetMaster
             openFileDialog1.Title = "Select a PADI User Script";
             string line;
             
+            
+
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                userScriptList[userScriptList.Length] = openFileDialog1.FileName;
-
+                if (userScriptList!=null && !userScriptList.Contains(openFileDialog1.FileName))
+                {
+                    userScriptList[userScriptList.Length] = openFileDialog1.FileName;
+                }
                 StreamReader userscript = new StreamReader(openFileDialog1.OpenFile());
              
                 while ((line = userscript.ReadLine()) != null)
@@ -169,6 +174,21 @@ namespace PuppetMaster
                    }
                }
             }
+        }
+
+        private void listBox1_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listCliOffline_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 

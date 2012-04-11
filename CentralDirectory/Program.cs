@@ -163,10 +163,10 @@ namespace CentralDirectory
                    //st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
 
                    IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
-                   link1.GetInitialIntervals(aux1, aux2);
+                   link1.GetInitialIntervals(aux1, aux2,listServer[0]);
 
                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[0].IP + ":" + listServer[0].Port.ToString() + "/Server");
-                   link2.GetInitialIntervals(aux1, aux2);
+                   link2.GetInitialIntervals(aux1, aux2,listServer[i]);
                }
                else
                {
@@ -182,10 +182,10 @@ namespace CentralDirectory
                    //st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
 
                    IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
-                   link1.GetInitialIntervals(aux1, aux2);
+                   link1.GetInitialIntervals(aux1, aux2,listServer[i+1]);
 
                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString() + "/Server");
-                   link2.GetInitialIntervals(aux1, aux2);
+                   link2.GetInitialIntervals(aux1, aux2,listServer[i]);
                }
 
                tableOfLocation.Add(st);

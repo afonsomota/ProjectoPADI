@@ -74,14 +74,14 @@ namespace CommonInterfaces
         Dictionary<uint, int> GetSemiTablesCount();
         void CleanSemiTable(uint semiTableToClean);
         void CopyAndCleanTable(uint semiTableToClean,Node nodeToCopy);
-        void GetInitialIntervals(uint minST1, uint maxST1);
+        void GetInitialIntervals(uint minST1, uint maxST1, Node replica);
         void GetNetworkUpdate(List<Node> network);
 
         //Cliente
         bool CanLock(int txid, List<string> keys);
         bool Lock(int txid);
         string Get(int txid, string key);
-        string Put(int txid, string key, string new_value);
+        void Put(int txid, string key, string new_value);
         bool Abort(int txid);
         bool CanCommit(int txid);
         bool Commit(int txid);  

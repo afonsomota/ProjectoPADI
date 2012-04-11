@@ -113,7 +113,8 @@ namespace Server
         public List<Node> NetworkTopology;
         private Semitable[] Semitables;
         public int K;
-        private int tableToInit = 0; 
+        private int tableToInit = 0;
+        public Node Replica;
 
         public Server(Node info, TcpChannel channel, int k)
         {
@@ -380,12 +381,12 @@ namespace Server
 
         public string Get(int txid, string key)
         {
-            throw new NotImplementedException();
+            return ctx.Get(key);
         }
 
-        public string Put(int txid, string key, string new_value)
+        public void Put(int txid, string key, string new_value)
         {
-            throw new NotImplementedException();
+            ctx.Put(key, new_value);
         }
 
         public bool Abort(int txid)

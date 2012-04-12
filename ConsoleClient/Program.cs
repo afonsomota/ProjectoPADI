@@ -34,6 +34,25 @@ namespace ConsoleClient
 
             List<Operation> ops = new List<Operation>();
 
+            string[] fIn = { "PUT 1 1", "GET 1", "PUT 2 2", "PUT Afonso A", "PUT Francisco F", "PUT Jerome J", "PUT JAmbrosio JA","GET JAmbrosio","PUT 3 3","PUT 4 4","GET 4"};
+
+
+            foreach (string inp in fIn)
+            {
+                if (inp.StartsWith("GET"))
+                {
+                    char[] delim = { ' ', '\t' };
+                    string[] arg = inp.Split(delim);
+                    ops.Add(new Operation(arg[1]));
+                }
+                else if (inp.StartsWith("PUT"))
+                {
+                    char[] delim = { ' ', '\t' };
+                    string[] arg = inp.Split(delim);
+                    ops.Add(new Operation(arg[1], arg[2]));
+                }
+            }
+
             Console.WriteLine("Choose you're operations\n\nPUT <key> <value> for a put\nGET <key> for a GET\nEmpty Line to process");
             string input="";
             do
@@ -53,6 +72,7 @@ namespace ConsoleClient
 
             } while (input != "");
 
+
             List<string> keys = new List<string>();
 
             foreach (Operation op in ops) {
@@ -64,8 +84,19 @@ namespace ConsoleClient
             TransactionContext tctx = ligacao.GetServers(ops);
 
 
+            for (int i = 1; i <= tctx.Operations.Count; i++) { 
+                Operation op = tctx.Operations[i];
+                Node srvToSend = tctx.NodesLocation[op.Key][0];
+                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srvToSend.IP + ":" + srvToSend.Port.ToString() + "/Server");
+                if (op.Type == OpType.GET){
+                    Console.WriteLine("GET("+op.Key+") = "+link.Get(tctx.Txid, op.Key));
+                }
+                else {
+                    link.Put(tctx.Txid, op.Key, op.Value);
+                }
+            }
 
-            Console.WriteLine(tctx);
+                Console.WriteLine(tctx);
 
 
             Console.ReadLine();
@@ -75,11 +106,11 @@ namespace ConsoleClient
     {
         public void GetNetworkUpdate(List<Node> network)
         {
-            Console.WriteLine("\nNetwork Topology Update!");
+            /*Console.WriteLine("\nNetwork Topology Update!");
             foreach (Node n in network)
             {
                 Console.WriteLine(n);
-            }
+            }*/
         }
     }
 }

@@ -312,12 +312,16 @@ namespace CentralDirectory
            foreach (CommonInterfaces.Node node in clients)
            {
                IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Client");
-               link.GetNetworkUpdate(listUpDate);
+               try
+               {
+                   if (link != null) link.GetNetworkUpdate(listUpDate);
+               }
+               catch { }
            }
            foreach (CommonInterfaces.Node node in servers)
            {
                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-               link.GetNetworkUpdate(listUpDate);
+               if (link != null) link.GetNetworkUpdate(listUpDate);
            }
        }
 

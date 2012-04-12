@@ -76,37 +76,34 @@ namespace Server
             ServerRemoting.ctx = srv;
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
-            System.Console.ReadLine();
-            //srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2);
+            /*//srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2);
             //srv.InitializeSemitables(UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
-            srv.Put("Afonso", "Teste1");
+            srv.Put(0,"Afonso", "Teste1");
             //Console.WriteLine(srv.Get("Afonso"));
-            srv.Put("Francisco", "OutroTeste");
+            srv.Put(0, "Francisco", "OutroTeste");
             //Console.WriteLine(srv.Get("Francisco"));
-            srv.Put("Ines","nãotenho");
+            srv.Put(0, "Ines", "nãotenho");
             //Console.WriteLine(srv.Get("Ines"));
-            srv.Put("Afonso", "Teste2");
+            srv.Put(0, "Afonso", "Teste2");
             //Console.WriteLine(srv.Get("Afonso"));
-            srv.Put("Ines", "continuo a nao ter!!!");
+            srv.Put(0, "Ines", "continuo a nao ter!!!");
             //Console.WriteLine(srv.Get("Ines"));
-            srv.Put("Afonso", "Eu tenho um Charizard!!!");
-            srv.Put("Hitler", "I'm a PokeMaster!!!");
+            srv.Put(0, "Afonso", "Eu tenho um Charizard!!!");
+            srv.Put(0, "Hitler", "I'm a PokeMaster!!!");
             //Console.WriteLine(srv.Get("Hitler"));
-            srv.Put("Bernardo", "Eu tenho um Charizard!!! Por isso ganho-te!");
+            srv.Put(0, "Bernardo", "Eu tenho um Charizard!!! Por isso ganho-te!");
             //Console.WriteLine(srv.Get("Afonso",2));
             //Console.WriteLine(srv.Get("Afonso"));
-            srv.Put("ola", "Também tenho coisas fixes");
-            srv.Put("ole", "Que brilham no escuro e tal");
-            srv.Put("oli", "E trolteiam");
-            srv.Put("olu", "E catam coisas parvas");
-            //srv.CleanTable(UInt32.MaxValue / 2, 0);
-            srv.PrintSemiTables();
+            srv.Put(0, "ola", "Também tenho coisas fixes");
+            srv.Put(0, "ole", "Que brilham no escuro e tal");
+            srv.Put(0, "oli", "E trolteiam");
+            srv.Put(0, "olu", "E catam coisas parvas");
+            //srv.CleanTable(UInt32.MaxValue / 2, 0);*/
 
-
-
-            Console.ReadLine();
-
-
+            while(true){
+                Console.ReadLine();
+                srv.PrintSemiTables();
+            }
         }
     }
 
@@ -160,7 +157,6 @@ namespace Server
             Semitables = new Semitable[2];
             Semitables[0] = st1;
             Semitables[1] = st2;
-            PrintSemiTables();
         }
 
         public void CleanTable(uint div,int side, Node replica) {
@@ -186,7 +182,6 @@ namespace Server
                     st.Replica = replica;
                 }
             }
-            PrintSemiTables();
         }
 
         public Semitable[] DivideSemiTable(uint div) {
@@ -277,12 +272,18 @@ namespace Server
             return all;
         }
 
-        public void Put(string key, string value)
+        public void Put(int txid,string key, string value)
         {
             foreach (Semitable st in Semitables)
             {
                 if (st.ContainsKey(key))
                 {
+
+                    if (txid != -1)
+                    {
+                        ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
+                        link.Put(-1, key, value);
+                    }
                     int max_timestamp = 0;
                     int min_timestamp = Int32.MaxValue;
                     TableValue min_tv = st[key][0];
@@ -308,6 +309,12 @@ namespace Server
                     uint hash = MD5Hash(key);
                     if (hash >= st.MinInterval && hash <= st.MaxInterval)
                     {
+
+                        if (txid != -1)
+                        {
+                            ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
+                            link.Put(-1, key, value);
+                        }
                         TableValue tv = new TableValue();
                         tv.Timestamp = 0;
                         tv.Value = value;
@@ -327,11 +334,11 @@ namespace Server
         public void GetNetworkUpdate(List<Node> network)
         {
             ctx.NetworkTopology = network;
-            Console.WriteLine("\nNetwork Topology Update!");
-            foreach (Node n in ctx.NetworkTopology)
-            {
-                Console.WriteLine(n);
-            }
+            /*Console.WriteLine("\nNetwork Topology Update!");
+           foreach (Node n in network)
+           {
+               Console.WriteLine(n);
+           }*/
         }
 
 
@@ -381,7 +388,8 @@ namespace Server
 
         public void Put(int txid, string key, string new_value)
         {
-            ctx.Put(key, new_value);
+            ctx.Put(txid,key, new_value);
+
         }
 
         public bool Abort(int txid)

@@ -53,6 +53,7 @@ namespace CentralDirectory
           public uint min;
           public uint max;
           public List<Node> IP;
+          public bool order;
         };
 
         public  bool firstPut = false;
@@ -163,10 +164,10 @@ namespace CentralDirectory
                    //st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
 
                    IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
-                   link1.GetInitialIntervals(aux1, aux2);
+                   link1.GetInitialIntervals(aux1, aux2,listServer[0]);
 
                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[0].IP + ":" + listServer[0].Port.ToString() + "/Server");
-                   link2.GetInitialIntervals(aux1, aux2);
+                   link2.GetInitialIntervals(aux1, aux2,listServer[i]);
                }
                else
                {
@@ -182,10 +183,10 @@ namespace CentralDirectory
                    //st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
 
                    IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
-                   link1.GetInitialIntervals(aux1, aux2);
+                   link1.GetInitialIntervals(aux1, aux2,listServer[i+1]);
 
                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString() + "/Server");
-                   link2.GetInitialIntervals(aux1, aux2);
+                   link2.GetInitialIntervals(aux1, aux2,listServer[i]);
                }
 
                tableOfLocation.Add(st);
@@ -280,7 +281,7 @@ namespace CentralDirectory
 
                     tableOfLocation.Add(st);
                     IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
-                    link1.CleanSemiTable(semiTable);
+                    link1.CleanSemiTable(semiTable,d);
                     IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[1].Port.ToString() + "/Server");
                     link2.CopyAndCleanTable(semiTable, d);
                     Location[i].IP[1] = d;
@@ -312,12 +313,16 @@ namespace CentralDirectory
            foreach (CommonInterfaces.Node node in clients)
            {
                IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Client");
-               link.GetNetworkUpdate(listUpDate);
+               try
+               {
+                   if (link != null) link.GetNetworkUpdate(listUpDate);
+               }
+               catch { }
            }
            foreach (CommonInterfaces.Node node in servers)
            {
                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-               link.GetNetworkUpdate(listUpDate);
+               if (link != null) link.GetNetworkUpdate(listUpDate);
            }
        }
 
@@ -345,7 +350,8 @@ namespace CentralDirectory
     {
 
         public static CentralDirectory ctx;
-        public int txid = 0;        
+        public int txid = 0;
+        
         
         public bool RegisterClient(CommonInterfaces.Node node)
         {
@@ -409,7 +415,7 @@ namespace CentralDirectory
         }
         */
 
-        public CommonInterfaces.TransactionContext GetServers(List<string> keys)
+        public CommonInterfaces.TransactionContext GetServers(List<Operation> ops)
         {
             Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
             //Random rd = new Random();
@@ -417,6 +423,26 @@ namespace CentralDirectory
             CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
             transactionsContext.Txid=txid;
             txid++;
+
+            List<string> keys = new List<string>();
+
+
+            Dictionary<int, Operation> opsd = new Dictionary<int, Operation>();
+            int o = 0;
+            foreach (Operation op in ops) {
+                opsd.Add(++o, op);
+                if(!keys.Contains(op.Key)) keys.Add(op.Key);
+                if (op.Type == OpType.PUT)
+                {
+                    if (ctx.firstPut == false)
+                    {
+                        ctx.division();
+                        ctx.firstPut = true;
+                    }
+                }
+                    
+            }
+
             for (int i = 0; i < keys.Count(); i++)
             {
                 string key = keys[i];
@@ -428,15 +454,27 @@ namespace CentralDirectory
                     if (ctx.Location[j].max > hash && ctx.Location[j].min <= hash)
                     {
                         List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
-                        listaux.Add(ctx.getNode(ctx.Location[j].IP[0].IP));
-                        listaux.Add(ctx.getNode(ctx.Location[j].IP[1].IP));
-                        Console.WriteLine("For key " + key + " hash is " + hash );
+                        Console.WriteLine("For key " + key + " hash is " + hash);
+                        if (ctx.Location[j].order)
+                        {
+                            listaux.Add(ctx.Location[j].IP[0]);
+                            listaux.Add(ctx.Location[j].IP[1]);
+                            Console.WriteLine("0-" + ctx.Location[j].IP[0] + " 1-" + ctx.Location[j].IP[1]);
+                            ctx.Location[j].order = false;
+                        }
+                        else {
+                            listaux.Add(ctx.Location[j].IP[1]);
+                            listaux.Add(ctx.Location[j].IP[0]);
+                            Console.WriteLine("1-" + ctx.Location[j].IP[1] + " 0-" + ctx.Location[j].IP[0]);
+                            ctx.Location[j].order = true;
+                        }
                         server.Add(key, listaux);
                         
                     }
                 }
             }
             transactionsContext.NodesLocation = server;
+            transactionsContext.Operations = opsd;
             return transactionsContext;
         }
 

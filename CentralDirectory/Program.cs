@@ -409,7 +409,7 @@ namespace CentralDirectory
         }
         */
 
-        public CommonInterfaces.TransactionContext GetServers(List<string> keys)
+        public CommonInterfaces.TransactionContext GetServers(List<Operation> ops)
         {
             Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
             //Random rd = new Random();
@@ -417,6 +417,22 @@ namespace CentralDirectory
             CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
             transactionsContext.Txid=txid;
             txid++;
+
+            List<string> keys = new List<string>();
+
+            foreach (Operation op in ops) {
+                if(!keys.Contains(op.Key)) keys.Add(op.Key);
+                if (op.Type == OpType.PUT)
+                {
+                    if (ctx.firstPut == false)
+                    {
+                        ctx.division();
+                        ctx.firstPut = true;
+                    }
+                }
+                    
+            }
+
             for (int i = 0; i < keys.Count(); i++)
             {
                 string key = keys[i];

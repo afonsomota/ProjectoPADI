@@ -25,8 +25,9 @@ namespace Server
     {
         public uint MinInterval;
         public uint MaxInterval;
+        public Node Replica;
 
-        public Semitable(uint min, uint max)
+        public Semitable(uint min, uint max, Node Replica)
             : base()
         {
             MinInterval = min;
@@ -38,6 +39,7 @@ namespace Server
         {
             MinInterval = info.GetUInt32("a");
             MaxInterval = info.GetUInt32("b");
+            Replica = (Node) info.GetValue("n", typeof(Node));
         }
 
         
@@ -46,6 +48,7 @@ namespace Server
             base.GetObjectData(info, context);
             info.AddValue("a", MinInterval);
             info.AddValue("b", MaxInterval);
+            info.AddValue("n",Replica);
         }
     }
 
@@ -114,7 +117,6 @@ namespace Server
         private Semitable[] Semitables;
         public int K;
         private int tableToInit = 0;
-        public Node Replica;
 
         public Server(Node info, TcpChannel channel, int k)
         {
@@ -124,11 +126,11 @@ namespace Server
             Semitables = new Semitable[2];
         }
 
-        public void InitializeSemitables(uint minST1, uint maxST1)
+        public void InitializeSemitables(uint minST1, uint maxST1,Node replica)
         {
             if (tableToInit < 2)
             {
-                Semitables[tableToInit] = new Semitable(minST1, maxST1);
+                Semitables[tableToInit] = new Semitable(minST1, maxST1,replica);
                 Console.WriteLine("Initialized SemiTable: " + tableToInit.ToString());
                 tableToInit ++;
             }
@@ -187,8 +189,8 @@ namespace Server
             Semitable[] new_semitables = new Semitable[2];
             foreach (Semitable st in Semitables){
                 if (div >= st.MinInterval && div <= st.MaxInterval) {
-                    new_semitables[0] = new Semitable(st.MinInterval,div-1);
-                    new_semitables[1] = new Semitable(div, st.MaxInterval); 
+                    new_semitables[0] = new Semitable(st.MinInterval,div-1,Info);
+                    new_semitables[1] = new Semitable(div, st.MaxInterval,st.Replica); 
                     foreach(string key in st.Keys){
                         uint hash =  MD5Hash(key);
                         if (hash < div){
@@ -340,8 +342,8 @@ namespace Server
         }
 
 
-        public void GetInitialIntervals(uint minST1, uint maxST1) {
-            ctx.InitializeSemitables(minST1, maxST1);
+        public void GetInitialIntervals(uint minST1, uint maxST1,Node replica) {
+            ctx.InitializeSemitables(minST1, maxST1,replica);
         }
 
         public Dictionary<uint, int> GetSemiTablesCount()

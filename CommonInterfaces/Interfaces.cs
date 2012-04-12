@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace CommonInterfaces
 {
@@ -10,7 +11,7 @@ namespace CommonInterfaces
     public enum NodeType { Server, Client }
 
     [Serializable]
-    public class Node
+    public class Node: ISerializable
     {
         public string IP;
         public int Port;
@@ -22,9 +23,38 @@ namespace CommonInterfaces
             Type = clientOrServer;
         }
 
+        public Node(SerializationInfo info, StreamingContext context) {
+            IP = info.GetString("i");
+            Port = info.GetInt32("p");
+            char c = info.GetChar("c");
+            if (c == 'c')
+            {
+                Type = NodeType.Client;
+            }
+            else {
+                Type = NodeType.Server;
+            }
+        }
+
         public override string ToString()
         {
             return string.Format("{0}@{1}:{2}", (Type==NodeType.Client?"client":"server"),IP,Port.ToString());
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("i", IP);
+            info.AddValue("p", Port);
+            char c;
+            if (Type == NodeType.Client)
+            {
+                c = 'c';
+                info.AddValue("t", c);
+            }
+            else {
+                c = 's';
+                info.AddValue("t", c);
+            }
         }
     }
 

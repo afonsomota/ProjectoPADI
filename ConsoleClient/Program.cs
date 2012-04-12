@@ -56,12 +56,12 @@ namespace ConsoleClient
             List<string> keys = new List<string>();
 
             foreach (Operation op in ops) {
-                keys.Add(op.Key);
+                if(!keys.Contains(op.Key)) keys.Add(op.Key);
                 Console.WriteLine(op);
             }
 
 
-            TransactionContext tctx = ligacao.GetServers(keys);
+            TransactionContext tctx = ligacao.GetServers(ops);
 
 
 

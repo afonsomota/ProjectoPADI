@@ -146,7 +146,7 @@ namespace CommonInterfaces
         //Cliente
         bool RegisterClient(Node client);
         //public Dictionary<string, List<Node>> GetServers(List<string> keys);
-        TransactionContext GetServers(List<string> keys);
+        TransactionContext GetServers(List<Operation> ops);
         void ServerDown(Node server);
     }
 

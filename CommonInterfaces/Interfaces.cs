@@ -7,11 +7,11 @@ using System.Runtime.Serialization;
 
 namespace CommonInterfaces
 {
-
+    
     public enum NodeType { Server, Client }
 
     [Serializable]
-    public class Node: ISerializable
+    public class Node
     {
         public string IP;
         public int Port;
@@ -102,7 +102,7 @@ namespace CommonInterfaces
     public interface IServer {
         //Central Directory
         Dictionary<uint, int> GetSemiTablesCount();
-        void CleanSemiTable(uint semiTableToClean);
+        void CleanSemiTable(uint semiTableToClean, Node newNode);
         void CopyAndCleanTable(uint semiTableToClean,Node nodeToCopy);
         void GetInitialIntervals(uint minST1, uint maxST1, Node replica);
         void GetNetworkUpdate(List<Node> network);

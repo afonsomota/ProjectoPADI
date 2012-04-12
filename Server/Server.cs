@@ -27,11 +27,12 @@ namespace Server
         public uint MaxInterval;
         public Node Replica;
 
-        public Semitable(uint min, uint max, Node Replica)
+        public Semitable(uint min, uint max, Node replica)
             : base()
         {
             MinInterval = min;
             MaxInterval = max;
+            Replica = replica;
         }
 
         protected Semitable(SerializationInfo info, StreamingContext context)
@@ -144,13 +145,15 @@ namespace Server
             foreach(string key in Semitables[0].Keys){
                 Console.Write(key+"; ");
             }
-            Console.WriteLine("Min: " + Semitables[0].MinInterval + "; Max: " + Semitables[0].MaxInterval);
+            Console.Write("Min: " + Semitables[0].MinInterval + "; Max: " + Semitables[0].MaxInterval);
+            Console.WriteLine("; Replica: "+Semitables[0].Replica);
             Console.Write("SemiTable 1: ");
             foreach (string key in Semitables[1].Keys)
             {
                 Console.Write(key + "; ");
             }
-            Console.WriteLine("Min: " + Semitables[1].MinInterval + "; Max: " + Semitables[1].MaxInterval);
+            Console.Write("Min: " + Semitables[1].MinInterval + "; Max: " + Semitables[1].MaxInterval);
+            Console.WriteLine("; Replica: " + Semitables[1].Replica.ToString());
         }
 
         public void CopySemitables(Semitable st1, Semitable st2) {  
@@ -160,7 +163,7 @@ namespace Server
             PrintSemiTables();
         }
 
-        public void CleanTable(uint div,int side) {
+        public void CleanTable(uint div,int side, Node replica) {
             foreach (Semitable st in Semitables)
             {
                 if (div >= st.MinInterval && div <= st.MaxInterval)
@@ -180,6 +183,7 @@ namespace Server
                         st.Remove(k);
                         Console.WriteLine("Removed Key: " + k);
                     }
+                    st.Replica = replica;
                 }
             }
             PrintSemiTables();
@@ -189,8 +193,8 @@ namespace Server
             Semitable[] new_semitables = new Semitable[2];
             foreach (Semitable st in Semitables){
                 if (div >= st.MinInterval && div <= st.MaxInterval) {
-                    new_semitables[0] = new Semitable(st.MinInterval,div-1,Info);
-                    new_semitables[1] = new Semitable(div, st.MaxInterval,st.Replica); 
+                    new_semitables[0] = new Semitable(st.MinInterval, div - 1, st.Replica);
+                    new_semitables[1] = new Semitable(div, st.MaxInterval,Info); 
                     foreach(string key in st.Keys){
                         uint hash =  MD5Hash(key);
                         if (hash < div){
@@ -205,17 +209,6 @@ namespace Server
             return new_semitables;
         }
 
-        public static uint SHA1Hash(string input)
-        {
-            SHA1 sha = new SHA1CryptoServiceProvider();
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(input);
-            byte[] hash = sha.ComputeHash(data);
-            uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12] ^ hash[16]) << 24) +
-                                   (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13] ^ hash[17]) << 16) +
-                                  (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14] ^ hash[18]) << 8) +
-                                  (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15] ^ hash[19]);
-            return interval;
-        }
 
         public static uint MD5Hash(string input) {
             System.Security.Cryptography.MD5CryptoServiceProvider x = new System.Security.Cryptography.MD5CryptoServiceProvider();
@@ -351,9 +344,9 @@ namespace Server
             return ctx.SemiTablesCount();
         }
 
-        public void CleanSemiTable(uint semiTableToClean)
+        public void CleanSemiTable(uint semiTableToClean, Node node)
         {
-            ctx.CleanTable(semiTableToClean,0);
+            ctx.CleanTable(semiTableToClean,0,node);
         }
 
         public void CopyAndCleanTable(uint semiTableToClean, Node node)
@@ -363,7 +356,7 @@ namespace Server
             Semitable st1 = tables[0];
             Semitable st2 = tables[1];
             link.CopyTable(st1,st2);
-            ctx.CleanTable(semiTableToClean, 1);
+            ctx.CleanTable(semiTableToClean, 1,node);
         }
 
         public void CopyTable(Semitable st1, Semitable st2)

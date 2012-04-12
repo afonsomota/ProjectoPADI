@@ -58,30 +58,82 @@ namespace CommonInterfaces
         }
     }
 
+    public enum OpType { PUT, GET }
+
     [Serializable]
     public class Operation 
     {
-        public string Type;
+        public OpType Type;
         public string Key;
+        public string Value;
 
-        public Operation(string type, string key){
-            Type = type;
+        public Operation(string key){
+            Type = OpType.GET;
             Key = key;
+            Value = null;
+        }
+
+        public Operation(string key, string value) {
+            Type = OpType.PUT;
+            Key = key;
+            Value = value;
         }
 
         public override string ToString()
         {
-            return string.Format("{0}({1})",Type, Key);
+            if (Value == null)
+            {
+                return string.Format("GET({0})", Key);
+            }
+            else {
+                return string.Format("PUT({0},{1})", Key, Value);
+            }
         }
     }
 
     [Serializable]
     public class TransactionContext
     {
-        public int Txid;
         public enum states { initiated, tentatively, commited, aborted };
+        public int Txid;
+        public states State;
         public Dictionary<int, Operation> Operations;
         public Dictionary<string, List<Node>> NodesLocation;
+
+        public override string ToString()
+        {
+            string ret = "";
+            ret += "ID: "+Txid.ToString() + "\n";
+            switch (State) { 
+                case states.initiated:
+                    ret += "State: Initiated\n";
+                    break;
+                case states.tentatively:
+                    ret += "State: Tentatively\n";
+                    break;
+                case states.commited:
+                    ret += "State: Commited\n";
+                    break;
+                case states.aborted:
+                    ret += "State: Aborted\n"; 
+                    break;
+                default:
+                    ret += "No State";
+                    break;
+            }
+            ret += "Operations:\n";
+            foreach (KeyValuePair<int,Operation> op in Operations)
+            {
+                ret += op.Key.ToString() +  ". " + op.Value.ToString() + "\n";
+            }
+            ret += "Nodes:\n";
+            foreach (KeyValuePair<string,List<Node>> n in NodesLocation)
+            {
+                ret += n.Key + " - " + n.Value[0].ToString() + " and " + n.Value[1].ToString() + "\n";
+            }
+            return ret;
+        }
+
     }
 
 

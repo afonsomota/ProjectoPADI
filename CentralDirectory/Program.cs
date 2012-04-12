@@ -420,7 +420,11 @@ namespace CentralDirectory
 
             List<string> keys = new List<string>();
 
+
+            Dictionary<int, Operation> opsd = new Dictionary<int, Operation>();
+            int o = 0;
             foreach (Operation op in ops) {
+                opsd.Add(++o, op);
                 if(!keys.Contains(op.Key)) keys.Add(op.Key);
                 if (op.Type == OpType.PUT)
                 {
@@ -444,8 +448,8 @@ namespace CentralDirectory
                     if (ctx.Location[j].max > hash && ctx.Location[j].min <= hash)
                     {
                         List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
-                        listaux.Add(ctx.getNode(ctx.Location[j].IP[0].IP));
-                        listaux.Add(ctx.getNode(ctx.Location[j].IP[1].IP));
+                        listaux.Add(ctx.Location[j].IP[0]);
+                        listaux.Add(ctx.Location[j].IP[1]);
                         Console.WriteLine("For key " + key + " hash is " + hash );
                         server.Add(key, listaux);
                         
@@ -453,6 +457,7 @@ namespace CentralDirectory
                 }
             }
             transactionsContext.NodesLocation = server;
+            transactionsContext.Operations = opsd;
             return transactionsContext;
         }
 

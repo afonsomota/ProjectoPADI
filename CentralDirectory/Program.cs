@@ -53,6 +53,7 @@ namespace CentralDirectory
           public uint min;
           public uint max;
           public List<Node> IP;
+          public bool order;
         };
 
         public  bool firstPut = false;
@@ -349,7 +350,8 @@ namespace CentralDirectory
     {
 
         public static CentralDirectory ctx;
-        public int txid = 0;        
+        public int txid = 0;
+        
         
         public bool RegisterClient(CommonInterfaces.Node node)
         {
@@ -452,9 +454,20 @@ namespace CentralDirectory
                     if (ctx.Location[j].max > hash && ctx.Location[j].min <= hash)
                     {
                         List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
-                        listaux.Add(ctx.Location[j].IP[0]);
-                        listaux.Add(ctx.Location[j].IP[1]);
-                        Console.WriteLine("For key " + key + " hash is " + hash );
+                        Console.WriteLine("For key " + key + " hash is " + hash);
+                        if (ctx.Location[j].order)
+                        {
+                            listaux.Add(ctx.Location[j].IP[0]);
+                            listaux.Add(ctx.Location[j].IP[1]);
+                            Console.WriteLine("0-" + ctx.Location[j].IP[0] + " 1-" + ctx.Location[j].IP[1]);
+                            ctx.Location[j].order = false;
+                        }
+                        else {
+                            listaux.Add(ctx.Location[j].IP[1]);
+                            listaux.Add(ctx.Location[j].IP[0]);
+                            Console.WriteLine("1-" + ctx.Location[j].IP[1] + " 0-" + ctx.Location[j].IP[0]);
+                            ctx.Location[j].order = true;
+                        }
                         server.Add(key, listaux);
                         
                     }

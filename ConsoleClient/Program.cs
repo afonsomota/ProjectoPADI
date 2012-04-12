@@ -83,21 +83,22 @@ namespace ConsoleClient
 
             TransactionContext tctx = ligacao.GetServers(ops);
 
+            Console.WriteLine(tctx);
+
 
             for (int i = 1; i <= tctx.Operations.Count; i++) { 
                 Operation op = tctx.Operations[i];
                 Node srvToSend = tctx.NodesLocation[op.Key][0];
                 IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srvToSend.IP + ":" + srvToSend.Port.ToString() + "/Server");
                 if (op.Type == OpType.GET){
-                    Console.WriteLine("GET("+op.Key+") = "+link.Get(tctx.Txid, op.Key));
+                    Console.WriteLine("GET(" + op.Key + ") = " + link.Get(tctx.Txid, op.Key) + " on server " + srvToSend.IP + ":" + srvToSend.Port.ToString());
                 }
                 else {
                     link.Put(tctx.Txid, op.Key, op.Value);
                 }
             }
 
-                Console.WriteLine(tctx);
-
+            
 
             Console.ReadLine();
         }

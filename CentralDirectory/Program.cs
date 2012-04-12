@@ -280,7 +280,7 @@ namespace CentralDirectory
 
                     tableOfLocation.Add(st);
                     IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
-                    link1.CleanSemiTable(semiTable);
+                    link1.CleanSemiTable(semiTable,d);
                     IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[1].Port.ToString() + "/Server");
                     link2.CopyAndCleanTable(semiTable, d);
                     Location[i].IP[1] = d;

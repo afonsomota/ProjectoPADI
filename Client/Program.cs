@@ -133,7 +133,7 @@ namespace Client
     class ClientRemoting : MarshalByRefObject, IClient
     {
 
-        public static Client ctx;
+        public static Client.Client ctx;
 
         public void GetNetworkUpdate(List<Node> network) {
             ctx.NetworkTopology = network;
@@ -149,7 +149,7 @@ namespace Client
 
     class ClientPuppet : MarshalByRefObject, IClientPuppet
     {
-        public static Client ctx;
+        public static Client.Client ctx;
 
         public void StartClient()
         {
@@ -230,18 +230,33 @@ namespace Client
 
         public void ExeScript(List<string> instructions)
         {
-            List<Operation> ops = new List<Operation>();
+            Dictionary<int,List<Operation>> clientOperations = new Dictionary<int,List<Operation>>();
+            int numberOfTransactions = -1;
+            bool inTransaction = false;
             while (instructions.Count != 0)
             {
                 char[] delim = { ' ', '\t' };
                 string[] arg = instructions[0].Split(delim);
 
-                if (instructions[0].StartsWith("BEGIN")) { 
-                    
-                
+
+                if (instructions[0].StartsWith("BEGINTX")) {
+                    inTransaction = true;
+                }
+                if (instructions[0].StartsWith("COMMITTX"))
+                {
+                    inTransaction = false;
                 }
 
-                else if (instructions[0].StartsWith("STORE"))
+                if (inTransaction)
+                {
+                    if (instructions[0].StartsWith("GET"))
+                    {
+                    }
+                    else if (instructions[0].StartsWith("PUT"))
+                    {                    }
+                    }
+                else {
+                if (instructions[0].StartsWith("STORE"))
                     this.Store(Int32.Parse(arg[1]), arg[2]);
                 else if (instructions[0].StartsWith("PUTVAL"))
                     this.PutVAl(arg[1], Int32.Parse(arg[2]));
@@ -253,8 +268,9 @@ namespace Client
                     this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
                 else if (instructions[0].StartsWith("DUMP"))
                     this.Dump();
-
+                
                 instructions.Remove(instructions[0]);
+            }
             }
 
     }

@@ -30,24 +30,25 @@ namespace ConsoleClient
                typeof(ICentralDirectory),
                "tcp://localhost:9090/CentralDirectory");
             ligacao.RegisterClient(node);
-            Console.WriteLine("Client Online");
+            Console.Write("Enter seed: ");
+            string seed = Console.ReadLine();
 
             List<Operation> ops = new List<Operation>();
 
-            string[] fIn = { "PUT 1 1", "GET 1", "PUT 2 2", "PUT Afonso A", "PUT Francisco F", "PUT Jerome J", "PUT JAmbrosio JA","GET JAmbrosio","PUT 3 3","PUT 4 4","GET 4"};
+            string[] fIn = { "PUT 1" + seed + " 1", "GET 1" + seed, "PUT 2" + seed + " 2", "PUT Afonso" + seed + " A", "PUT Francisco" + seed + " F", "PUT Jerome" + seed + " J", "PUT JAmbrosio" + seed + " JA", "GET JAmbrosio" + seed, "PUT 3" + seed + " 3", "PUT 4" + seed + " 4", "GET 4" + seed };
 
 
             foreach (string inp in fIn)
             {
                 if (inp.StartsWith("GET"))
                 {
-                    char[] delim = { ' ', '\t' };
+                    char[] delim = {' ','\t'};
                     string[] arg = inp.Split(delim);
                     ops.Add(new Operation(arg[1]));
                 }
                 else if (inp.StartsWith("PUT"))
                 {
-                    char[] delim = { ' ', '\t' };
+                    char[] delim = {' ','\t'};
                     string[] arg = inp.Split(delim);
                     ops.Add(new Operation(arg[1], arg[2]));
                 }

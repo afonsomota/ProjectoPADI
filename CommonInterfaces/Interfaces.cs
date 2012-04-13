@@ -158,6 +158,7 @@ namespace CommonInterfaces
         void CopyAndCleanTable(uint semiTableToClean,Node nodeToCopy);
         void GetInitialIntervals(uint minST1, uint maxST1, Node replica);
         void GetNetworkUpdate(List<Node> network);
+        void CopySemiTables(Node newNode);//Caso especial em que se comeca com um servidor e adiciona-se outro
 
         //Cliente
         bool CanLock(int txid, List<string> keys);

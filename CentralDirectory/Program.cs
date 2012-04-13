@@ -141,6 +141,32 @@ namespace CentralDirectory
            
            List<string> aux4 = new List<string>();
 
+           if (numberofServer == 1) {
+               Node srv = new Node(listServer[0].IP, listServer[0].Port, NodeType.Server);
+               Interval st1 = new Interval();
+               st1.IP = new List<Node>();
+               st1.min = UInt32.MinValue;
+               st1.max = UInt32.MaxValue/2;
+               st1.IP.Add(srv);
+               st1.IP.Add(srv);
+               Interval st2 = new Interval();
+               st2.IP = new List<Node>();
+               st2.min = UInt32.MaxValue / 2 + 1;
+               st2.max = UInt32.MaxValue;
+               st2.IP.Add(srv);
+               st2.IP.Add(srv);
+
+               IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srv.IP + ":" + srv.Port.ToString() + "/Server");
+               link1.GetInitialIntervals(st1.min, st1.max, srv);
+               IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srv.IP + ":" + srv.Port.ToString() + "/Server");
+               link2.GetInitialIntervals(st2.min, st2.max, srv);
+
+               tableOfLocation.Add(st1);
+               tableOfLocation.Add(st2);
+
+               return;
+           }
+
            for (int i = 0; i < numberofServer; i++)
            {
 
@@ -168,6 +194,8 @@ namespace CentralDirectory
 
                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[0].IP + ":" + listServer[0].Port.ToString() + "/Server");
                    link2.GetInitialIntervals(aux1, aux2,listServer[i]);
+
+
                }
                else
                {
@@ -264,11 +292,25 @@ namespace CentralDirectory
 
         public void Restructure(uint semiTable,Node d){
             uint max_aux = 0;
+            uint numberofServer = (uint)listServer.Count();
+
+
+            if (numberofServer == 1)
+            {
+                Console.WriteLine("Replicating... ");
+                IServer oldNode = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[0].IP[1].IP + ":" + Location[0].IP[1].Port.ToString() + "/Server");
+                oldNode.CopySemiTables(d);
+                Location[0].IP[1] = d;
+                Location[1].IP[0] = d;
+                return;
+            }
+
             for (int i = 0; i < Location.Count(); i++)
             {
 
                 if (Location[i].min < semiTable && Location[i].max > semiTable)
                 {
+                    Console.WriteLine("Restructuring... " + semiTable);
 
                     Interval st = new Interval();
                     st.IP = new List<Node>();
@@ -278,6 +320,7 @@ namespace CentralDirectory
                     st.max = max_aux;
                     st.IP.Add(d);
                     st.IP.Add(Location[i].IP[1]);
+
 
                     tableOfLocation.Add(st);
                     IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");

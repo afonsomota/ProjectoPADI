@@ -112,7 +112,7 @@ namespace Server
         public Node Info;
         public TcpChannel Channel;
         public List<Node> NetworkTopology;
-        private Semitable[] Semitables;
+        public Semitable[] Semitables;
         public int K;
         private int tableToInit = 0;
 
@@ -137,6 +137,11 @@ namespace Server
             }
         }
 
+        public void UpdateReplica(Node newNode) {
+            foreach (Semitable st in Semitables)
+                st.Replica = newNode;
+        }
+
         public void PrintSemiTables() {
             Console.Write("SemiTable 0: ");
             foreach(string key in Semitables[0].Keys){
@@ -152,6 +157,7 @@ namespace Server
             Console.Write("Min: " + Semitables[1].MinInterval + "; Max: " + Semitables[1].MaxInterval);
             Console.WriteLine("; Replica: " + Semitables[1].Replica.ToString());
         }
+
 
         public void CopySemitables(Semitable st1, Semitable st2) {  
             Semitables = new Semitable[2];
@@ -274,12 +280,13 @@ namespace Server
 
         public void Put(int txid,string key, string value)
         {
+            Console.WriteLine("PUT " + key + " " + value);
             foreach (Semitable st in Semitables)
             {
                 if (st.ContainsKey(key))
                 {
 
-                    if (txid != -1)
+                    if (txid != -1 && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
                     {
                         ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
                         link.Put(-1, key, value);
@@ -310,7 +317,7 @@ namespace Server
                     if (hash >= st.MinInterval && hash <= st.MaxInterval)
                     {
 
-                        if (txid != -1)
+                        if (txid != -1 && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
                         {
                             ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
                             link.Put(-1, key, value);
@@ -405,6 +412,15 @@ namespace Server
         public bool Commit(int txid)
         {
             throw new NotImplementedException();
+        }
+
+        public void CopySemiTables(Node node) {
+            Semitable[] tables = ctx.Semitables;
+            ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
+            Semitable st1 = tables[0];
+            Semitable st2 = tables[1];
+            link.CopyTable(st1, st2);
+            ctx.UpdateReplica(node);
         }
     }
 

@@ -49,15 +49,6 @@ namespace Client
             testList.Add("Power Ranger");
             testList.Add("Pokemon");
             testList.Add("Mais uma string qualquer");
-            ICentralDirectory central = (ICentralDirectory)Activator.GetObject(
-               typeof(ICentralDirectory),
-               "tcp://localhost:9090/CentralDirectory");
-            TransactionContext txctx = central.GetServers(testList);
-            Console.WriteLine("Transaction no: "+txctx.Txid);
-            foreach (KeyValuePair<string, List<Node>> pair in txctx.NodesLocation) {
-                Console.WriteLine(pair.Key + " is in: " + pair.Value[0] + " and " + pair.Value[1]);
-            }
-
             System.Console.ReadLine();            
         }
     }
@@ -134,7 +125,7 @@ namespace Client
 
         }
 
-        public void ExeScriptInternal(string[] instructions)
+        public void ExeScriptInternal(List<string> instructions)
         {
 
         }
@@ -238,7 +229,8 @@ namespace Client
             return ctx.Registers;
         }
 
-        public void ExeScript(string[] operations){
+        public void ExeScript(List<string> operations)
+        {
             ctx.ExeScriptInternal(operations);
         }
 

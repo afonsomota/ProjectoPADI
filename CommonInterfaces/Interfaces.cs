@@ -190,7 +190,7 @@ namespace CommonInterfaces
         void Concat(int register1, int register2);
         void CommitTx();
         string[] Dump();
-        void ExeScript(string[] operations);
+        void ExeScript(List<string> operations);
     }
 
     public interface IClient {

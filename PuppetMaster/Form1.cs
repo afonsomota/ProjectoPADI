@@ -253,15 +253,28 @@ namespace PuppetMaster
                     IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet),
                     "tcp://" + arg[1] + "/ClientPuppet");
-                    ligacao.ExeScript(clientsOperations[arg[1]]);
+                    List<string> umaInstrucao = new List<string>();
+                    umaInstrucao.Add(arg[0] + " " + arg[2] + " " + arg[3]);
+                    ligacao.ExeScript(umaInstrucao);
                 }
                 else if (operation.StartsWith("TOLOWER") || operation.StartsWith("TOUPPER"))
                 {
+                    IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet),
+                    "tcp://" + arg[1] + "/ClientPuppet");
+                    List<string> umaInstrucao = new List<string>();
+                    umaInstrucao.Add(arg[0] + " " + arg[2]);
+                    ligacao.ExeScript(umaInstrucao);
                     
                 }
                 else if (operation.StartsWith("DUMP"))
                 {
-                   
+                    IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+                     typeof(IClientPuppet),
+                     "tcp://" + arg[1] + "/ClientPuppet");
+                    List<string> umaInstrucao = new List<string>();
+                    umaInstrucao.Add(arg[0]);
+                    ligacao.ExeScript(umaInstrucao);
                 }
             
             }

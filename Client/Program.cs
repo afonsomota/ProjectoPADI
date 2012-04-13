@@ -125,7 +125,7 @@ namespace Client
 
         }
 
-        public void ExeScriptInternal(string[] instructions)
+        public void ExeScriptInternal(List<string> instructions)
         {
 
         }
@@ -229,7 +229,8 @@ namespace Client
             return ctx.Registers;
         }
 
-        public void ExeScript(string[] operations){
+        public void ExeScript(List<string> operations)
+        {
             ctx.ExeScriptInternal(operations);
         }
 

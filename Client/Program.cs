@@ -230,7 +230,7 @@ namespace Client
 
         public void ExeScript(List<string> instructions)
         {
-            Dictionary<int,List<Operation>> clientOperations = new Dictionary<int,List<Operation>>();
+            Dictionary<int,List<string>> clientOperations = new Dictionary<int,List<string>>();
             int numberOfTransactions = -1;
             bool inTransaction = false;
             while (instructions.Count != 0)
@@ -250,11 +250,22 @@ namespace Client
                 if (inTransaction)
                 {
                     if (instructions[0].StartsWith("GET"))
-                    {
-                    }
-                    else if (instructions[0].StartsWith("PUT"))
-                    {                    }
-                    }
+                        clientOperations[1]=instructions[0];
+                    else if (instructions[0].StartsWith("PUT"))                   
+
+                    else if (instructions[0].StartsWith("STORE"))
+                       
+                    else if (instructions[0].StartsWith("PUTVAL"))
+                        
+                    else if (instructions[0].StartsWith("TOLOWER"))
+                        
+                    else if (instructions[0].StartsWith("TOUPPER"))
+                       
+                    else if (instructions[0].StartsWith("CONCAT"))
+                       
+                    else if (instructions[0].StartsWith("DUMP"))
+                        
+                }
                 else {
                 if (instructions[0].StartsWith("STORE"))
                     this.Store(Int32.Parse(arg[1]), arg[2]);

@@ -125,8 +125,6 @@ namespace Client
 
         }
 
-        public void ExeScriptInternal(List<string> instructions)
-        {
 
         }
 
@@ -135,7 +133,7 @@ namespace Client
     class ClientRemoting : MarshalByRefObject, IClient
     {
 
-        public static Client ctx;
+        public static Client.Client ctx;
 
         public void GetNetworkUpdate(List<Node> network) {
             ctx.NetworkTopology = network;
@@ -151,7 +149,7 @@ namespace Client
 
     class ClientPuppet : MarshalByRefObject, IClientPuppet
     {
-        public static Client ctx;
+        public static Client.Client ctx;
 
         public void StartClient()
         {
@@ -161,6 +159,7 @@ namespace Client
                "tcp://localhost:9090/CentralDirectory");
             ligacao.RegisterClient(ctx.Info);
             Console.WriteLine("Client Online");
+            
         }
 
 
@@ -229,10 +228,50 @@ namespace Client
             return ctx.Registers;
         }
 
-        public void ExeScript(List<string> operations)
+        public void ExeScript(List<string> instructions)
         {
-            ctx.ExeScriptInternal(operations);
-        }
+            Dictionary<int,List<Operation>> clientOperations = new Dictionary<int,List<Operation>>();
+            int numberOfTransactions = -1;
+            bool inTransaction = false;
+            while (instructions.Count != 0)
+            {
+                char[] delim = { ' ', '\t' };
+                string[] arg = instructions[0].Split(delim);
+
+
+                if (instructions[0].StartsWith("BEGINTX")) {
+                    inTransaction = true;
+                }
+                if (instructions[0].StartsWith("COMMITTX"))
+                {
+                    inTransaction = false;
+                }
+
+                if (inTransaction)
+                {
+                    if (instructions[0].StartsWith("GET"))
+                    {
+                    }
+                    else if (instructions[0].StartsWith("PUT"))
+                    {                    }
+                    }
+                else {
+                if (instructions[0].StartsWith("STORE"))
+                    this.Store(Int32.Parse(arg[1]), arg[2]);
+                else if (instructions[0].StartsWith("PUTVAL"))
+                    this.PutVAl(arg[1], Int32.Parse(arg[2]));
+                else if (instructions[0].StartsWith("TOLOWER"))
+                    this.ToLower(Int32.Parse(arg[1]));
+                else if (instructions[0].StartsWith("TOUPPER"))
+                    this.ToUpper(Int32.Parse(arg[1]));
+                else if (instructions[0].StartsWith("CONCAT"))
+                    this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
+                else if (instructions[0].StartsWith("DUMP"))
+                    this.Dump();
+                
+                instructions.Remove(instructions[0]);
+            }
+            }
 
     }
 

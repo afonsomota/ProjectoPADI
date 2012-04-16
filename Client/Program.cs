@@ -10,11 +10,11 @@ using System.Collections;
 using System.Threading;
 using System.IO;
 
+
 namespace Client
 {
     class Program
     {
-        
 
         static void Main(string[] args)
         {
@@ -29,14 +29,21 @@ namespace Client
 
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
-            IPuppetMaster ligacao = (IPuppetMaster)Activator.GetObject(
+           
+            IPuppetMaster puppet = (IPuppetMaster)Activator.GetObject(
                typeof(IPuppetMaster),
                "tcp://localhost:8090/PseudoNodeReg");
+
+            ICentralDirectory cd = (ICentralDirectory)Activator.GetObject(
+              typeof(ICentralDirectory),
+              "tcp://localhost:9090/CentralDirectory");
+
             Node node = new Node(host, port, NodeType.Client);
-            Client clt = new Client(node,channel);
+            cd.RegisterClient(node);
+            Client clt = new Client(node,channel,puppet,cd);
             ClientPuppet.ctx = clt;
             ClientRemoting.ctx = clt;
-            ligacao.RegisterPseudoNode(node);
+            puppet.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             Console.WriteLine("Press Enter to Test...");
            
@@ -58,23 +65,19 @@ namespace Client
         public Node Info;
         public TcpChannel Channel;
         public List<Node> NetworkTopology;
-
-        public Client(Node info,TcpChannel channel){
+        public IPuppetMaster Puppet;
+        public ICentralDirectory CD;
+ 
+        public Client(Node info,TcpChannel channel,  IPuppetMaster puppet, ICentralDirectory cd){
             Registers = new string[10];
             Info = info;
             Channel = channel;
+            Puppet = puppet;
+            CD = cd;
         }
 
         public void StoreValue(int reg, string value){
             Registers[reg] = value;
-        }
-
-
-        //Inicia a transacção
-        public void BeginTxInternal()
-        {
-           
-
         }
 
         //Adiciona o valor ao registo
@@ -152,14 +155,9 @@ namespace Client
         public static Client.Client ctx;
 
         public void StartClient()
-        {
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);
-            ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
-               typeof(ICentralDirectory),
-               "tcp://localhost:9090/CentralDirectory");
-            ligacao.RegisterClient(ctx.Info);
-            Console.WriteLine("Client Online");
-            
+        { 
+            ctx.CD.RegisterClient(ctx.Info);
+            Console.WriteLine("Client Online");   
         }
 
 
@@ -178,11 +176,6 @@ namespace Client
             ChannelServices.RegisterChannel(ctx.Channel, true);
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
             Console.WriteLine("Client Offline");
-        }
-
-        //Inicia a transacção
-        public void BeginTx() {
-            ctx.BeginTxInternal();
         }
 
         //Adiciona o valor ao registo
@@ -233,57 +226,152 @@ namespace Client
             Dictionary<int,List<string>> clientOperations = new Dictionary<int,List<string>>();
             int numberOfTransactions = -1;
             bool inTransaction = false;
-            while (instructions.Count != 0)
+
+            for (; instructions.Count != 0; instructions.Remove(instructions[0]))
             {
-                char[] delim = { ' ', '\t' };
-                string[] arg = instructions[0].Split(delim);
+                
 
-
-                if (instructions[0].StartsWith("BEGINTX")) {
+                if (instructions[0].StartsWith("BEGINTX"))
+                {
                     inTransaction = true;
+                    numberOfTransactions++;
+                    continue;
                 }
                 if (instructions[0].StartsWith("COMMITTX"))
                 {
                     inTransaction = false;
+                    continue;
                 }
 
                 if (inTransaction)
                 {
-                    if (instructions[0].StartsWith("GET"))
-                        clientOperations[1]=instructions[0];
-                    else if (instructions[0].StartsWith("PUT"))                   
-
-                    else if (instructions[0].StartsWith("STORE"))
-                       
-                    else if (instructions[0].StartsWith("PUTVAL"))
-                        
-                    else if (instructions[0].StartsWith("TOLOWER"))
-                        
-                    else if (instructions[0].StartsWith("TOUPPER"))
-                       
-                    else if (instructions[0].StartsWith("CONCAT"))
-                       
-                    else if (instructions[0].StartsWith("DUMP"))
-                        
+                    clientOperations[numberOfTransactions].Add(instructions[0]);
+                    continue;
                 }
-                else {
-                if (instructions[0].StartsWith("STORE"))
-                    this.Store(Int32.Parse(arg[1]), arg[2]);
-                else if (instructions[0].StartsWith("PUTVAL"))
-                    this.PutVAl(arg[1], Int32.Parse(arg[2]));
-                else if (instructions[0].StartsWith("TOLOWER"))
-                    this.ToLower(Int32.Parse(arg[1]));
-                else if (instructions[0].StartsWith("TOUPPER"))
-                    this.ToUpper(Int32.Parse(arg[1]));
-                else if (instructions[0].StartsWith("CONCAT"))
-                    this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
-                else if (instructions[0].StartsWith("DUMP"))
-                    this.Dump();
-                
-                instructions.Remove(instructions[0]);
+                else
+                {
+                    char[] delim = { ' ', '\t' };
+                    string[] arg = instructions[0].Split(delim);
+
+                    if (instructions[0].StartsWith("GET")) 
+                    { 
+                    
+                    }
+                    else if (instructions[0].StartsWith("PUT"))
+                    {
+
+                    }
+                    else if (instructions[0].StartsWith("STORE"))
+                        this.Store(Int32.Parse(arg[1]), arg[2]);
+                    else if (instructions[0].StartsWith("PUTVAL"))
+                        this.PutVAl(arg[1], Int32.Parse(arg[2]));
+                    else if (instructions[0].StartsWith("TOLOWER"))
+                        this.ToLower(Int32.Parse(arg[1]));
+                    else if (instructions[0].StartsWith("TOUPPER"))
+                        this.ToUpper(Int32.Parse(arg[1]));
+                    else if (instructions[0].StartsWith("CONCAT"))
+                        this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
+                    else if (instructions[0].StartsWith("DUMP"))
+                        this.Dump();
+                }
             }
+    }
+
+    public void ExecuteTransactions(Dictionary<int,List<string>> clientOperations)
+    {
+        List<Operation> operationsLocations = new List<Operation>();
+
+        for (int aux2 = 1; clientOperations.Count != aux2; aux2++ )
+        {
+            operationsLocations = GetOperationsLocation(clientOperations[aux2]);
+
+            //Nao ha gets nem puts... é correr tudo....
+            if (operationsLocations.Count == 0)
+            {
+                for (int aux = 1; clientOperations[aux].Count != aux; aux++)
+                {
+                    char[] delim = { ' ', '\t' };
+                    string[] arg = clientOperations[aux][aux2].Split(delim);
+
+                    if (clientOperations[aux][aux2].StartsWith("STORE"))
+                        this.Store(Int32.Parse(arg[1]), arg[2]);
+                    else if (clientOperations[aux][aux2].StartsWith("PUTVAL"))
+                        this.PutVAl(arg[1], Int32.Parse(arg[2]));
+                    else if (clientOperations[aux][aux2].StartsWith("TOLOWER"))
+                        this.ToLower(Int32.Parse(arg[1]));
+                    else if (clientOperations[aux][aux2].StartsWith("TOUPPER"))
+                        this.ToUpper(Int32.Parse(arg[1]));
+                    else if (clientOperations[aux][aux2].StartsWith("CONCAT"))
+                        this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
+                    else if (clientOperations[aux][aux2].StartsWith("DUMP"))
+                        this.Dump();
+                }
             }
 
+            TransactionContext transaction = ctx.CD.GetServers(operationsLocations);
+
+            for (int aux = 1; clientOperations[aux].Count != aux; aux++) 
+            {
+                char[] delim = { ' ', '\t' };
+                string[] arg = clientOperations[aux][aux2].Split(delim);
+
+                //standart stuff
+                if (clientOperations[aux][aux2].StartsWith("STORE"))
+                    this.Store(Int32.Parse(arg[1]), arg[2]);
+                else if (clientOperations[aux][aux2].StartsWith("PUTVAL"))
+                    this.PutVAl(arg[1], Int32.Parse(arg[2]));
+                else if (clientOperations[aux][aux2].StartsWith("TOLOWER"))
+                    this.ToLower(Int32.Parse(arg[1]));
+                else if (clientOperations[aux][aux2].StartsWith("TOUPPER"))
+                    this.ToUpper(Int32.Parse(arg[1]));
+                else if (clientOperations[aux][aux2].StartsWith("CONCAT"))
+                    this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
+                else if (clientOperations[aux][aux2].StartsWith("DUMP"))
+                    this.Dump();
+
+            
+                //get e sets...
+                else if (clientOperations[aux][aux2].StartsWith("GET"))
+                {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + IP + ":" + srvToSend.Port.ToString() + "/Server");
+                
+                }
+                else if (clientOperations[aux][aux2].StartsWith("SET"))
+                { 
+                
+                
+                }
+            }
+
+        }
+        
     }
+
+    public List<Operation> GetOperationsLocation(List<string> transactions)
+    {
+        List<Operation> operationsLocations = new List<Operation>();
+
+        for (; transactions.Count != 0; transactions.Remove(transactions[0]))
+        {
+
+            if (transactions[0].StartsWith("GET")) { 
+                 char[] delim = { ' ', '\t' };
+                 string[] arg = transactions[0].Split(delim);
+
+                 operationsLocations.Add(new Operation(arg[2]));
+
+            }
+            else if ( transactions[0].StartsWith("PUT")){
+                char[] delim = { ' ', '\t' };
+                string[] arg = transactions[0].Split(delim);
+
+                operationsLocations.Add(new Operation(arg[2],arg[2]));
+            
+            }
+        }
+        return operationsLocations;
+    }
+
+    
 
 }

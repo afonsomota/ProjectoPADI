@@ -135,9 +135,8 @@ namespace PuppetMaster
             openFileDialog1.Filter = "PADI Script|*.txt";
             openFileDialog1.Title = "Select a PADI User Script";
             string line;
-            
-            
 
+        
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 if (userScriptList!=null && !userScriptList.Contains(openFileDialog1.FileName))

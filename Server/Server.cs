@@ -452,6 +452,10 @@ namespace Server
             ctx.Channel = new TcpChannel(ctx.Info.Port);
             ChannelServices.RegisterChannel(ctx.Channel, true);
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ServerPuppet), "ServerPuppet", WellKnownObjectMode.Singleton);
+            ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
+              typeof(ICentralDirectory),
+              "tcp://localhost:9090/CentralDirectory");
+            ligacao.ServerDown(ctx.Info);
             Console.WriteLine("Server Offline");
         }
     }

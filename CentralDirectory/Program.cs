@@ -394,7 +394,11 @@ namespace CentralDirectory
 
         public static CentralDirectory ctx;
         public int txid = 0;
-        
+        public uint semiTablemin1 = 0;
+        public uint semiTablemax1 = 0;
+        public uint semiTablemin2 = 0;
+        public uint semiTablemax2 = 0;
+        public bool miss = false;
         
         public bool RegisterClient(CommonInterfaces.Node node)
         {
@@ -415,12 +419,39 @@ namespace CentralDirectory
             Console.WriteLine("Registred" + node.IP + "on port" + node.Port);
             List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
 
-            if (ctx.firstPut == true)
+            if (miss == true)
+            {
+                for (int i = 0; i < ctx.Location.Count; i++)
+                {
+                    if (ctx.Location[i].min == semiTablemin1 && ctx.Location[i].max == semiTablemax1)
+                    {
+                      
+                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + ctx.Location[i].IP[0].IP + ":" + ctx.Location[i].IP[0].Port.ToString() + "/Server");
+                        ctx.Location[i].IP.Add(node);
+                        
+                        link.CopySemiTables(node);
+                    }
+
+                    else if (ctx.Location[i].min == semiTablemin2 && ctx.Location[i].max == semiTablemax2)
+                    {
+                       
+                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + ctx.Location[i].IP[0].IP + ":" + ctx.Location[i].IP[0].Port.ToString() + "/Server");
+                        ctx.Location[i].IP.Add(node);
+                        
+                        link.CopySemiTables(node);
+                    }
+                }
+                miss = false;
+            }
+
+            
+            else if (ctx.firstPut == true)
             {
                 listAux = ctx.DimensionOfServers(ctx.ListServer);
                 ctx.Restructure(ctx.MaxSemiTable(listAux), node);
             }
-           
+
+                       
             ctx.Server = node;
             ctx.Send(ctx.ListClient, ctx.ListServer);
             return true;
@@ -521,12 +552,39 @@ namespace CentralDirectory
             return transactionsContext;
         }
 
+        
+
         public void ServerDown(CommonInterfaces.Node server)
         {
-           CommonInterfaces.Node node = ctx.getNode(server.IP);
-           ctx.ListServer.Remove(node);
+           int j = 1;
+           ctx.ListServer.Remove(server);
+           for (int i = 0; i < ctx.Location.Count; i++)
+           {
+               if (ctx.Location[i].IP[0].Port == server.Port || ctx.Location[i].IP[1].Port == server.Port)
+               {
+                   
+                   
+                  if (j == 1)
+                   {
+                       semiTablemin1 = ctx.Location[i].min;
+                       semiTablemax1 = ctx.Location[i].max;
+                       j = 2;
+                   }
+                   else if (j == 2)
+                   {
+                       semiTablemin2 = ctx.Location[i].min;
+                       semiTablemax2 = ctx.Location[i].max;
+                       j = 1;
+                   }
+               }
+               ctx.Location[i].IP.Remove(server);
+               
+           }
+           miss = true;
+           Console.WriteLine("min1 - " + semiTablemin1 + " max1 - " + semiTablemax1);
+           Console.WriteLine("min2 - " + semiTablemin2 + " max2 - " + semiTablemax2);
+           ctx.Send(ctx.ListClient, ctx.ListServer);
         }
-
         
 
     }

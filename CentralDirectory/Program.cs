@@ -256,27 +256,7 @@ namespace CentralDirectory
            }
            Console.WriteLine("resultado:" + semitableint); 
             return semitableint;
-          }
-
-       /*public uint SHA1Hash(string input)
-       {
-           SHA1 sha = new SHA1CryptoServiceProvider();
-           byte[] data = System.Text.Encoding.ASCII.GetBytes(input);
-           byte[] hash = sha.ComputeHash(data);
-           uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12] ^ hash[16]) << 24) +
-                                  (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13] ^ hash[17]) << 16) +
-                                 (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14] ^ hash[18]) << 8) +
-                                 (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15] ^ hash[19]);
-
-
-           /*StringBuilder sb = new StringBuilder();
-           for (int i = 0; i < hash.Length; i++)
-           {
-               sb.Append(hash[i].ToString("X2"));
-           }
-           return sb.ToString();
-           return interval;
-       }*/
+       }
 
        public static uint MD5Hash(string input)
        {
@@ -425,20 +405,18 @@ namespace CentralDirectory
                 {
                     if (ctx.Location[i].min == semiTablemin1 && ctx.Location[i].max == semiTablemax1)
                     {
-                      
+                        Console.WriteLine("Sending restructure request to: " + ctx.Location[i].IP[0]);
                         IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + ctx.Location[i].IP[0].IP + ":" + ctx.Location[i].IP[0].Port.ToString() + "/Server");
                         ctx.Location[i].IP.Add(node);
-                        
-                        link.CopySemiTables(node);
+                        link.CopySemiTable(ctx.Location[i].min,node);
                     }
 
                     else if (ctx.Location[i].min == semiTablemin2 && ctx.Location[i].max == semiTablemax2)
                     {
-                       
+                        Console.WriteLine("Sending restructure request to: " + ctx.Location[i].IP[0]);
                         IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + ctx.Location[i].IP[0].IP + ":" + ctx.Location[i].IP[0].Port.ToString() + "/Server");
                         ctx.Location[i].IP.Add(node);
-                        
-                        link.CopySemiTables(node);
+                        link.CopySemiTable(ctx.Location[i].min, node);
                     }
                 }
                 miss = false;
@@ -562,10 +540,10 @@ namespace CentralDirectory
            {
                if (ctx.Location[i].IP[0].Port == server.Port || ctx.Location[i].IP[1].Port == server.Port)
                {
-                   
-                   
+
+                   Node nodeToRemove = null;
                   if (j == 1)
-                   {
+                  {
                        semiTablemin1 = ctx.Location[i].min;
                        semiTablemax1 = ctx.Location[i].max;
                        j = 2;
@@ -576,10 +554,16 @@ namespace CentralDirectory
                        semiTablemax2 = ctx.Location[i].max;
                        j = 1;
                    }
+                  foreach (Node n in ctx.Location[i].IP)
+                      if (n.IP == server.IP && n.Port == server.Port)
+                          nodeToRemove = n;
+                  ctx.Location[i].IP.Remove(nodeToRemove);
                }
-               ctx.Location[i].IP.Remove(server);
+
                
+
            }
+            
            miss = true;
            Console.WriteLine("min1 - " + semiTablemin1 + " max1 - " + semiTablemax1);
            Console.WriteLine("min2 - " + semiTablemin2 + " max2 - " + semiTablemax2);

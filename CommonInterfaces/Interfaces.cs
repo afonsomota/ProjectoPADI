@@ -159,6 +159,7 @@ namespace CommonInterfaces
         void GetInitialIntervals(uint minST1, uint maxST1, Node replica);
         void GetNetworkUpdate(List<Node> network);
         void CopySemiTables(Node newNode);//Caso especial em que se comeca com um servidor e adiciona-se outro
+        void CopySemiTable(uint semiTableToCopy, Node nodeToCopy);// Caso em que um servidor vai abaixo e outro vem acima
 
         //Cliente
         bool CanLock(int txid, List<string> keys);

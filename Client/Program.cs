@@ -280,6 +280,7 @@ namespace Client
     public void ExecuteTransactions(Dictionary<int,List<string>> clientOperations)
     {
         List<Operation> operationsLocations = new List<Operation>();
+        char[] delim = { ' ', '\t' };
 
         for (int aux2 = 1; clientOperations.Count != aux2; aux2++ )
         {
@@ -290,7 +291,6 @@ namespace Client
             {
                 for (int aux = 1; clientOperations[aux].Count != aux; aux++)
                 {
-                    char[] delim = { ' ', '\t' };
                     string[] arg = clientOperations[aux][aux2].Split(delim);
 
                     if (clientOperations[aux][aux2].StartsWith("STORE"))
@@ -312,7 +312,7 @@ namespace Client
 
             for (int aux = 1; clientOperations[aux].Count != aux; aux++) 
             {
-                char[] delim = { ' ', '\t' };
+                
                 string[] arg = clientOperations[aux][aux2].Split(delim);
 
                 //standart stuff
@@ -333,13 +333,14 @@ namespace Client
                 //get e sets...
                 else if (clientOperations[aux][aux2].StartsWith("GET"))
                 {
-                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + IP + ":" + srvToSend.Port.ToString() + "/Server");
-                
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + transaction.NodesLocation[arg[2]] + "/Server");
+                    ctx.Registers[Int32.Parse(arg[1])] = server.Get(transaction.Txid,arg[2]);
+                    
                 }
                 else if (clientOperations[aux][aux2].StartsWith("SET"))
-                { 
-                
-                
+                {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + transaction.NodesLocation[arg[2]] + "/Server");
+                    server.Put(transaction.Txid, arg[1], ctx.Registers[Int32.Parse(arg[1])]);
                 }
             }
 
@@ -351,22 +352,23 @@ namespace Client
     {
         List<Operation> operationsLocations = new List<Operation>();
 
-        for (; transactions.Count != 0; transactions.Remove(transactions[0]))
+        for (int aux = 1; aux != transactions.Count; aux++)
         {
 
-            if (transactions[0].StartsWith("GET")) { 
-                 char[] delim = { ' ', '\t' };
-                 string[] arg = transactions[0].Split(delim);
-
-                 operationsLocations.Add(new Operation(arg[2]));
-
-            }
-            else if ( transactions[0].StartsWith("PUT")){
+            if (transactions[aux].StartsWith("GET"))
+            {
                 char[] delim = { ' ', '\t' };
                 string[] arg = transactions[0].Split(delim);
 
-                operationsLocations.Add(new Operation(arg[2],arg[2]));
-            
+                operationsLocations.Add(new Operation(arg[2]));
+
+            }
+            else if (transactions[aux].StartsWith("PUT"))
+            {
+                char[] delim = { ' ', '\t' };
+                string[] arg = transactions[0].Split(delim);
+
+                operationsLocations.Add(new Operation(arg[2], arg[2]));
             }
         }
         return operationsLocations;

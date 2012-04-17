@@ -136,8 +136,6 @@ namespace CommonInterfaces
 
     }
 
-
-
     public interface ICentralDirectory {
 
         //Servidor
@@ -181,7 +179,6 @@ namespace CommonInterfaces
     {
         void StartClient();
         void KillClient();
-        void BeginTx();
         void Store(int register, string value);
         void Put(int register, string key);
         void Get(int register, string key);

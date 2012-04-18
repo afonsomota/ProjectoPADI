@@ -125,7 +125,15 @@ namespace PuppetMaster
 
         private void button2_Click_1(object sender, EventArgs e)
         {
+            string scriptLine;
+            string scriptPath = (string)listBox1.SelectedItem;
+            StreamReader userscript = new StreamReader(scriptPath);
 
+            listBox3.Items.Clear();
+            while ((scriptLine = userscript.ReadLine()) != null)
+            {               
+                listBox3.Items.Add(scriptLine);
+            }
         }
 
         private void button1_Click_1(object sender, EventArgs e)
@@ -134,56 +142,15 @@ namespace PuppetMaster
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             openFileDialog1.Filter = "PADI Script|*.txt";
             openFileDialog1.Title = "Select a PADI User Script";
-            string line;
 
         
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                if (userScriptList!=null && !userScriptList.Contains(openFileDialog1.FileName))
+                if (listBox1.FindString(openFileDialog1.FileName,0)!=0 )
                 {
-                    userScriptList[userScriptList.Length] = openFileDialog1.FileName;
+                    listBox1.Items.Add(openFileDialog1.FileName);
                 }
-                StreamReader userscript = new StreamReader(openFileDialog1.OpenFile());
-             
-                while ((line = userscript.ReadLine()) != null)
-               {
-                   Console.WriteLine(line);
-                   
-                    string [] operation = line.Split(new Char[] {' ','\t'});
-
-                   switch (operation[0])
-                   { 
-
-                    //Client 
-                       case "BEGINTX":
-                            // beginTx
-                       case "STORE":
-                           // store
-                       case "PUT":
-                            //put
-                       case "GET":
-                           //get
-                       case "PUTVAL":
-
-                       case "TOLOWER":
-
-                       case "TOUPPER":
-
-                       case "CONCAT":
-
-                       case "COMMITTX":        
-
-                       case "DUMP":
-
-                       case "WAIT":
-
-                       default:
-                           //invalid argument
-                           break;
-
-
-                   }
-               }
+                
             }
         }
 
@@ -281,6 +248,93 @@ namespace PuppetMaster
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
+
+        }
+
+        private void button4_Click_1(object sender, EventArgs e)
+        {
+            foreach (string operation in listBox3.Items)
+            {
+                char[] delim = { ' ', '\t' };
+                string[] arg = operation.Split(delim);
+
+                if (operation.StartsWith("BEGINTX"))
+                {
+                    clientsOperations[arg[1]].Add("BEGINTX");
+                }
+                // Esta a meio de uma transacção JA EXISTE UM "BEGINTX" -- Adiciona a pilha de transaccoes
+                else if (clientsOperations[arg[1]].Contains("BEGINTX"))
+                {
+                    if (operation.StartsWith("STORE") || operation.StartsWith("PUTVAL") || operation.StartsWith("CONCAT") || operation.StartsWith("PUT") || operation.StartsWith("GET"))
+                    {
+                        clientsOperations[arg[1]].Add(arg[0] + " " + arg[2] + " " + arg[3]);
+                    }
+                    else if (operation.StartsWith("TOLOWER") || operation.StartsWith("TOUPPER"))
+                    {
+                        clientsOperations[arg[1]].Add(arg[0] + " " + arg[2]);
+                    }
+                    else if (operation.StartsWith("DUMP"))
+                    {
+                        clientsOperations[arg[1]].Add(arg[0]);
+                    }
+                    else if (operation.StartsWith("COMMITTX"))
+                    {
+                        clientsOperations[arg[1]].Add("COMMITTX");
+                        IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+                        typeof(IClientPuppet),
+                        "tcp://" + arg[1] + "/ClientPuppet");
+                        ligacao.ExeScript(clientsOperations[arg[1]]);
+                        clientsOperations[arg[1]]=new List<string>();
+                    }
+                }
+
+                //Nao tem nenhum begin, é para executar logo 
+                else {
+                    if (operation.StartsWith("STORE") || operation.StartsWith("PUTVAL") || operation.StartsWith("CONCAT"))
+                    {
+                        IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+                        typeof(IClientPuppet),
+                        "tcp://" + arg[1] + "/ClientPuppet");
+                        List<string> umaInstrucao = new List<string>();
+                        umaInstrucao.Add(arg[0] + " " + arg[2] + " " + arg[3]);
+                        ligacao.ExeScript(umaInstrucao);
+                    }
+                    else if (operation.StartsWith("TOLOWER") || operation.StartsWith("TOUPPER"))
+                    {
+                        IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+                        typeof(IClientPuppet),
+                        "tcp://" + arg[1] + "/ClientPuppet");
+                        List<string> umaInstrucao = new List<string>();
+                        umaInstrucao.Add(arg[0] + " " + arg[2]);
+                        ligacao.ExeScript(umaInstrucao);  
+                    }
+                    else if (operation.StartsWith("DUMP"))
+                    {
+                        IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+                        typeof(IClientPuppet),
+                        "tcp://" + arg[1] + "/ClientPuppet");
+                        List<string> umaInstrucao = new List<string>();
+                        umaInstrucao.Add(arg[0]);
+                        ligacao.ExeScript(umaInstrucao);
+                    }
+                }
+            }
+            
+        }
+
+        private void listServOnline_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listServOffline_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button3_Click_1(object sender, EventArgs e)
+        {
+            string selectedOperation = (string)listBox3.SelectedItem;
 
         }
     }

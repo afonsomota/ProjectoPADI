@@ -142,6 +142,16 @@ namespace Server
                 st.Replica = newNode;
         }
 
+        public void UpdateReplica(uint hash,Node newNode)
+        {
+            foreach (Semitable st in Semitables)
+                if (hash >= st.MinInterval && hash <= st.MaxInterval)
+                {
+                    Console.WriteLine("Replica from semiTable containing " + hash + " updated to " + newNode);
+                    st.Replica = newNode;
+                }
+        }
+
         public void PrintSemiTables() {
             Console.Write("SemiTable 0: ");
             foreach(string key in Semitables[0].Keys){
@@ -238,6 +248,13 @@ namespace Server
                 }
             }
             return semiCount;
+        }
+
+        public Semitable GetSemiTable(uint hash) {
+            foreach (Semitable st in Semitables)
+                if (hash >= st.MinInterval && hash <= st.MaxInterval)
+                    return st;
+            return null;
         }
 
         public string Get(string key, int timestamp) {
@@ -422,6 +439,27 @@ namespace Server
             link.CopyTable(st1, st2);
             ctx.UpdateReplica(node);
         }
+
+        public void SendSemiTable(Semitable st1)
+        {
+            if (ctx.Semitables[0]==null) {
+                ctx.Semitables[0] = st1;
+            }
+            else if (ctx.Semitables[1] == null) {
+                ctx.Semitables[1] = st1;
+            }
+        }
+
+        public void CopySemiTable(uint semiTableToCopy, Node node) {
+            Semitable st1 = ctx.GetSemiTable(semiTableToCopy);
+            st1.Replica = ctx.Info;
+            if (st1 != null) {
+                ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
+                if (link != null) link.SendSemiTable(st1);
+            }
+            ctx.UpdateReplica(semiTableToCopy, node);
+        }
+
     }
 
     class ServerPuppet : MarshalByRefObject, IServerPuppet

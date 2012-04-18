@@ -66,27 +66,38 @@ namespace CommonInterfaces
         public OpType Type;
         public string Key;
         public string Value;
+        public int Register;
 
         public Operation(string key){
             Type = OpType.GET;
             Key = key;
             Value = null;
+            Register = -1;
         }
 
         public Operation(string key, string value) {
             Type = OpType.PUT;
             Key = key;
             Value = value;
+            Register = -1;
+        }
+
+        public Operation(string key, int register)
+        {
+            Type = OpType.PUT;
+            Key = key;
+            Value = null;
+            Register = register;
         }
 
         public override string ToString()
         {
-            if (Value == null)
+            if (Type == OpType.GET)
             {
                 return string.Format("GET({0})", Key);
             }
             else {
-                return string.Format("PUT({0},{1})", Key, Value);
+                return string.Format("PUT({0},{1})", Key,Value);
             }
         }
     }
@@ -160,7 +171,7 @@ namespace CommonInterfaces
         void CopySemiTable(uint semiTableToCopy, Node nodeToCopy);// Caso em que um servidor vai abaixo e outro vem acima
 
         //Cliente
-        bool CanLock(int txid, List<string> keys);
+        bool CanLock(int txid, List<Operation> ops);
         bool Lock(int txid);
         string Get(int txid, string key);
         void Put(int txid, string key, string new_value);

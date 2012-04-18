@@ -13,12 +13,103 @@ using System.Runtime.Serialization;
 
 namespace Server
 {
+
+    //Read Lock = Read+Write Lock
+    public enum KeyState {FREE= 0 , READ_LOCKING = 1, WRITE_LOCKING= 2 , READ_LOCK = 3  , WRITE_LOCK =4 , NEW =5, TO_REMOVE= 6, COMMITING=7 }
+
     [Serializable]
-    public struct TableValue
+    public class TransactionState {
+        public int Txid;
+        public KeyState State;
+
+        public TransactionState() {
+            Txid = 0;
+            State = KeyState.FREE; 
+        }
+        public TransactionState(int txid,KeyState state)
+        {
+            Txid = txid;
+            State = state;
+        }
+    }
+
+    [Serializable]
+    public class TableValue
     {
         public string Value;
         public int Timestamp;
-    } ;
+        public TransactionState State;
+
+        public TableValue(string val, int timestamp) {
+            Value = val;
+            Timestamp = timestamp;
+            State = new TransactionState();
+        }
+        public TableValue(string val, int timestamp, TransactionState state)
+        {
+            Value = val;
+            Timestamp = timestamp;
+            State = state;
+        }
+
+        public bool isLocked(int txid) {
+            if (State.State > KeyState.WRITE_LOCKING) return true;
+            else return false;
+        }
+
+        public bool isFree(int txid){
+            KeyState state = State.State;
+            if (state == KeyState.FREE || ((state == KeyState.READ_LOCKING || state == KeyState.WRITE_LOCKING) && txid <= State.Txid))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool lockingVariable(int txid) {
+            KeyState state = State.State;
+            if (state == KeyState.FREE || ((state == KeyState.READ_LOCKING || state == KeyState.WRITE_LOCKING) && txid <= State.Txid))
+            {
+                State.Txid = txid;
+                State.State = KeyState.READ_LOCKING;
+                return true;
+            }
+            else
+            {
+
+                Console.WriteLine("Inconsistent State on canLock on Transaction " + txid);
+                return false;
+            }
+        }
+
+        public void lockVariable(int txid) {
+            if ((State.State != KeyState.READ_LOCKING || State.State != KeyState.WRITE_LOCKING)||State.Txid!=txid) {
+                Console.WriteLine("Inconsistent State on Lock on Transaction " + txid);
+            }
+            State.State = KeyState.READ_LOCK;
+        }
+
+        public void commitingVariable(int txid) {
+            if ((State.State != KeyState.READ_LOCK || State.State != KeyState.WRITE_LOCK) || State.Txid != txid)
+            {
+                Console.WriteLine("Inconsistent State on canCommit on Transaction " + txid);
+            }
+            State.State = KeyState.COMMITING;
+        }
+
+        public void commitVariable(int txid) {
+            if (State.State != KeyState.COMMITING || State.Txid != txid)
+            {
+                Console.WriteLine("Inconsistent State on Commit on Transaction " + txid);
+            }
+            State.State = KeyState.FREE;
+            State.Txid = 0;
+        }
+    } 
+
 
     [Serializable]
     public class Semitable : Dictionary<string, List<TableValue>>, ISerializable
@@ -55,8 +146,6 @@ namespace Server
 
     class Program
     {
-        
-
         static void Main(string[] args)
         {
             TcpChannel channel = new TcpChannel(0);
@@ -76,30 +165,6 @@ namespace Server
             ServerRemoting.ctx = srv;
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
-            /*//srv.InitializeSemitables(UInt32.MinValue, UInt32.MaxValue / 2);
-            //srv.InitializeSemitables(UInt32.MaxValue / 2 + 1, UInt32.MaxValue);
-            srv.Put(0,"Afonso", "Teste1");
-            //Console.WriteLine(srv.Get("Afonso"));
-            srv.Put(0, "Francisco", "OutroTeste");
-            //Console.WriteLine(srv.Get("Francisco"));
-            srv.Put(0, "Ines", "nãotenho");
-            //Console.WriteLine(srv.Get("Ines"));
-            srv.Put(0, "Afonso", "Teste2");
-            //Console.WriteLine(srv.Get("Afonso"));
-            srv.Put(0, "Ines", "continuo a nao ter!!!");
-            //Console.WriteLine(srv.Get("Ines"));
-            srv.Put(0, "Afonso", "Eu tenho um Charizard!!!");
-            srv.Put(0, "Hitler", "I'm a PokeMaster!!!");
-            //Console.WriteLine(srv.Get("Hitler"));
-            srv.Put(0, "Bernardo", "Eu tenho um Charizard!!! Por isso ganho-te!");
-            //Console.WriteLine(srv.Get("Afonso",2));
-            //Console.WriteLine(srv.Get("Afonso"));
-            srv.Put(0, "ola", "Também tenho coisas fixes");
-            srv.Put(0, "ole", "Que brilham no escuro e tal");
-            srv.Put(0, "oli", "E trolteiam");
-            srv.Put(0, "olu", "E catam coisas parvas");
-            //srv.CleanTable(UInt32.MaxValue / 2, 0);*/
-
             while(true){
                 Console.ReadLine();
                 srv.PrintSemiTables();
@@ -115,6 +180,8 @@ namespace Server
         public Semitable[] Semitables;
         public int K;
         private int tableToInit = 0;
+        public Dictionary<int, Dictionary<string,List<TableValue>>> TransactionObjects;
+        public Dictionary<int, List<Operation>> OperationList;
 
         public Server(Node info, TcpChannel channel, int k)
         {
@@ -122,6 +189,8 @@ namespace Server
             Channel = channel;
             K = k;
             Semitables = new Semitable[2];
+            TransactionObjects = new Dictionary<int, Dictionary<string,List<TableValue>>>();
+            OperationList = new Dictionary<int, List<Operation>>();
         }
 
         public void InitializeSemitables(uint minST1, uint maxST1,Node replica)
@@ -150,6 +219,128 @@ namespace Server
                     Console.WriteLine("Replica from semiTable containing " + hash + " updated to " + newNode);
                     st.Replica = newNode;
                 }
+        }
+
+        public void Abort(int txid) {
+            bool isTxLocked = true;
+            foreach (List<TableValue> list in TransactionObjects[txid].Values)
+                foreach (TableValue tv in list)
+                {
+                    if (tv.isLocked(txid))
+                    {
+                        isTxLocked = true;
+                        break;
+                    }
+                }
+            if (isTxLocked) {
+                foreach (string key in TransactionObjects[txid].Keys)
+                {
+                    foreach (Semitable st in Semitables)
+                    {
+                        if (st.ContainsKey(key))
+                        {
+                            List<TableValue> tvToRemove = new List<TableValue>();
+                            foreach (TableValue tv in st[key])
+                                if (tv.State.State == KeyState.NEW && tv.State.Txid == txid)
+                                    tvToRemove.Add(tv);
+                            foreach (TableValue tv in tvToRemove)
+                            {
+                                st[key].Remove(tv);
+                            }
+                        }
+                    }
+                }
+            }
+            foreach (List<TableValue> list in TransactionObjects[txid].Values)
+                foreach (TableValue tv in list)
+                {
+                    tv.State.State = KeyState.FREE;
+                    tv.State.Txid = 0;
+                }
+        }
+
+        public bool Finish(int txid) {
+            foreach (string key in TransactionObjects[txid].Keys) {
+                foreach (Semitable st in Semitables) {
+                    if (st.ContainsKey(key)) { 
+                        List<TableValue> tvToRemove = new List<TableValue>();
+                        foreach (TableValue tv in st[key])
+                            if (tv.State.State == KeyState.TO_REMOVE && tv.State.Txid == txid)
+                                tvToRemove.Add(tv);
+                        foreach (TableValue tv in tvToRemove) {
+                            st[key].Remove(tv);
+                        }
+                    }
+                }
+            }
+            foreach (List<TableValue> list in TransactionObjects[txid].Values)
+                foreach (TableValue tv in list)
+                    tv.commitVariable(txid);
+            TransactionObjects.Remove(txid);
+            OperationList.Remove(txid);
+            return true;
+        }
+
+        public bool IsFinished(int txid) {
+            if (OperationList[txid].Count == 0)
+            {
+                foreach (List<TableValue> list in TransactionObjects[txid].Values)
+                    foreach(TableValue tv in list)
+                        tv.commitingVariable(txid);
+                
+                return true;
+            }
+            else return false;
+        }
+
+        public bool LockTransactionVariables(int txid) {
+            foreach (List<TableValue> list in TransactionObjects[txid].Values)
+                    foreach(TableValue tv in list)
+                        tv.lockVariable(txid);   
+            
+            return true;
+        }
+        
+        
+        public bool AreKeysFree(int txid, List<Operation> ops) {
+            Dictionary<string,List< TableValue>> objectsToLock = new Dictionary<string, List<TableValue>>();
+            List<Operation> localOperations = new List<Operation>();
+            foreach (Operation op in ops)
+            {
+                string key = op.Key;
+                uint hash = MD5Hash(key);
+                foreach (Semitable st in Semitables)
+                {
+                    if (hash >= st.MinInterval && hash <= st.MaxInterval) {
+                        localOperations.Add(op);
+                        if (!st.ContainsKey(key))
+                        {
+                            List<TableValue> tvList = new List<TableValue>();
+                            tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
+                            st.Add(key, tvList);
+                        }
+                        int max_timestamp = 0;
+                        TableValue valueToAdd = null;
+                        foreach (TableValue tv in st[key]) {
+                            if (!tv.isFree(txid)) return false;
+                            else if (tv.Timestamp > max_timestamp) valueToAdd = tv;
+                        }
+                        List<TableValue> list = new List<TableValue>();
+                        list.Add(valueToAdd);
+                        objectsToLock.Add(key,list);
+                    }
+                }
+            }
+            if (objectsToLock.Count > 0)
+            {
+                foreach(List<TableValue> list in objectsToLock.Values)
+                    foreach (TableValue tv in list)
+                        tv.lockingVariable(txid);
+                TransactionObjects.Add(txid, objectsToLock);
+                OperationList.Add(txid, localOperations);
+                return true;
+            }
+            return false;
         }
 
         public void PrintSemiTables() {
@@ -295,21 +486,40 @@ namespace Server
             return all;
         }
 
-        public void Put(int txid,string key, string value)
+        public void RemoveOperation(int txid,OpType type, string key) {
+            List<Operation> ops = OperationList[txid];
+            Operation opToRemove = null;
+            foreach (Operation op in ops) {
+                if (op.Key == key && op.Type == type){
+                    opToRemove = op;
+                    break;
+                }
+            }
+            if (opToRemove != null) ops.Remove(opToRemove);
+            else Console.WriteLine("Inconsistent state for Remove Operation");
+        }
+
+        public void Put(int txid,string key, string value,bool isReplica)
         {
             Console.WriteLine("PUT " + key + " " + value);
+            TransactionState tvState = new TransactionState(txid, KeyState.NEW);
             foreach (Semitable st in Semitables)
             {
                 if (st.ContainsKey(key))
                 {
 
-                    if (txid != -1 && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
+                    if (!isReplica && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
                     {
                         ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
-                        link.Put(-1, key, value);
+                        link.PutInner(txid, key, value);
                     }
                     int max_timestamp = 0;
                     int min_timestamp = Int32.MaxValue;
+                    if (st[key][0].Value == null)
+                    {
+                        st[key][0].Value = value;
+                        return;
+                    }
                     TableValue min_tv = st[key][0];
                     foreach (TableValue tv in st[key])
                     {
@@ -322,10 +532,9 @@ namespace Server
                         }
                     }
                     if (st[key].Count == K)
-                        st[key].Remove(min_tv);
-                    TableValue newtv = new TableValue();
-                    newtv.Timestamp = max_timestamp + 1;
-                    newtv.Value = value;
+                        min_tv.State.State = KeyState.TO_REMOVE;
+                    TableValue newtv = new TableValue(value, max_timestamp + 1,tvState);
+                    TransactionObjects[txid][key].Add(newtv);
                     st[key].Add(newtv);
                 }
                 else
@@ -334,14 +543,12 @@ namespace Server
                     if (hash >= st.MinInterval && hash <= st.MaxInterval)
                     {
 
-                        if (txid != -1 && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
+                        if (!isReplica && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
                         {
                             ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
-                            link.Put(-1, key, value);
+                            link.PutInner(txid, key, value);
                         }
-                        TableValue tv = new TableValue();
-                        tv.Timestamp = 0;
-                        tv.Value = value;
+                        TableValue tv = new TableValue(value,0,tvState);
                         List<TableValue> values = new List<TableValue>();
                         values.Add(tv);
                         st.Add(key, values);
@@ -354,6 +561,8 @@ namespace Server
 
     public class ServerRemoting: MarshalByRefObject, IServer{
         public static Server ctx;
+        private System.Object locker = new System.Object();
+        private System.Object lockerInner = new System.Object();
 
         public void GetNetworkUpdate(List<Node> network)
         {
@@ -395,14 +604,17 @@ namespace Server
             ctx.CopySemitables(st1, st2);
         }
 
-        public bool CanLock(int txid, List<string> keys)
-        {
-            throw new NotImplementedException();
+        public bool CanLock(int txid, List<Operation> keys) {
+            lock (locker) {
+                return ctx.AreKeysFree(txid,keys);
+            }
         }
 
         public bool Lock(int txid)
         {
-            throw new NotImplementedException();
+            lock (locker) {
+                return ctx.LockTransactionVariables(txid);
+            }
         }
 
         public string Get(int txid, string key)
@@ -412,8 +624,12 @@ namespace Server
 
         public void Put(int txid, string key, string new_value)
         {
-            ctx.Put(txid,key, new_value);
+            ctx.Put(txid,key, new_value, false);
+        }
 
+        public void PutInner(int txid, string key, string new_value) {
+            //Validar se "txid" pode fazer put na chave "key"
+            ctx.Put(txid, key, new_value,true);
         }
 
         public bool Abort(int txid)
@@ -423,12 +639,16 @@ namespace Server
 
         public bool CanCommit(int txid)
         {
-            throw new NotImplementedException();
+            lock (locker) {
+                return ctx.IsFinished(txid);
+            }
         }
 
         public bool Commit(int txid)
         {
-            throw new NotImplementedException();
+            lock(locker){
+                return ctx.Finish(txid);
+            }
         }
 
         public void CopySemiTables(Node node) {

@@ -96,19 +96,43 @@ namespace PuppetMaster
             }
         }
 
+        private string SearchClientAdressByName(string name) 
+        {
+            string address=null;
+            foreach (Node p in Clients)
+            {
+                if (name==p.Name)
+                    address = p.IP +":"+ p.Port;
+            }
+            return address;
+        }
+        
+        private string SearchServerAdressByName(string name)
+        {
+            string address = null;
+            foreach (Node p in Servers)
+            {
+                if (name == p.Name)
+                    address = p.IP + ":" + p.Port;
+            }
+            return address;
+        }
+
         private void button2_Click(object sender, EventArgs e)
         {
-            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
               typeof(IClientPuppet),
-              "tcp://" + (string)listCliOffline.SelectedItem + "/ClientPuppet");
-            ligacao.KillClient();
+              "tcp://" + SearchClientAdressByName((string)listCliOnline.SelectedItem) + "/ClientPuppet");
+           // try
+            //{
+                cliente.KillClient();
+            //}
+            //catch (IOException p) 
+            //{
+              //  clientsOperations.Remove((string)listCliOnline.SelectedItem);
+            //}
 
-            
             clientsOperations.Remove((string)listCliOnline.SelectedItem);
-
-            string item = (string)listCliOffline.SelectedItem;
-            listCliOffline.Items.Remove(item);
-            listCliOnline.Items.Add(item);
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -146,13 +170,13 @@ namespace PuppetMaster
 
         private void button3_Click(object sender, EventArgs e)
         {
-            IServerPuppet ligacao = (IServerPuppet)Activator.GetObject(
+            IServerPuppet server = (IServerPuppet)Activator.GetObject(
               typeof(IServerPuppet),
-              "tcp://" + (string)listServOffline.SelectedItem + "/ServerPuppet");
-            ligacao.KillServer();
-            string item = (string)listServOffline.SelectedItem;
-            listServOffline.Items.Remove(item);
-            listServOnline.Items.Add(item);
+              "tcp://" + SearchServerAdressByName((string)listServOnline.SelectedItem) + "/ServerPuppet");
+            server.KillServer();
+
+            string item = (string)listServOnline.SelectedItem;
+            listServOnline.Items.Remove(item);
         }
 
         private void Form1_Load(object sender, EventArgs e)

@@ -62,20 +62,16 @@ namespace PuppetMaster
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
-
             if (listCliOnline.SelectedItem!= null)
             {
                 string item = (string)listCliOnline.SelectedItem;
                 listCliOnline.Items.Remove(item);
-                listCliOffline.Items.Add(item);
+              //  listCliOffline.Items.Add(item);
 
                 IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
                 typeof(IClientPuppet),
                  "tcp://" + (string)listCliOnline.SelectedItem + "/ClientPuppet");
                 ligacao.StartClient();
-
-
 
                 clientsOperations.Add((string)listCliOnline.SelectedItem, new List<string>());
             }
@@ -83,15 +79,12 @@ namespace PuppetMaster
             {
                 string item = (string)listCliOnline.Items[0];
                 listCliOnline.Items.RemoveAt(0);
-                listCliOffline.Items.Add(item);
+                //listCliOffline.Items.Add(item);
 
                 IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
                typeof(IClientPuppet),
                 "tcp://" + item + "/ClientPuppet");
                 ligacao.StartClient();
-
-
-
                 clientsOperations.Add(item, new List<string>());
             }
         }
@@ -125,6 +118,7 @@ namespace PuppetMaster
               "tcp://" + SearchClientAdressByName((string)listCliOnline.SelectedItem) + "/ClientPuppet");
            // try
             //{
+                listCliOnline.Items.Remove((string)listCliOnline.SelectedItem);
                 cliente.KillClient();
             //}
             //catch (IOException p) 
@@ -132,7 +126,7 @@ namespace PuppetMaster
               //  clientsOperations.Remove((string)listCliOnline.SelectedItem);
             //}
 
-            clientsOperations.Remove((string)listCliOnline.SelectedItem);
+            //clientsOperations.Remove((string)listCliOnline.SelectedItem);
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -151,20 +145,19 @@ namespace PuppetMaster
                 ligacao.StartServer();
                 string item = (string)listServOnline.SelectedItem;
                 listServOnline.Items.Remove(item);
-                listServOffline.Items.Add(item);
+                //listServOffline.Items.Add(item);
             }
             else  
             {
                 string item = (string)listServOnline.Items[0];
                 listServOnline.Items.RemoveAt(0);
-                listServOffline.Items.Add(item);
+             //   listServOffline.Items.Add(item);
 
                 IServerPuppet ligacao = (IServerPuppet)Activator.GetObject(
                   typeof(IServerPuppet),
                   "tcp://" + item + "/ServerPuppet");
 
-                ligacao.StartServer();
-               
+                ligacao.StartServer();    
             }
         }
 
@@ -226,7 +219,7 @@ namespace PuppetMaster
 
         private void listCliOffline_SelectedIndexChanged(object sender, EventArgs e)
         {
-            textBox1.Text += (string)listCliOffline.SelectedItem;
+          //  textBox1.Text += (string)listCliOffline.SelectedItem;
         }
 
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
@@ -244,12 +237,10 @@ namespace PuppetMaster
             string operation = textBox1.Text;
             char[] delim = { ' ', '\t' };
                     string[] arg = operation.Split(delim);
-            
-
-            
+               
             if (operation.StartsWith("BEGINTX"))
             {
-                clientsOperations[arg[1]].Add("BEGINTX");
+                    clientsOperations[arg[1]].Add("BEGINTX");
             }
             // Esta a meio de uma transacção JA EXISTE UM "BEGINTX" -- Adiciona a pilha de transaccoes
             else if (clientsOperations[arg[1]].Contains("BEGINTX"))
@@ -407,17 +398,23 @@ namespace PuppetMaster
 
         }
 
-        private void button7_Click(object sender, EventArgs e)
-        {
+        private void startClient(string clientName) 
+        {   
+            List<string> operations = new List<string>(); 
             Process process = new Process();
-            string arguments = textBox2.Text;
             string currentDirectory = Environment.CurrentDirectory;
             string path = currentDirectory.Replace("PuppetMaster", "Client");
             path += "/Client.exe";
-            process.StartInfo.Arguments = arguments;
+            clientsOperations.Add(clientName, operations);
+            process.StartInfo.Arguments = clientName;
             process.StartInfo.FileName = path;
             process.Start();
-            //centralDirectory = new CentralDirectoryInfo(ip, Convert.ToInt16(port));
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            string clientName = textBox2.Text;
+            startClient(clientName);    
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -439,6 +436,21 @@ namespace PuppetMaster
             procs = Process.GetProcessesByName("Server");
             foreach (Process p in procs) { p.Kill(); }
             listServOnline.Items.Clear();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

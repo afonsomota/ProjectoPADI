@@ -172,6 +172,7 @@ namespace Client
 
         public void KillClientThread()
         {
+            Thread.Sleep(50);
             Environment.Exit(0);
         }
 

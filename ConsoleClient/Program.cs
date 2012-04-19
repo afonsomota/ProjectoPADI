@@ -186,7 +186,7 @@ namespace ConsoleClient
             {
                 IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + serv.IP + ":" + serv.Port.ToString() + "/Server");
                 bool b1 = link.CanCommit(tctx.Txid);
-                canLockValues.Add(serv, b1);
+                canCommitValues.Add(serv, b1);
             }
 
             bool allCanCommit = true;

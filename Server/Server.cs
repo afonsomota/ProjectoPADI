@@ -86,7 +86,7 @@ namespace Server
         }
 
         public void lockVariable(int txid) {
-            if ((State.State != KeyState.READ_LOCKING || State.State != KeyState.WRITE_LOCKING)||State.Txid!=txid) {
+            if ((State.State != KeyState.READ_LOCKING && State.State != KeyState.WRITE_LOCKING)||State.Txid!=txid) {
                 Console.WriteLine("Inconsistent State on Lock on Transaction " + txid);
             }
             State.State = KeyState.READ_LOCK;
@@ -319,15 +319,20 @@ namespace Server
                             tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
                             st.Add(key, tvList);
                         }
-                        int max_timestamp = 0;
+                        int max_timestamp = -1;
                         TableValue valueToAdd = null;
                         foreach (TableValue tv in st[key]) {
                             if (!tv.isFree(txid)) return false;
                             else if (tv.Timestamp > max_timestamp) valueToAdd = tv;
                         }
-                        List<TableValue> list = new List<TableValue>();
-                        list.Add(valueToAdd);
-                        objectsToLock.Add(key,list);
+                        if (!objectsToLock.ContainsKey(key))
+                        {
+                            List<TableValue> list = new List<TableValue>();
+                            list.Add(valueToAdd);
+                            objectsToLock.Add(key, list);
+                        }
+                        else objectsToLock[key].Add(valueToAdd);
+                            
                     }
                 }
             }

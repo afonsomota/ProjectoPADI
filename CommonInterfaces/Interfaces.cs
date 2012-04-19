@@ -41,6 +41,47 @@ namespace CommonInterfaces
             return string.Format("{0}@{1}:{2}", (Type==NodeType.Client?"client":"server"),IP,Port.ToString());
         }
 
+        public override bool Equals(System.Object obj)
+        {
+            Node n = obj as Node;
+            if ((object)n == null) return false;
+            return Equals(n);
+        }
+
+        public bool Equals(Node node)
+        {
+            if (IP == node.IP && Port == node.Port) return true;
+            else return false;
+        }
+
+        public static bool operator ==(Node a, Node b)
+        {
+            // If both are null, or both are same instance, return true.
+            if (System.Object.ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            // If one is null, but not both, return false.
+            if (((object)a == null) || ((object)b == null))
+            {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return a.IP == b.IP && a.Port == b.Port;
+        }
+
+        public static bool operator !=(Node a, Node b)
+        {
+            return !(a == b);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode() ^  Port.GetHashCode() ^ IP.GetHashCode() ^ Type.GetHashCode();
+        }
+
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             info.AddValue("i", IP);
@@ -72,23 +113,14 @@ namespace CommonInterfaces
             Type = OpType.GET;
             Key = key;
             Value = null;
-            Register = -1;
         }
 
         public Operation(string key, string value) {
             Type = OpType.PUT;
             Key = key;
             Value = value;
-            Register = -1;
         }
 
-        public Operation(string key, int register)
-        {
-            Type = OpType.PUT;
-            Key = key;
-            Value = null;
-            Register = register;
-        }
 
         public override string ToString()
         {

@@ -11,6 +11,47 @@ namespace ConsoleClient
 {
     class Program
     {
+
+        static Dictionary<Node, List<Operation>> InvertNodesLocation(Dictionary<string, List<Node>> nodesLocation, Dictionary<int,Operation> operations)
+        {
+            Dictionary<Node, List<Operation>> serversKeys = new Dictionary<Node, List<Operation>>();
+            foreach (KeyValuePair<string, List<Node>> servers in nodesLocation)
+            {
+                foreach (Node serv in servers.Value)
+                {
+                    bool servExists = false;
+                    Node existingServ = null;
+                    foreach (Node s in serversKeys.Keys) {
+                        if (s == serv) { 
+                            servExists = true;
+                            existingServ = s;
+                            break;
+                        }
+                    }
+                    if (!servExists)
+                    {
+                        List<Operation> new_list = new List<Operation>();
+                        foreach(Operation op in operations.Values){
+                            if (servers.Key == op.Key)
+                                new_list.Add(op);
+                        }
+                        serversKeys.Add(serv, new_list);
+                        existingServ = serv;
+                    }
+                    else foreach (Operation op in operations.Values)
+                        {
+                            if (servers.Key == op.Key)
+                            {
+                                if (!serversKeys[existingServ].Contains(op))
+                                    serversKeys[existingServ].Add(op);
+                                else break;
+                            } 
+                        } 
+                }
+            }
+            return serversKeys;
+        }
+
         static void Main(string[] args)
         {
 
@@ -86,6 +127,47 @@ namespace ConsoleClient
 
             Console.WriteLine(tctx);
 
+            Dictionary<Node,List<Operation>> serversKeys = InvertNodesLocation(tctx.NodesLocation,tctx.Operations);
+
+            foreach(KeyValuePair<Node,List<Operation>> pair in serversKeys){
+                Console.Write("For node " + pair.Key + ": ");
+                foreach (Operation op in pair.Value) {
+                    Console.WriteLine(op + "; ");
+                }
+                Console.WriteLine();
+            }
+
+            Dictionary<Node, bool> canLockValues = new Dictionary<Node, bool>();
+            foreach (Node serv in serversKeys.Keys) {
+                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + serv.IP + ":" + serv.Port.ToString() + "/Server");
+                bool b1 = link.CanLock(tctx.Txid,serversKeys[serv]);
+                canLockValues.Add(serv, b1);
+            }
+
+            bool allCanLock = true;
+            foreach (bool b in canLockValues.Values) {
+                if (!b) {
+                    allCanLock = false;
+                    break;
+                }
+            }
+            if (!allCanLock) {
+                foreach (Node n in canLockValues.Keys) {
+                    if (!canLockValues[n]) {
+                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                        link.Abort(tctx.Txid);
+                        Console.WriteLine("Transaction Aborted");
+                        return;
+                    }
+                }
+            }
+
+            foreach (Node n in canLockValues.Keys) {
+                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                link.Lock(tctx.Txid);
+            }
+
+
 
             for (int i = 1; i <= tctx.Operations.Count; i++) { 
                 Operation op = tctx.Operations[i];
@@ -98,6 +180,45 @@ namespace ConsoleClient
                     link.Put(tctx.Txid, op.Key, op.Value);
                 }
             }
+
+            Dictionary<Node, bool> canCommitValues = new Dictionary<Node, bool>();
+            foreach (Node serv in serversKeys.Keys)
+            {
+                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + serv.IP + ":" + serv.Port.ToString() + "/Server");
+                bool b1 = link.CanCommit(tctx.Txid);
+                canLockValues.Add(serv, b1);
+            }
+
+            bool allCanCommit = true;
+            foreach (bool b in canCommitValues.Values)
+            {
+                if (!b)
+                {
+                    allCanCommit = false;
+                    break;
+                }
+            }
+            if (!allCanCommit)
+            {
+                foreach (Node n in canCommitValues.Keys)
+                {
+                    if (!canCommitValues[n])
+                    {
+                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                        link.Abort(tctx.Txid);
+                        Console.WriteLine("Transaction Aborted");
+                        return;
+                    }
+                }
+            }
+
+            foreach (Node n in canCommitValues.Keys)
+            {
+                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                link.Commit(tctx.Txid);
+            }
+
+
 
             
 

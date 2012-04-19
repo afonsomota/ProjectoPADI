@@ -343,6 +343,13 @@ namespace Server
             return false;
         }
 
+        public bool ContainsKey(string key){
+            foreach (Semitable st in Semitables) 
+                if (st.ContainsKey(key)) 
+                    return true;
+            return false;
+        }
+
         public void PrintSemiTables() {
             Console.Write("SemiTable 0: ");
             foreach(string key in Semitables[0].Keys){
@@ -364,6 +371,26 @@ namespace Server
             Semitables = new Semitable[2];
             Semitables[0] = st1;
             Semitables[1] = st2;
+        }
+
+        public bool EligibleForWrite(int txid,string key) { 
+            foreach(string k in TransactionObjects[txid].Keys)
+                if (k == key) 
+                    foreach (TableValue tv in TransactionObjects[txid][k]) 
+                        if (tv.State.State > KeyState.WRITE_LOCKING && tv.State.State != KeyState.COMMITING && tv.State.Txid == txid)
+                            return true;
+            return false;    
+        }
+
+        public bool EligibleForRead(int txid, string key)
+        {
+            foreach (string k in TransactionObjects[txid].Keys)
+                if (k == key)
+                    foreach (TableValue tv in TransactionObjects[txid][k])
+                        if ((tv.State.State > KeyState.WRITE_LOCKING && tv.State.State != KeyState.COMMITING && tv.State.Txid == txid) ||
+                                tv.State.State==KeyState.WRITE_LOCK)
+                            return true;
+            return false;
         }
 
         public void CleanTable(uint div,int side, Node replica) {
@@ -619,22 +646,28 @@ namespace Server
 
         public string Get(int txid, string key)
         {
-            return ctx.Get(key);
+            if (ctx.EligibleForRead(txid, key) && ctx.ContainsKey(key))
+                return ctx.Get(key);
+            else return null;
         }
 
         public void Put(int txid, string key, string new_value)
         {
-            ctx.Put(txid,key, new_value, false);
+            if(ctx.EligibleForWrite(txid,key))
+                ctx.Put(txid,key, new_value, false);
         }
 
         public void PutInner(int txid, string key, string new_value) {
-            //Validar se "txid" pode fazer put na chave "key"
-            ctx.Put(txid, key, new_value,true);
+            if (ctx.EligibleForWrite(txid, key))
+                ctx.Put(txid, key, new_value,true);
         }
 
         public bool Abort(int txid)
         {
-            throw new NotImplementedException();
+            lock (locker) {
+                ctx.Abort(txid);
+                return true;
+            }
         }
 
         public bool CanCommit(int txid)
@@ -706,15 +739,11 @@ namespace Server
 
         public void KillServerThread()
         {
-            ChannelServices.UnregisterChannel(ctx.Channel);
-            ctx.Channel = new TcpChannel(ctx.Info.Port);
-            ChannelServices.RegisterChannel(ctx.Channel, true);
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ServerPuppet), "ServerPuppet", WellKnownObjectMode.Singleton);
             ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
               typeof(ICentralDirectory),
               "tcp://localhost:9090/CentralDirectory");
             ligacao.ServerDown(ctx.Info);
-            Console.WriteLine("Server Offline");
+            Environment.Exit(0);
         }
     }
 }

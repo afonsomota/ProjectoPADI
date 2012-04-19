@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -50,11 +51,11 @@ namespace PuppetMaster
         
         }
 
-        public void WriteHostMethod(NodeType type,string url){
+        public void WriteHostMethod(NodeType type,string name){
             if(type==NodeType.Client){
-                listCliOnline.Items.Add(url);
+                listCliOnline.Items.Add(name);
             }else{
-                listServOnline.Items.Add(url);
+                listServOnline.Items.Add(name);
             }
         }
 
@@ -381,6 +382,40 @@ namespace PuppetMaster
             string selectedOperation = (string)listBox3.SelectedItem;
 
         }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            Process process = new Process();
+            string arguments = textBox2.Text;
+            string currentDirectory = Environment.CurrentDirectory;
+            string path = currentDirectory.Replace("PuppetMaster", "Client");
+            path += "/Client.exe";
+            process.StartInfo.Arguments = arguments;
+            process.StartInfo.FileName = path;
+            process.Start();
+            //centralDirectory = new CentralDirectoryInfo(ip, Convert.ToInt16(port));
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            Process process = new Process();
+            string currentDirectory = Environment.CurrentDirectory;
+            string path = currentDirectory.Replace("PuppetMaster", "Server");
+            path += "/Server.exe";
+            process.StartInfo.FileName = path;
+            process.Start();
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            Process[] procs = Process.GetProcessesByName("Client");
+            foreach (Process p in procs) { p.Kill(); }
+            listCliOnline.Items.Clear();
+
+            procs = Process.GetProcessesByName("Server");
+            foreach (Process p in procs) { p.Kill(); }
+            listServOnline.Items.Clear();
+        }
     }
 
     public class PuppetMaster : MarshalByRefObject, IPuppetMaster
@@ -392,11 +427,12 @@ namespace PuppetMaster
             if (node.Type == NodeType.Client)
             {
                 ctx.Clients.Add(node);
-                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.IP +":"+ node.Port.ToString() });
+                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.Name });
             }
             else {
+                node.Name = "server-" + (ctx.Servers.Count + 1).ToString();
                 ctx.Servers.Add(node);
-                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.IP + ":" + node.Port.ToString() });
+                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.Name });
             }
         }
     }

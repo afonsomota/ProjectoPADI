@@ -25,6 +25,7 @@ namespace Client
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
+            string name = args[0];
 
 
 
@@ -38,7 +39,7 @@ namespace Client
               typeof(ICentralDirectory),
               "tcp://localhost:9090/CentralDirectory");
 
-            Node node = new Node(host, port, NodeType.Client);
+            Node node = new Node(host, port, name,NodeType.Client);
             cd.RegisterClient(node);
             Client clt = new Client(node,channel,puppet,cd);
             ClientPuppet.ctx = clt;
@@ -171,11 +172,7 @@ namespace Client
 
         public void KillClientThread()
         {
-            ChannelServices.UnregisterChannel(ctx.Channel);
-            ctx.Channel = new TcpChannel(ctx.Info.Port);
-            ChannelServices.RegisterChannel(ctx.Channel, true);
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
-            Console.WriteLine("Client Offline");
+            Environment.Exit(0);
         }
 
         //Adiciona o valor ao registo

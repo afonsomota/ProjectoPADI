@@ -20,9 +20,9 @@ namespace ConsoleClient
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
+            string name = args[1];
 
-
-            Node node = new Node(host, port, NodeType.Client);
+            Node node = new Node(host, port, name, NodeType.Client);
 
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);

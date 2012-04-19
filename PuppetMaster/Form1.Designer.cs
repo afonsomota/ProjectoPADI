@@ -52,12 +52,16 @@
             this.button4 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
+            this.button7 = new System.Windows.Forms.Button();
+            this.button8 = new System.Windows.Forms.Button();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.button9 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(549, 228);
+            this.label1.Location = new System.Drawing.Point(556, 293);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(71, 13);
             this.label1.TabIndex = 0;
@@ -66,7 +70,7 @@
             // listCliOnline
             // 
             this.listCliOnline.FormattingEnabled = true;
-            this.listCliOnline.Location = new System.Drawing.Point(552, 245);
+            this.listCliOnline.Location = new System.Drawing.Point(559, 310);
             this.listCliOnline.Name = "listCliOnline";
             this.listCliOnline.Size = new System.Drawing.Size(116, 82);
             this.listCliOnline.TabIndex = 1;
@@ -75,7 +79,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(549, 342);
+            this.label2.Location = new System.Drawing.Point(556, 407);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(71, 13);
             this.label2.TabIndex = 2;
@@ -84,7 +88,7 @@
             // listCliOffline
             // 
             this.listCliOffline.FormattingEnabled = true;
-            this.listCliOffline.Location = new System.Drawing.Point(552, 358);
+            this.listCliOffline.Location = new System.Drawing.Point(559, 423);
             this.listCliOffline.Name = "listCliOffline";
             this.listCliOffline.Size = new System.Drawing.Size(116, 82);
             this.listCliOffline.TabIndex = 3;
@@ -92,7 +96,7 @@
             // 
             // startCliButton
             // 
-            this.startCliButton.Location = new System.Drawing.Point(675, 245);
+            this.startCliButton.Location = new System.Drawing.Point(682, 310);
             this.startCliButton.Name = "startCliButton";
             this.startCliButton.Size = new System.Drawing.Size(40, 82);
             this.startCliButton.TabIndex = 4;
@@ -102,7 +106,7 @@
             // 
             // stopCliButton
             // 
-            this.stopCliButton.Location = new System.Drawing.Point(675, 358);
+            this.stopCliButton.Location = new System.Drawing.Point(682, 423);
             this.stopCliButton.Name = "stopCliButton";
             this.stopCliButton.Size = new System.Drawing.Size(40, 82);
             this.stopCliButton.TabIndex = 5;
@@ -112,7 +116,7 @@
             // 
             // stopServButton
             // 
-            this.stopServButton.Location = new System.Drawing.Point(873, 358);
+            this.stopServButton.Location = new System.Drawing.Point(880, 423);
             this.stopServButton.Name = "stopServButton";
             this.stopServButton.Size = new System.Drawing.Size(40, 82);
             this.stopServButton.TabIndex = 11;
@@ -122,7 +126,7 @@
             // 
             // startServButton
             // 
-            this.startServButton.Location = new System.Drawing.Point(873, 245);
+            this.startServButton.Location = new System.Drawing.Point(880, 310);
             this.startServButton.Name = "startServButton";
             this.startServButton.Size = new System.Drawing.Size(40, 82);
             this.startServButton.TabIndex = 10;
@@ -133,7 +137,7 @@
             // listServOffline
             // 
             this.listServOffline.FormattingEnabled = true;
-            this.listServOffline.Location = new System.Drawing.Point(750, 358);
+            this.listServOffline.Location = new System.Drawing.Point(757, 423);
             this.listServOffline.Name = "listServOffline";
             this.listServOffline.Size = new System.Drawing.Size(116, 82);
             this.listServOffline.TabIndex = 9;
@@ -142,7 +146,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(747, 342);
+            this.label3.Location = new System.Drawing.Point(754, 407);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(76, 13);
             this.label3.TabIndex = 8;
@@ -151,7 +155,7 @@
             // listServOnline
             // 
             this.listServOnline.FormattingEnabled = true;
-            this.listServOnline.Location = new System.Drawing.Point(750, 245);
+            this.listServOnline.Location = new System.Drawing.Point(757, 310);
             this.listServOnline.Name = "listServOnline";
             this.listServOnline.Size = new System.Drawing.Size(116, 82);
             this.listServOnline.TabIndex = 7;
@@ -160,7 +164,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(747, 228);
+            this.label4.Location = new System.Drawing.Point(754, 293);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(76, 13);
             this.label4.TabIndex = 6;
@@ -207,7 +211,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(549, 460);
+            this.label6.Location = new System.Drawing.Point(556, 525);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(75, 13);
             this.label6.TabIndex = 17;
@@ -216,7 +220,7 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(552, 476);
+            this.textBox1.Location = new System.Drawing.Point(559, 541);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(208, 20);
             this.textBox1.TabIndex = 18;
@@ -235,12 +239,12 @@
             this.listBox3.FormattingEnabled = true;
             this.listBox3.Location = new System.Drawing.Point(22, 245);
             this.listBox3.Name = "listBox3";
-            this.listBox3.Size = new System.Drawing.Size(401, 147);
+            this.listBox3.Size = new System.Drawing.Size(401, 290);
             this.listBox3.TabIndex = 20;
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(22, 399);
+            this.button3.Location = new System.Drawing.Point(22, 538);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(107, 23);
             this.button3.TabIndex = 21;
@@ -250,7 +254,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(323, 399);
+            this.button4.Location = new System.Drawing.Point(323, 538);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(100, 23);
             this.button4.TabIndex = 22;
@@ -260,7 +264,7 @@
             // 
             // button5
             // 
-            this.button5.Location = new System.Drawing.Point(777, 475);
+            this.button5.Location = new System.Drawing.Point(784, 540);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(135, 23);
             this.button5.TabIndex = 23;
@@ -277,11 +281,52 @@
             this.button6.Text = "Enter and Run Script";
             this.button6.UseVisualStyleBackColor = true;
             // 
+            // button7
+            // 
+            this.button7.Location = new System.Drawing.Point(555, 201);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(75, 50);
+            this.button7.TabIndex = 25;
+            this.button7.Text = " Run Stupid Client";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
+            // 
+            // button8
+            // 
+            this.button8.Location = new System.Drawing.Point(757, 201);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(75, 50);
+            this.button8.TabIndex = 26;
+            this.button8.Text = "Run Stupid Server";
+            this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(636, 217);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.Size = new System.Drawing.Size(86, 20);
+            this.textBox2.TabIndex = 27;
+            // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point(849, 201);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(75, 50);
+            this.button9.TabIndex = 28;
+            this.button9.Text = "Kill Servers and Clients";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(936, 567);
+            this.Controls.Add(this.button9);
+            this.Controls.Add(this.textBox2);
+            this.Controls.Add(this.button8);
+            this.Controls.Add(this.button7);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.button5);
             this.Controls.Add(this.button4);
@@ -340,6 +385,10 @@
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Button button7;
+        private System.Windows.Forms.Button button8;
+        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Button button9;
     }
 }
 

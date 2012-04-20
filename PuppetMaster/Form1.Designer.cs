@@ -111,7 +111,7 @@
             this.listServOnline.Name = "listServOnline";
             this.listServOnline.Size = new System.Drawing.Size(132, 82);
             this.listServOnline.TabIndex = 7;
-            this.listServOnline.SelectedIndexChanged += new System.EventHandler(this.listServOnline_SelectedIndexChanged);
+            //this.listServOnline.SelectedIndexChanged += new System.EventHandler(this.listServOnline_SelectedIndexChanged);
             // 
             // button1
             // 
@@ -148,7 +148,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(208, 20);
             this.textBox1.TabIndex = 18;
-            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            //this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // label7
             // 

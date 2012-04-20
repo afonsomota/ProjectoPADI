@@ -17,6 +17,7 @@ namespace PuppetMaster
 {
     public delegate void WriteHost(NodeType type, string url);
     public delegate void WriteUserScripts(string[] userScriptList);
+    
 
 
     public partial class Form1 : Form
@@ -25,6 +26,8 @@ namespace PuppetMaster
         public WriteUserScripts WriteUserScripts;
         public List<Node> Clients;
         public List<Node> Servers;
+        int numberOfUnamedClients = 0;
+        string[] defaultUsernames = new string[] { "caravela", "adamastor", "pedro", "carro", "kika", "antonio", "shelf", "chapeu", "frigorifico", "porta", "papel", "computador", "livro", "caneta", "lapiseira", "rato" };
         public string[] userScriptList;
         public string[] testes;
         public Dictionary<string, List<string>> clientsOperations = new Dictionary<string, List<string>>();
@@ -42,13 +45,9 @@ namespace PuppetMaster
             Clients = new List<Node>();
             Servers = new List<Node>();
             WriteHostDelegate = new WriteHost(WriteHostMethod);
+
            // WriteUserScriptsDelegate = new WriteUserScripts(WriteUserScriptsMethod);
             
-        }
-
-        public void WriteUserScriptsMethod(string[] userScripts) { 
-        
-        
         }
 
         public void WriteHostMethod(NodeType type,string name){
@@ -116,17 +115,8 @@ namespace PuppetMaster
             IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
               typeof(IClientPuppet),
               "tcp://" + SearchClientAdressByName((string)listCliOnline.SelectedItem) + "/ClientPuppet");
-           // try
-            //{
                 listCliOnline.Items.Remove((string)listCliOnline.SelectedItem);
                 cliente.KillClient();
-            //}
-            //catch (IOException p) 
-            //{
-              //  clientsOperations.Remove((string)listCliOnline.SelectedItem);
-            //}
-
-            //clientsOperations.Remove((string)listCliOnline.SelectedItem);
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -302,11 +292,6 @@ namespace PuppetMaster
             }
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void button4_Click_1(object sender, EventArgs e)
         {
             if (listBox3.SelectedItem != null)
@@ -382,16 +367,6 @@ namespace PuppetMaster
             
         }
 
-        private void listServOnline_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void listServOffline_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void button3_Click_1(object sender, EventArgs e)
         {
             string selectedOperation = (string)listBox3.SelectedItem;
@@ -413,7 +388,17 @@ namespace PuppetMaster
 
         private void button7_Click(object sender, EventArgs e)
         {
-            string clientName = textBox2.Text;
+            string clientName = null;
+
+            if (textBox2.Text.Length==0 )
+            {
+                clientName = defaultUsernames[numberOfUnamedClients];
+                numberOfUnamedClients++;
+            }
+            else
+            {
+                clientName = textBox2.Text;
+            }
             startClient(clientName);    
         }
 

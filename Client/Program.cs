@@ -27,7 +27,7 @@ namespace Client
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
             string name = args[0];
 
-
+            Console.WriteLine("Ciente: " + name);
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
            
@@ -47,17 +47,26 @@ namespace Client
             puppet.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             Console.WriteLine("Press Enter to Test...");
-           
+
+            //Testes by Bernardo
+            clt.Registers[0] = "Ola";
+            clt.Registers[1] = "Ola1";
+            clt.Registers[2] = "Ola2";
+            clt.Registers[3] = "Ola3";
+            clt.Registers[4] = "Ola4";
+
             //Testes
-            System.Console.ReadLine();
-            List<string> testList = new List<string>();
-            testList.Add("Afonso");
-            testList.Add("Rui");
-            testList.Add("Chinchila");
-            testList.Add("Power Ranger");
-            testList.Add("Pokemon");
-            testList.Add("Mais uma string qualquer");
-            System.Console.ReadLine();            
+           // System.Console.ReadLine();
+           // List<string> testList = new List<string>();
+           // testList.Add("Afonso");
+            //testList.Add("Rui");
+            //testList.Add("Chinchila");
+           // testList.Add("Power Ranger");
+           // testList.Add("Pokemon");
+           // testList.Add("Mais uma string qualquer");
+            System.Console.ReadLine();    
+        
+            
         }
     }
 
@@ -70,7 +79,7 @@ namespace Client
         public ICentralDirectory CD;
  
         public Client(Node info,TcpChannel channel,  IPuppetMaster puppet, ICentralDirectory cd){
-            Registers = new string[10];
+            Registers = new string[9];
             Info = info;
             Channel = channel;
             Puppet = puppet;

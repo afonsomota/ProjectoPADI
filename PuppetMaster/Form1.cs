@@ -447,7 +447,8 @@ namespace PuppetMaster
 
         void MyHandler(object sender, EventArgs e, string clientName) {
             Button dumpButton = (Button)sender;
-            //string[] clientRegisters = new string();
+            int aux=1;
+            string[] clientRegisters = new string[] { "", "", "", "", "", "", "", "", "",""};
 
 
             //dumpButton.Text = clientName;
@@ -455,8 +456,17 @@ namespace PuppetMaster
              typeof(IClientPuppet),
              "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
 
-            cliente.Dump();
+            clientRegisters = cliente.Dump();
 
+            ListBox currentListBox = clientRegistersValueListbox[clientName];
+            currentListBox.Items.Clear();
+
+
+            foreach (string s in clientRegisters) {
+
+                currentListBox.Items.Add("Resgisto " + aux.ToString() + "  Valor: " + s);
+                aux++;
+            }
 
         }
 

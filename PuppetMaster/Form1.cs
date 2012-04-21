@@ -31,6 +31,8 @@ namespace PuppetMaster
         public string[] userScriptList;
         public string[] testes;
         public Dictionary<string, List<string>> clientsOperations = new Dictionary<string, List<string>>();
+        public Dictionary<string, ListBox> clientRegistersValueListbox = new Dictionary<string, ListBox>();
+        int numberOfClients = 0;
         
         public string ip;
         
@@ -399,7 +401,32 @@ namespace PuppetMaster
             {
                 clientName = textBox2.Text;
             }
+
+            clientsOperations.Add(clientName, new List<string>());
+            clientRegistersValueListbox.Add(clientName,new ListBox());
+
+            GenerateClientDumpListBox(clientName); 
+            numberOfClients++;
             startClient(clientName);    
+        }
+
+        private void GenerateClientDumpListBox(string clientName) 
+        {
+            int tableWidth = 120;
+            int startingPointX = 40 + numberOfClients * tableWidth;
+
+            Label labelClientName = new Label();
+            labelClientName.Text = clientName;
+            labelClientName.Location = new System.Drawing.Point(startingPointX, 20);
+
+            ListBox listBoxClient = new ListBox();
+            listBoxClient.Location = new System.Drawing.Point(startingPointX, 40);
+            listBoxClient.Name = "ListBox"+"clientName";
+            listBoxClient.Size = new System.Drawing.Size(tableWidth, 500);
+           
+            this.tabPage2.Controls.Add(listBoxClient);
+            this.tabPage2.Controls.Add(labelClientName);
+        
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -434,6 +461,11 @@ namespace PuppetMaster
         }
 
         private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
         {
 
         }

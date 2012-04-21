@@ -32,6 +32,8 @@ namespace PuppetMaster
         public string[] testes;
         public Dictionary<string, List<string>> clientsOperations = new Dictionary<string, List<string>>();
         public Dictionary<string, ListBox> clientRegistersValueListbox = new Dictionary<string, ListBox>();
+        public Dictionary<string, Label> clientRegistersValueListboxLabel = new Dictionary<string, Label>();
+        public Dictionary<string, Button> clientListBoxDumpButton = new Dictionary<string, Button>();
         int numberOfClients = 0;
         
         public string ip;
@@ -377,12 +379,19 @@ namespace PuppetMaster
 
         private void startClient(string clientName) 
         {   
-            List<string> operations = new List<string>(); 
             Process process = new Process();
             string currentDirectory = Environment.CurrentDirectory;
             string path = currentDirectory.Replace("PuppetMaster", "Client");
             path += "/Client.exe";
-            clientsOperations.Add(clientName, operations);
+
+            clientsOperations.Add(clientName, new List<string>());
+            clientRegistersValueListbox.Add(clientName, new ListBox());
+            clientRegistersValueListboxLabel.Add(clientName, new Label());
+            clientListBoxDumpButton.Add(clientName, new Button());
+
+            GenerateClientDumpListBox(clientName);
+            numberOfClients++;
+
             process.StartInfo.Arguments = clientName;
             process.StartInfo.FileName = path;
             process.Start();
@@ -402,31 +411,61 @@ namespace PuppetMaster
                 clientName = textBox2.Text;
             }
 
-            clientsOperations.Add(clientName, new List<string>());
-            clientRegistersValueListbox.Add(clientName,new ListBox());
 
-            GenerateClientDumpListBox(clientName); 
-            numberOfClients++;
             startClient(clientName);    
         }
 
         private void GenerateClientDumpListBox(string clientName) 
         {
-            int tableWidth = 120;
+            int tableWidth = 120, tableHeight=500;
             int startingPointX = 40 + numberOfClients * tableWidth;
 
-            Label labelClientName = new Label();
+            Button dumpClientButton = clientListBoxDumpButton[clientName];
+            dumpClientButton.Text = "Show " + clientName + " Registers (DUMP)";
+            dumpClientButton.Width = tableWidth;
+            dumpClientButton.Height = 40;
+
+            dumpClientButton.Click += (sender, e) => { MyHandler(sender, e,clientName); };
+
+
+            dumpClientButton.Location = new System.Drawing.Point(startingPointX, 40 + tableHeight);
+
+            Label labelClientName = clientRegistersValueListboxLabel[clientName];
             labelClientName.Text = clientName;
             labelClientName.Location = new System.Drawing.Point(startingPointX, 20);
 
-            ListBox listBoxClient = new ListBox();
+            ListBox listBoxClient = clientRegistersValueListbox[clientName];
             listBoxClient.Location = new System.Drawing.Point(startingPointX, 40);
             listBoxClient.Name = "ListBox"+"clientName";
-            listBoxClient.Size = new System.Drawing.Size(tableWidth, 500);
-           
+            listBoxClient.Size = new System.Drawing.Size(tableWidth, tableHeight);
+
+            this.tabPage2.Controls.Add(dumpClientButton);
             this.tabPage2.Controls.Add(listBoxClient);
             this.tabPage2.Controls.Add(labelClientName);
         
+        }
+
+        void MyHandler(object sender, EventArgs e, string clientName) {
+            Button dumpButton = (Button)sender;
+            //string[] clientRegisters = new string();
+
+
+            //dumpButton.Text = clientName;
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+             typeof(IClientPuppet),
+             "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
+
+            cliente.Dump();
+
+
+        }
+
+
+        void DumpClient(object sender, EventArgs e)
+        {
+            Button CurrentButton = (Button)sender;
+
+            CurrentButton.Text = "I was clicked";
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -466,6 +505,11 @@ namespace PuppetMaster
         }
 
         private void tabPage1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage2_Click(object sender, EventArgs e)
         {
 
         }

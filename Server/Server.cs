@@ -15,7 +15,7 @@ namespace Server
 {
 
     //Read Lock = Read+Write Lock
-    public enum KeyState {FREE= 0 , READ_LOCKING = 1, WRITE_LOCKING= 2 , READ_LOCK = 3  , WRITE_LOCK =4 , NEW =5, TO_REMOVE= 6, COMMITING=7 }
+    public enum KeyState {FREE= 0 , READ_LOCKING = 1, WRITE_LOCKING= 2 , READ_LOCK = 3  , WRITE_LOCK =4 , NEW =5, TO_REMOVE= 6, COMMITING=7, NEW_COMMITING = 8, TO_REMOVE_COMMITING = 9 }
 
     [Serializable]
     public class TransactionState {
@@ -59,6 +59,12 @@ namespace Server
                     break;
                 case KeyState.COMMITING:
                     ret = "COMMITING";
+                    break;
+                case KeyState.NEW_COMMITING:
+                    ret = "NEW_COMMITING";
+                    break;
+                case KeyState.TO_REMOVE_COMMITING:
+                    ret = "TO_REMOVE_COMMITING";
                     break;
                 default:
                     ret = "";
@@ -118,30 +124,42 @@ namespace Server
             else
             {
 
-                Console.WriteLine("Inconsistent State on canLock on Transaction " + txid);
+                Console.WriteLine("Inconsistent State on canLock on Transaction " + txid + ": " + State);
                 return false;
             }
         }
 
         public void lockVariable(int txid) {
             if ((State.State != KeyState.READ_LOCKING && State.State != KeyState.WRITE_LOCKING)||State.Txid!=txid) {
-                Console.WriteLine("Inconsistent State on Lock on Transaction " + txid);
+                Console.WriteLine("Inconsistent State on Lock on Transaction " + txid + ": " + State + " v:" + Value + " t:" + Timestamp);
             }
             State.State = KeyState.READ_LOCK;
         }
 
         public void commitingVariable(int txid) {
-            if ((State.State != KeyState.READ_LOCK || State.State != KeyState.WRITE_LOCK) || State.Txid != txid)
+            if ((State.State != KeyState.READ_LOCK && State.State != KeyState.WRITE_LOCK
+                && State.State != KeyState.NEW && State.State != KeyState.TO_REMOVE) || State.Txid != txid)
             {
-                Console.WriteLine("Inconsistent State on canCommit on Transaction " + txid);
+                Console.WriteLine("Inconsistent State on canCommit on Transaction " + txid + ": " + State + " v:" + Value + " t:" + Timestamp);
             }
-            State.State = KeyState.COMMITING;
+            switch (State.State) { 
+                case KeyState.NEW:
+                    State.State = KeyState.NEW_COMMITING;
+                    break;
+                case KeyState.TO_REMOVE:
+                    State.State = KeyState.TO_REMOVE_COMMITING;
+                    break;
+                default:
+                    State.State = KeyState.COMMITING;
+                    break;
+            }
+            
         }
 
         public void commitVariable(int txid) {
-            if (State.State != KeyState.COMMITING || State.Txid != txid)
+            if (State.State < KeyState.COMMITING || State.Txid != txid)
             {
-                Console.WriteLine("Inconsistent State on Commit on Transaction " + txid);
+                Console.WriteLine("Inconsistent State on Commit on Transaction " + txid + ": " + State + " v:" + Value + " t:" + Timestamp);
             }
             State.State = KeyState.FREE;
             State.Txid = 0;
@@ -316,8 +334,10 @@ namespace Server
                     if (st.ContainsKey(key)) { 
                         List<TableValue> tvToRemove = new List<TableValue>();
                         foreach (TableValue tv in st[key])
-                            if (tv.State.State == KeyState.TO_REMOVE && tv.State.Txid == txid)
+                        {
+                            if (tv.State.State == KeyState.TO_REMOVE_COMMITING && tv.State.Txid == txid)
                                 tvToRemove.Add(tv);
+                        }
                         foreach (TableValue tv in tvToRemove) {
                             st[key].Remove(tv);
                         }
@@ -383,14 +403,15 @@ namespace Server
                                 if (!tv.isFree(txid)) return false;
                                 else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
                             }
-                            if (!objectsToLock.ContainsKey(key))
+                            bool objectsContainsKeys = false;
+                            foreach (string dicKey in objectsToLock.Keys)
+                                if (key == dicKey) objectsContainsKeys = true;
+                            if (!objectsContainsKeys)
                             {
                                 List<TableValue> list = new List<TableValue>();
                                 list.Add(valueToAdd);
                                 objectsToLock.Add(key, list);
                             }
-                            else objectsToLock[key].Add(valueToAdd);
-                            
                         }
                     }
                 }
@@ -398,7 +419,10 @@ namespace Server
             {
                 foreach(List<TableValue> list in objectsToLock.Values)
                     foreach (TableValue tv in list)
+                    {
+                        Console.WriteLine(tv.Value + " " + tv.Timestamp );
                         tv.lockingVariable(txid);
+                    }
                 TransactionObjects.Add(txid, objectsToLock);
                 OperationList.Add(txid, localOperations);
                 return true;
@@ -421,8 +445,6 @@ namespace Server
                         ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
                         link.PutInner(txid, key, value);
                     }
-                    int max_timestamp = 0;
-                    int min_timestamp = Int32.MaxValue;
                     if (st[key][0].Value == null)
                     {
                         st[key][0].Value = value;
@@ -430,18 +452,22 @@ namespace Server
                         return;
                     }
                     TableValue min_tv = st[key][0];
+                    int max_timestamp = 0;
+                    int min_timestamp = Int32.MaxValue;
                     foreach (TableValue tv in st[key])
                     {
                         if (tv.Timestamp > max_timestamp)
                             max_timestamp = tv.Timestamp;
-                        else if (tv.Timestamp < min_timestamp)
+                        if (tv.State.State != KeyState.TO_REMOVE && tv.Timestamp < min_timestamp)
                         {
                             min_timestamp = tv.Timestamp;
                             min_tv = tv;
                         }
                     }
-                    if (st[key].Count == K)
+                    if (st[key].Count >= K)
+                    {
                         min_tv.State.State = KeyState.TO_REMOVE;
+                    }
                     TableValue newtv = new TableValue(value, max_timestamp + 1, tvState);
                     TransactionObjects[txid][key].Add(newtv);
                     st[key].Add(newtv);
@@ -531,7 +557,7 @@ namespace Server
             foreach(string k in TransactionObjects[txid].Keys)
                 if (k == key) 
                     foreach (TableValue tv in TransactionObjects[txid][k]) 
-                        if (tv.State.State > KeyState.WRITE_LOCKING && tv.State.State != KeyState.COMMITING && tv.State.Txid == txid)
+                        if (tv.State.State > KeyState.WRITE_LOCKING && tv.State.State < KeyState.COMMITING && tv.State.Txid == txid)
                             return true;
             return false;    
         }
@@ -541,7 +567,7 @@ namespace Server
             foreach (string k in TransactionObjects[txid].Keys)
                 if (k == key)
                     foreach (TableValue tv in TransactionObjects[txid][k])
-                        if ((tv.State.State > KeyState.WRITE_LOCKING && tv.State.State != KeyState.COMMITING && tv.State.Txid == txid) ||
+                        if ((tv.State.State > KeyState.WRITE_LOCKING && tv.State.State < KeyState.COMMITING && tv.State.Txid == txid) ||
                                 tv.State.State==KeyState.WRITE_LOCK)
                             return true;
             return false;

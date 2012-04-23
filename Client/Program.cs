@@ -109,7 +109,19 @@ namespace Client
         //Executa um get na key "key" e guarda o conteudo no register
         public void GetInternal(int register, string key)
         {
+            List<Operation> ops = new List<Operation>();
+            Operation op =new Operation(key);
+            ops.Add(op);
+            TransactionContext transaction = new TransactionContext();
 
+            ICentralDirectory cd = (ICentralDirectory)Activator.GetObject(
+             typeof(ICentralDirectory),
+             "tcp://localhost:9090/CentralDirectory");
+
+            transaction = cd.GetServers(ops);
+
+            IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + transaction.NodesLocation[key][0].IP +":" +transaction.NodesLocation[key][0].Port + "/Server");
+            Registers[register] = server.Get(transaction.Txid,key);
         }
 
         //mete o valor "value" na key "key"

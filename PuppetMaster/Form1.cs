@@ -44,6 +44,9 @@ namespace PuppetMaster
         public Dictionary<string,TextBox > clientListBoxPutRegisterTextBox = new Dictionary<string, TextBox>();
         public Dictionary<string, TextBox> clientListBoxPutRegisterTextBox2 = new Dictionary<string, TextBox>();
         public Dictionary<string, Button> clientListBoxPutRegisterButton = new Dictionary<string, Button>();
+        public Dictionary<string, TextBox> clientListBoxGetKeyTextBox = new Dictionary<string, TextBox>();
+        public Dictionary<string, TextBox> clientListBoxGetKeyTextBox2 = new Dictionary<string, TextBox>();
+        public Dictionary<string, Button> clientListBoxGetKeyButton = new Dictionary<string, Button>();
 
         int numberOfClients = 0;
         
@@ -409,6 +412,10 @@ namespace PuppetMaster
             clientListBoxPutRegisterTextBox.Add(clientName,new TextBox());
             clientListBoxPutRegisterTextBox2.Add(clientName, new TextBox());
             clientListBoxPutRegisterButton.Add(clientName,new Button());
+            clientListBoxGetKeyTextBox.Add(clientName, new TextBox());
+            clientListBoxGetKeyTextBox2.Add(clientName, new TextBox());
+            clientListBoxGetKeyButton.Add(clientName, new Button());
+
 
 
             GenerateClientDumpListBox(clientName);
@@ -499,6 +506,21 @@ namespace PuppetMaster
             clientListBoxPutRegisterButton[clientName].Click += (sender, e) => { PutRegisterHandler(sender, e, clientName, Int32.Parse(clientListBoxPutRegisterTextBox[clientName].Text), clientListBoxPutRegisterTextBox2[clientName].Text); };
             clientListBoxPutRegisterButton[clientName].Location = new System.Drawing.Point(startingPointX, 140 + tableHeight);
 
+            //Get no Servidor
+            clientListBoxGetKeyTextBox[clientName].Location = new System.Drawing.Point(startingPointX + 95, 160 + tableHeight);
+            clientListBoxGetKeyTextBox[clientName].Width = 15;
+            clientListBoxGetKeyTextBox[clientName].Height = 40;
+
+            clientListBoxGetKeyTextBox2[clientName].Location = new System.Drawing.Point(startingPointX + 110, 160 + tableHeight);
+            clientListBoxGetKeyTextBox2[clientName].Width = tableWidth / 2 - 20;
+            clientListBoxGetKeyTextBox2[clientName].Height = 40;
+
+            clientListBoxGetKeyButton[clientName].Text = "Get Key Value";
+            clientListBoxGetKeyButton[clientName].Width = tableWidth / 2;
+            clientListBoxGetKeyButton[clientName].Height = 20;
+            clientListBoxGetKeyButton[clientName].Click += (sender, e) => { GetKeyHandler(sender, e, clientName, Int32.Parse(clientListBoxPutRegisterTextBox[clientName].Text), clientListBoxPutRegisterTextBox2[clientName].Text); };
+            clientListBoxGetKeyButton[clientName].Location = new System.Drawing.Point(startingPointX, 160 + tableHeight);
+
             clientRegistersValueListbox[clientName].Location = new System.Drawing.Point(startingPointX, 40);
             clientRegistersValueListbox[clientName].Name = "ListBox"+"clientName";
             clientRegistersValueListbox[clientName].Size = new System.Drawing.Size(tableWidth, tableHeight);
@@ -516,9 +538,22 @@ namespace PuppetMaster
             this.tabPage2.Controls.Add(clientListBoxPutRegisterTextBox[clientName]);
             this.tabPage2.Controls.Add(clientListBoxPutRegisterButton[clientName]);
             this.tabPage2.Controls.Add(clientListBoxPutRegisterTextBox2[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxGetKeyTextBox2[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxGetKeyTextBox[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxGetKeyButton[clientName]);
         
         }
 
+        void GetKeyHandler(object sender, EventArgs e, string clientName, int registerNumber, string key)
+        {
+
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+            typeof(IClientPuppet),
+            "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
+
+            cliente.Get(registerNumber, key);
+            DumpClient(clientName);
+        }
 
         void PutRegisterHandler(object sender, EventArgs e, string clientName, int registerNumber, string newValue)
         {

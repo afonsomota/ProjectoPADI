@@ -228,6 +228,7 @@ namespace Server
         private int tableToInit = 0;
         public Dictionary<int, Dictionary<string,List<TableValue>>> TransactionObjects;
         public Dictionary<int, List<Operation>> OperationList;
+        public Dictionary<int, List<string>> KeysAdded;
 
         public Server(Node info, TcpChannel channel, int k)
         {
@@ -237,6 +238,7 @@ namespace Server
             Semitables = new Semitable[2];
             TransactionObjects = new Dictionary<int, Dictionary<string,List<TableValue>>>();
             OperationList = new Dictionary<int, List<Operation>>();
+            KeysAdded = new Dictionary<int, List<string>>();
         }
 
         public void InitializeSemitables(uint minST1, uint maxST1,Node replica)
@@ -293,6 +295,9 @@ namespace Server
                             {
                                 st[key].Remove(tv);
                             }
+                            if (st[key].Count == 0) {
+                                st.Remove(key);
+                            }
                         }
                     }
                 }
@@ -324,6 +329,7 @@ namespace Server
                     tv.commitVariable(txid);
             TransactionObjects.Remove(txid);
             OperationList.Remove(txid);
+            KeysAdded.Remove(txid);
             return true;
         }
 
@@ -335,7 +341,7 @@ namespace Server
                     {
                         tv.commitingVariable(txid);
                     }
-                return false;
+                return true;
             }
             else {
                 return false; 
@@ -354,6 +360,7 @@ namespace Server
         public bool AreKeysFree(int txid, List<Operation> ops) {
             Dictionary<string,List< TableValue>> objectsToLock = new Dictionary<string, List<TableValue>>();
             List<Operation> localOperations = new List<Operation>();
+            KeysAdded.Add(txid, new List<string>());
             foreach (Operation op in ops)
             {
                 string key = op.Key;
@@ -365,6 +372,7 @@ namespace Server
                             localOperations.Add(op);
                             if (!st.ContainsKey(key))
                             {
+                                KeysAdded[txid].Add(key);
                                 List<TableValue> tvList = new List<TableValue>();
                                 tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
                                 st.Add(key, tvList);

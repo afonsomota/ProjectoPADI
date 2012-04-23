@@ -34,6 +34,12 @@ namespace PuppetMaster
         public Dictionary<string, ListBox> clientRegistersValueListbox = new Dictionary<string, ListBox>();
         public Dictionary<string, Label> clientRegistersValueListboxLabel = new Dictionary<string, Label>();
         public Dictionary<string, Button> clientListBoxDumpButton = new Dictionary<string, Button>();
+        public Dictionary<string, Button> clientListBoxToUpperButton = new Dictionary<string, Button>();
+        public Dictionary<string, Button> clientListBoxLowerButton = new Dictionary<string, Button>();
+        public Dictionary<string, TextBox> clientListBoxLowerTextBox = new Dictionary<string, TextBox>();
+        public Dictionary<string, TextBox> clientListBoxUpperTextBox = new Dictionary<string, TextBox>();
+        
+
         int numberOfClients = 0;
         
         public string ip;
@@ -388,6 +394,10 @@ namespace PuppetMaster
             clientRegistersValueListbox.Add(clientName, new ListBox());
             clientRegistersValueListboxLabel.Add(clientName, new Label());
             clientListBoxDumpButton.Add(clientName, new Button());
+            clientListBoxToUpperButton.Add(clientName, new Button());
+            clientListBoxLowerButton.Add(clientName, new Button());
+            clientListBoxLowerTextBox.Add(clientName,new TextBox());
+            clientListBoxUpperTextBox.Add(clientName, new TextBox());
 
             GenerateClientDumpListBox(clientName);
             numberOfClients++;
@@ -410,73 +420,108 @@ namespace PuppetMaster
             {
                 clientName = textBox2.Text;
             }
-
-
-            startClient(clientName);    
+            startClient(clientName);
+            
         }
 
         private void GenerateClientDumpListBox(string clientName) 
         {
-            int tableWidth = 120, tableHeight=500;
+            int tableWidth = 170, tableHeight=150;
             int startingPointX = 40 + numberOfClients * tableWidth;
 
-            Button dumpClientButton = clientListBoxDumpButton[clientName];
-            dumpClientButton.Text = "Show " + clientName + " Registers (DUMP)";
-            dumpClientButton.Width = tableWidth;
-            dumpClientButton.Height = 40;
+            clientListBoxDumpButton[clientName].Text = "Show " + clientName + " Registers (DUMP)";
+            clientListBoxDumpButton[clientName].Width = tableWidth;
+            clientListBoxDumpButton[clientName].Height = 40;
+            clientListBoxDumpButton[clientName].Click += (sender, e) => { MyHandler(sender, e,clientName); };
+            clientListBoxDumpButton[clientName].Location = new System.Drawing.Point(startingPointX, 40 + tableHeight);
 
-            dumpClientButton.Click += (sender, e) => { MyHandler(sender, e,clientName); };
+            clientListBoxLowerTextBox[clientName].Location = new System.Drawing.Point(startingPointX + 95, 80 + tableHeight);
+            clientListBoxLowerTextBox[clientName].Width = tableWidth / 2 - 10;
+            clientListBoxLowerTextBox[clientName].Height = 40;
 
+            clientListBoxLowerButton[clientName].Text = "Lower Case";
+            clientListBoxLowerButton[clientName].Width = tableWidth/2;
+            clientListBoxLowerButton[clientName].Height = 20;
+            clientListBoxLowerButton[clientName].Click += (sender, e) => { toLowerHandler(sender, e, clientName, Int32.Parse(clientListBoxLowerTextBox[clientName].Text)); };
+            clientListBoxLowerButton[clientName].Location = new System.Drawing.Point(startingPointX , 80 + tableHeight);
 
-            dumpClientButton.Location = new System.Drawing.Point(startingPointX, 40 + tableHeight);
+            clientListBoxUpperTextBox[clientName].Location = new System.Drawing.Point(startingPointX + 95, 100 + tableHeight);
+            clientListBoxUpperTextBox[clientName].Width = tableWidth / 2 - 10;
+            clientListBoxUpperTextBox[clientName].Height = 40;
 
-            Label labelClientName = clientRegistersValueListboxLabel[clientName];
-            labelClientName.Text = clientName;
-            labelClientName.Location = new System.Drawing.Point(startingPointX, 20);
+            clientListBoxToUpperButton[clientName].Text = "Up Case";
+            clientListBoxToUpperButton[clientName].Width = tableWidth/2;
+            clientListBoxToUpperButton[clientName].Height = 20;
+            clientListBoxToUpperButton[clientName].Click += (sender, e) => { toUpperHandler(sender, e, clientName, Int32.Parse(clientListBoxUpperTextBox[clientName].Text)); };
+            clientListBoxToUpperButton[clientName].Location = new System.Drawing.Point(startingPointX , 100 + tableHeight);
+        
+            clientRegistersValueListboxLabel[clientName].Text = clientName;
+            clientRegistersValueListboxLabel[clientName].Location = new System.Drawing.Point(startingPointX, 20);
 
-            ListBox listBoxClient = clientRegistersValueListbox[clientName];
-            listBoxClient.Location = new System.Drawing.Point(startingPointX, 40);
-            listBoxClient.Name = "ListBox"+"clientName";
-            listBoxClient.Size = new System.Drawing.Size(tableWidth, tableHeight);
+            clientRegistersValueListbox[clientName].Location = new System.Drawing.Point(startingPointX, 40);
+            clientRegistersValueListbox[clientName].Name = "ListBox"+"clientName";
+            clientRegistersValueListbox[clientName].Size = new System.Drawing.Size(tableWidth, tableHeight);
 
-            this.tabPage2.Controls.Add(dumpClientButton);
-            this.tabPage2.Controls.Add(listBoxClient);
-            this.tabPage2.Controls.Add(labelClientName);
+            this.tabPage2.Controls.Add(clientListBoxDumpButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxUpperTextBox[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxToUpperButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxLowerButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxLowerTextBox[clientName]);
+            this.tabPage2.Controls.Add(clientRegistersValueListbox[clientName]);
+            this.tabPage2.Controls.Add(clientRegistersValueListboxLabel[clientName]);
+            
         
         }
 
-        void MyHandler(object sender, EventArgs e, string clientName) {
-            Button dumpButton = (Button)sender;
-            int aux=1;
-            string[] clientRegisters = new string[] { "", "", "", "", "", "", "", "", "",""};
+        void toLowerHandler(object sender, EventArgs e, string clientName,int registerNumber) 
+        {
+            Button toLowerButton = (Button)sender;
 
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+            typeof(IClientPuppet),
+            "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
 
+            cliente.ToLower(registerNumber);
+            DumpClient(clientName);
+        }
+
+        void toUpperHandler(object sender, EventArgs e, string clientName, int registerNumber)
+        {
+            Button toLowerButton = (Button)sender;
+
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+            typeof(IClientPuppet),
+            "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
+
+            cliente.ToUpper(registerNumber);
+            DumpClient(clientName);
+        }
+
+        void DumpClient(string clientName)
+        {
+            int aux = 1;
             //dumpButton.Text = clientName;
             IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
              typeof(IClientPuppet),
              "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
-
+            string[] clientRegisters = new string[] { "", "", "", "", "", "", "", "", "", "", "" };
             clientRegisters = cliente.Dump();
 
             ListBox currentListBox = clientRegistersValueListbox[clientName];
             currentListBox.Items.Clear();
 
 
-            foreach (string s in clientRegisters) {
-
+            foreach (string s in clientRegisters)
+            {
                 currentListBox.Items.Add("Resgisto " + aux.ToString() + "  Valor: " + s);
                 aux++;
             }
-
         }
 
-
-        void DumpClient(object sender, EventArgs e)
-        {
-            Button CurrentButton = (Button)sender;
-
-            CurrentButton.Text = "I was clicked";
+        void MyHandler(object sender, EventArgs e, string clientName) {
+            DumpClient(clientName);
         }
+
 
         private void button8_Click(object sender, EventArgs e)
         {

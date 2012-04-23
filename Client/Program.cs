@@ -49,11 +49,13 @@ namespace Client
             Console.WriteLine("Press Enter to Test...");
 
             //Testes by Bernardo
-            clt.Registers[0] = "Ola";
-            clt.Registers[1] = "Ola1";
-            clt.Registers[2] = "Ola2";
-            clt.Registers[3] = "Ola3";
-            clt.Registers[4] = "Ola4";
+            clt.Registers[0] = "pEdro";
+            clt.Registers[1] = "paUlo";
+            clt.Registers[2] = "pReto";
+            clt.Registers[3] = "PATO";
+            clt.Registers[4] = "porCo";
+
+            clt.ToLowerInternal(2);
 
             //Testes
            // System.Console.ReadLine();
@@ -79,7 +81,7 @@ namespace Client
         public ICentralDirectory CD;
  
         public Client(Node info,TcpChannel channel,  IPuppetMaster puppet, ICentralDirectory cd){
-            Registers = new string[9];
+            Registers = new string[10];
             Info = info;
             Channel = channel;
             Puppet = puppet;
@@ -117,13 +119,13 @@ namespace Client
         //change the value of the key in the register number to lower case
         public void ToLowerInternal(int register)
         {
-            Registers[register].ToLower();
+            Registers[register]=Registers[register].ToLower();
 
         }
 
         public void ToUpperInternal(int register)
         {
-            Registers[register].ToUpper();
+            Registers[register]=Registers[register].ToUpper();
         }
 
         //concata a string do registo 2 no registo 1
@@ -155,9 +157,6 @@ namespace Client
                 Console.WriteLine(n);
             }
         }
-
-
-
     }
 
     class ClientPuppet : MarshalByRefObject, IClientPuppet
@@ -207,11 +206,11 @@ namespace Client
 
         //change the value of the key in the register number to lower case
         public void ToLower(int register) {
-            ctx.ToLowerInternal(register);
+            ctx.ToLowerInternal(register-1);
         }
 
         public void ToUpper(int register) {
-            ctx.ToUpperInternal(register);
+            ctx.ToUpperInternal(register-1);
         }
 
         //concata a string do registo 2 no registo 1

@@ -131,7 +131,7 @@ namespace Client
         //concata a string do registo 2 no registo 1
         public void ConcatInternal(int register1, int register2)
         {
-            Registers[register1] = Registers[register1] + Registers[register2];
+            Registers[register1-1] = Registers[register1-1] + Registers[register2-1];
         }
 
         //faz commit da transacção

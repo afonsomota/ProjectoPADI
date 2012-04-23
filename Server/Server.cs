@@ -309,33 +309,34 @@ namespace Server
             {
                 string key = op.Key;
                 uint hash = MD5Hash(key);
-                foreach (Semitable st in Semitables)
-                {
-                    if (hash >= st.MinInterval && hash <= st.MaxInterval) {
-                        localOperations.Add(op);
-                        if (!st.ContainsKey(key))
-                        {
-                            List<TableValue> tvList = new List<TableValue>();
-                            tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
-                            st.Add(key, tvList);
-                        }
-                        int max_timestamp = -1;
-                        TableValue valueToAdd = null;
-                        foreach (TableValue tv in st[key]) {
-                            if (!tv.isFree(txid)) return false;
-                            else if (tv.Timestamp > max_timestamp) valueToAdd = tv;
-                        }
-                        if (!objectsToLock.ContainsKey(key))
-                        {
-                            List<TableValue> list = new List<TableValue>();
-                            list.Add(valueToAdd);
-                            objectsToLock.Add(key, list);
-                        }
-                        else objectsToLock[key].Add(valueToAdd);
+                if(op.Type == OpType.PUT) 
+                    foreach (Semitable st in Semitables)
+                    {
+                        if (hash >= st.MinInterval && hash <= st.MaxInterval) {
+                            localOperations.Add(op);
+                            if (!st.ContainsKey(key))
+                            {
+                                List<TableValue> tvList = new List<TableValue>();
+                                tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
+                                st.Add(key, tvList);
+                            }
+                            int max_timestamp = -1;
+                            TableValue valueToAdd = null;
+                            foreach (TableValue tv in st[key]) {
+                                if (!tv.isFree(txid)) return false;
+                                else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
+                            }
+                            if (!objectsToLock.ContainsKey(key))
+                            {
+                                List<TableValue> list = new List<TableValue>();
+                                list.Add(valueToAdd);
+                                objectsToLock.Add(key, list);
+                            }
+                            else objectsToLock[key].Add(valueToAdd);
                             
+                        }
                     }
                 }
-            }
             if (objectsToLock.Count > 0)
             {
                 foreach(List<TableValue> list in objectsToLock.Values)

@@ -475,7 +475,8 @@ namespace CentralDirectory
             CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
             transactionsContext.Txid=txid;
             txid++;
-
+            Console.WriteLine("transacao identificador" + transactionsContext.Txid);
+            Console.WriteLine(txid);
             List<string> keys = new List<string>();
 
 

@@ -31,6 +31,44 @@ namespace Server
             Txid = txid;
             State = state;
         }
+
+        public override string ToString() {
+            string ret;
+
+            switch (State) { 
+                case KeyState.FREE:
+                    ret  = "FREE";
+                    break;
+                case KeyState.READ_LOCKING:
+                    ret = "READ_LOCKING";
+                    break;
+                case KeyState.WRITE_LOCKING:
+                    ret = "WRITE_LOCKING";
+                    break;
+                case KeyState.READ_LOCK:
+                    ret = "READ_LOCK";
+                    break;
+                case KeyState.WRITE_LOCK:
+                    ret = "WRITE_LOCK";
+                    break;
+                case KeyState.NEW:
+                    ret = "NEW";
+                    break;
+                case KeyState.TO_REMOVE:
+                    ret = "TO_REMOVE";
+                    break;
+                case KeyState.COMMITING:
+                    ret = "COMMITING";
+                    break;
+                default:
+                    ret = "";
+                    break;
+            }
+            if (ret != "FREE") {
+                ret += " to txid " + Txid;
+            }
+            return ret;
+        }
     }
 
     [Serializable]
@@ -159,15 +197,23 @@ namespace Server
             IPuppetMaster ligacao = (IPuppetMaster)Activator.GetObject(
                typeof(IPuppetMaster),
                "tcp://localhost:8090/PseudoNodeReg");
+
+            Console.WriteLine("Registering Server on Central Directory...");
             Node node = new Node(host, port, NodeType.Server);
-            Server srv = new Server(node, channel,5);
+            Server srv = new Server(node, channel, 5);
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ServerRemoting), "Server", WellKnownObjectMode.Singleton);
+            ICentralDirectory central = (ICentralDirectory)Activator.GetObject(
+               typeof(ICentralDirectory),
+               "tcp://localhost:9090/CentralDirectory");
+            central.RegisterServer(srv.Info);
+            Console.WriteLine("Server Online.");
             ServerPuppet.ctx = srv;
             ServerRemoting.ctx = srv;
             ligacao.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             while(true){
                 Console.ReadLine();
-                srv.PrintSemiTables();
+                srv.PrintSemiTablesValues();
             }
         }
     }
@@ -284,13 +330,16 @@ namespace Server
         public bool IsFinished(int txid) {
             if (OperationList[txid].Count == 0)
             {
-                foreach (List<TableValue> list in TransactionObjects[txid].Values)
-                    foreach(TableValue tv in list)
+                foreach (string key in TransactionObjects[txid].Keys)
+                    foreach (TableValue tv in TransactionObjects[txid][key])
+                    {
                         tv.commitingVariable(txid);
-                
-                return true;
+                    }
+                return false;
             }
-            else return false;
+            else {
+                return false; 
+            }
         }
 
         public bool LockTransactionVariables(int txid) {
@@ -349,11 +398,102 @@ namespace Server
             return false;
         }
 
+
+        public void Put(int txid, string key, string value, bool isReplica)
+        {
+            Console.WriteLine("PUT " + key + " " + value);
+            TransactionState tvState = new TransactionState(txid, KeyState.NEW);
+            foreach (Semitable st in Semitables)
+            {
+                if (st.ContainsKey(key))
+                {
+
+                    if (!isReplica && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
+                    {
+                        ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
+                        link.PutInner(txid, key, value);
+                    }
+                    int max_timestamp = 0;
+                    int min_timestamp = Int32.MaxValue;
+                    if (st[key][0].Value == null)
+                    {
+                        st[key][0].Value = value;
+                        st[key][0].State.State = KeyState.NEW;
+                        return;
+                    }
+                    TableValue min_tv = st[key][0];
+                    foreach (TableValue tv in st[key])
+                    {
+                        if (tv.Timestamp > max_timestamp)
+                            max_timestamp = tv.Timestamp;
+                        else if (tv.Timestamp < min_timestamp)
+                        {
+                            min_timestamp = tv.Timestamp;
+                            min_tv = tv;
+                        }
+                    }
+                    if (st[key].Count == K)
+                        min_tv.State.State = KeyState.TO_REMOVE;
+                    TableValue newtv = new TableValue(value, max_timestamp + 1, tvState);
+                    TransactionObjects[txid][key].Add(newtv);
+                    st[key].Add(newtv);
+                }
+                else
+                {
+                    uint hash = MD5Hash(key);
+                    if (hash >= st.MinInterval && hash <= st.MaxInterval)
+                    {
+
+                        if (!isReplica && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
+                        {
+                            ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
+                            link.PutInner(txid, key, value);
+                        }
+                        TableValue tv = new TableValue(value, 0, tvState);
+                        List<TableValue> values = new List<TableValue>();
+                        values.Add(tv);
+                        st.Add(key, values);
+                        Console.WriteLine("Inserted Key: " + key);
+                    }
+                }
+            }
+        }
+
         public bool ContainsKey(string key){
             foreach (Semitable st in Semitables) 
                 if (st.ContainsKey(key)) 
                     return true;
             return false;
+        }
+
+        public void PrintSemiTablesValues() {
+            Console.Write("SemiTable 0-> ");
+            Console.Write("[" + Semitables[0].MinInterval + "," + Semitables[0].MaxInterval+"]");
+            Console.WriteLine("; Replica: " + Semitables[0].Replica);
+            foreach (string key in Semitables[0].Keys)
+            {
+                Console.WriteLine(key + ":");
+                foreach (TableValue tv in Semitables[0][key]) {
+                    Console.WriteLine("\t\tValue: " + tv.Value + "; Timestamp: " + tv.Timestamp + "; State: " + tv.State);
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.Write("SemiTable 1-> ");
+            Console.Write("[" + Semitables[1].MinInterval + "," + Semitables[1].MaxInterval + "]");
+            Console.WriteLine("; Replica: " + Semitables[1].Replica);
+            foreach (string key in Semitables[1].Keys)
+            {
+                Console.WriteLine(key + ":");
+                foreach (TableValue tv in Semitables[1][key])
+                {
+                    Console.WriteLine("\t\tValue: " + tv.Value + "; Timestamp: " + tv.Timestamp + "; State: " + tv.State);
+                }
+                Console.WriteLine();
+            }
+            
+        
         }
 
         public void PrintSemiTables() {
@@ -532,64 +672,7 @@ namespace Server
             else Console.WriteLine("Inconsistent state for Remove Operation");
         }
 
-        public void Put(int txid,string key, string value,bool isReplica)
-        {
-            Console.WriteLine("PUT " + key + " " + value);
-            TransactionState tvState = new TransactionState(txid, KeyState.NEW);
-            foreach (Semitable st in Semitables)
-            {
-                if (st.ContainsKey(key))
-                {
-
-                    if (!isReplica && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
-                    {
-                        ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
-                        link.PutInner(txid, key, value);
-                    }
-                    int max_timestamp = 0;
-                    int min_timestamp = Int32.MaxValue;
-                    if (st[key][0].Value == null)
-                    {
-                        st[key][0].Value = value;
-                        return;
-                    }
-                    TableValue min_tv = st[key][0];
-                    foreach (TableValue tv in st[key])
-                    {
-                        if (tv.Timestamp > max_timestamp)
-                            max_timestamp = tv.Timestamp;
-                        else if (tv.Timestamp < min_timestamp)
-                        {
-                            min_timestamp = tv.Timestamp;
-                            min_tv = tv;
-                        }
-                    }
-                    if (st[key].Count == K)
-                        min_tv.State.State = KeyState.TO_REMOVE;
-                    TableValue newtv = new TableValue(value, max_timestamp + 1,tvState);
-                    TransactionObjects[txid][key].Add(newtv);
-                    st[key].Add(newtv);
-                }
-                else
-                {
-                    uint hash = MD5Hash(key);
-                    if (hash >= st.MinInterval && hash <= st.MaxInterval)
-                    {
-
-                        if (!isReplica && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
-                        {
-                            ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
-                            link.PutInner(txid, key, value);
-                        }
-                        TableValue tv = new TableValue(value,0,tvState);
-                        List<TableValue> values = new List<TableValue>();
-                        values.Add(tv);
-                        st.Add(key, values);
-                        Console.WriteLine("Inserted Key: " + key);
-                    }
-                }
-            }
-        }
+       
     }
 
     public class ServerRemoting: MarshalByRefObject, IServer{
@@ -652,20 +735,31 @@ namespace Server
 
         public string Get(int txid, string key)
         {
+            string ret = null;
             if (ctx.EligibleForRead(txid, key) && ctx.ContainsKey(key))
-                return ctx.Get(key);
-            else return null;
+            {
+                ret =  ctx.Get(key);
+                ctx.RemoveOperation(txid, OpType.GET, key);
+            }
+
+            return ret;
         }
 
         public void Put(int txid, string key, string new_value)
         {
-            if(ctx.EligibleForWrite(txid,key))
-                ctx.Put(txid,key, new_value, false);
+            if (ctx.EligibleForWrite(txid, key))
+            {
+                ctx.Put(txid, key, new_value, false);
+                ctx.RemoveOperation(txid, OpType.PUT, key);
+            }
         }
 
         public void PutInner(int txid, string key, string new_value) {
             if (ctx.EligibleForWrite(txid, key))
-                ctx.Put(txid, key, new_value,true);
+            {
+                ctx.Put(txid, key, new_value, true);
+                ctx.RemoveOperation(txid, OpType.PUT, key);
+            }
         }
 
         public bool Abort(int txid)
@@ -678,6 +772,7 @@ namespace Server
 
         public bool CanCommit(int txid)
         {
+            ctx.PrintSemiTablesValues();
             lock (locker) {
                 return ctx.IsFinished(txid);
             }

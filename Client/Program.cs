@@ -25,8 +25,9 @@ namespace Client
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
+            string name = args[0];
 
-
+            Console.WriteLine("Ciente: " + name);
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
            
@@ -38,7 +39,7 @@ namespace Client
               typeof(ICentralDirectory),
               "tcp://localhost:9090/CentralDirectory");
 
-            Node node = new Node(host, port, NodeType.Client);
+            Node node = new Node(host, port, name,NodeType.Client);
             cd.RegisterClient(node);
             Client clt = new Client(node,channel,puppet,cd);
             ClientPuppet.ctx = clt;
@@ -46,17 +47,28 @@ namespace Client
             puppet.RegisterPseudoNode(node);
             System.Console.WriteLine(host + ":" + port.ToString());
             Console.WriteLine("Press Enter to Test...");
-           
+
+            //Testes by Bernardo
+            clt.Registers[0] = "pEdro";
+            clt.Registers[1] = "paUlo";
+            clt.Registers[2] = "pReto";
+            clt.Registers[3] = "PATO";
+            clt.Registers[4] = "porCo";
+
+            clt.ToLowerInternal(2);
+
             //Testes
-            System.Console.ReadLine();
-            List<string> testList = new List<string>();
-            testList.Add("Afonso");
-            testList.Add("Rui");
-            testList.Add("Chinchila");
-            testList.Add("Power Ranger");
-            testList.Add("Pokemon");
-            testList.Add("Mais uma string qualquer");
-            System.Console.ReadLine();            
+           // System.Console.ReadLine();
+           // List<string> testList = new List<string>();
+           // testList.Add("Afonso");
+            //testList.Add("Rui");
+            //testList.Add("Chinchila");
+           // testList.Add("Power Ranger");
+           // testList.Add("Pokemon");
+           // testList.Add("Mais uma string qualquer");
+            System.Console.ReadLine();    
+        
+            
         }
     }
 
@@ -107,13 +119,13 @@ namespace Client
         //change the value of the key in the register number to lower case
         public void ToLowerInternal(int register)
         {
-            Registers[register].ToLower();
+            Registers[register]=Registers[register].ToLower();
 
         }
 
         public void ToUpperInternal(int register)
         {
-            Registers[register].ToUpper();
+            Registers[register]=Registers[register].ToUpper();
         }
 
         //concata a string do registo 2 no registo 1
@@ -145,9 +157,6 @@ namespace Client
                 Console.WriteLine(n);
             }
         }
-
-
-
     }
 
     class ClientPuppet : MarshalByRefObject, IClientPuppet
@@ -171,11 +180,8 @@ namespace Client
 
         public void KillClientThread()
         {
-            ChannelServices.UnregisterChannel(ctx.Channel);
-            ctx.Channel = new TcpChannel(ctx.Info.Port);
-            ChannelServices.RegisterChannel(ctx.Channel, true);
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientPuppet), "ClientPuppet", WellKnownObjectMode.Singleton);
-            Console.WriteLine("Client Offline");
+            Thread.Sleep(50);
+            Environment.Exit(0);
         }
 
         //Adiciona o valor ao registo
@@ -200,11 +206,11 @@ namespace Client
 
         //change the value of the key in the register number to lower case
         public void ToLower(int register) {
-            ctx.ToLowerInternal(register);
+            ctx.ToLowerInternal(register-1);
         }
 
         public void ToUpper(int register) {
-            ctx.ToUpperInternal(register);
+            ctx.ToUpperInternal(register-1);
         }
 
         //concata a string do registo 2 no registo 1

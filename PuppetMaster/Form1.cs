@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace PuppetMaster
 {
     public delegate void WriteHost(NodeType type, string url);
     public delegate void WriteUserScripts(string[] userScriptList);
+    
 
 
     public partial class Form1 : Form
@@ -24,9 +26,21 @@ namespace PuppetMaster
         public WriteUserScripts WriteUserScripts;
         public List<Node> Clients;
         public List<Node> Servers;
+        int numberOfUnamedClients = 0;
+        string[] defaultUsernames = new string[] { "caravela", "adamastor", "pedro", "carro", "kika", "antonio", "shelf", "chapeu", "frigorifico", "porta", "papel", "computador", "livro", "caneta", "lapiseira", "rato" };
         public string[] userScriptList;
         public string[] testes;
         public Dictionary<string, List<string>> clientsOperations = new Dictionary<string, List<string>>();
+        public Dictionary<string, ListBox> clientRegistersValueListbox = new Dictionary<string, ListBox>();
+        public Dictionary<string, Label> clientRegistersValueListboxLabel = new Dictionary<string, Label>();
+        public Dictionary<string, Button> clientListBoxDumpButton = new Dictionary<string, Button>();
+        public Dictionary<string, Button> clientListBoxToUpperButton = new Dictionary<string, Button>();
+        public Dictionary<string, Button> clientListBoxLowerButton = new Dictionary<string, Button>();
+        public Dictionary<string, TextBox> clientListBoxLowerTextBox = new Dictionary<string, TextBox>();
+        public Dictionary<string, TextBox> clientListBoxUpperTextBox = new Dictionary<string, TextBox>();
+        
+
+        int numberOfClients = 0;
         
         public string ip;
         
@@ -41,40 +55,32 @@ namespace PuppetMaster
             Clients = new List<Node>();
             Servers = new List<Node>();
             WriteHostDelegate = new WriteHost(WriteHostMethod);
+
            // WriteUserScriptsDelegate = new WriteUserScripts(WriteUserScriptsMethod);
             
         }
 
-        public void WriteUserScriptsMethod(string[] userScripts) { 
-        
-        
-        }
-
-        public void WriteHostMethod(NodeType type,string url){
+        public void WriteHostMethod(NodeType type,string name){
             if(type==NodeType.Client){
-                listCliOnline.Items.Add(url);
+                listCliOnline.Items.Add(name);
             }else{
-                listServOnline.Items.Add(url);
+                listServOnline.Items.Add(name);
             }
         }
 
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
-
             if (listCliOnline.SelectedItem!= null)
             {
                 string item = (string)listCliOnline.SelectedItem;
                 listCliOnline.Items.Remove(item);
-                listCliOffline.Items.Add(item);
+              //  listCliOffline.Items.Add(item);
 
                 IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
                 typeof(IClientPuppet),
                  "tcp://" + (string)listCliOnline.SelectedItem + "/ClientPuppet");
                 ligacao.StartClient();
-
-
 
                 clientsOperations.Add((string)listCliOnline.SelectedItem, new List<string>());
             }
@@ -82,32 +88,45 @@ namespace PuppetMaster
             {
                 string item = (string)listCliOnline.Items[0];
                 listCliOnline.Items.RemoveAt(0);
-                listCliOffline.Items.Add(item);
+                //listCliOffline.Items.Add(item);
 
                 IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
                typeof(IClientPuppet),
                 "tcp://" + item + "/ClientPuppet");
                 ligacao.StartClient();
-
-
-
                 clientsOperations.Add(item, new List<string>());
             }
         }
 
+        private string SearchClientAdressByName(string name) 
+        {
+            string address=null;
+            foreach (Node p in Clients)
+            {
+                if (name==p.Name)
+                    address = p.IP +":"+ p.Port;
+            }
+            return address;
+        }
+        
+        private string SearchServerAdressByName(string name)
+        {
+            string address = null;
+            foreach (Node p in Servers)
+            {
+                if (name == p.Name)
+                    address = p.IP + ":" + p.Port;
+            }
+            return address;
+        }
+
         private void button2_Click(object sender, EventArgs e)
         {
-            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
               typeof(IClientPuppet),
-              "tcp://" + (string)listCliOffline.SelectedItem + "/ClientPuppet");
-            ligacao.KillClient();
-
-            
-            clientsOperations.Remove((string)listCliOnline.SelectedItem);
-
-            string item = (string)listCliOffline.SelectedItem;
-            listCliOffline.Items.Remove(item);
-            listCliOnline.Items.Add(item);
+              "tcp://" + SearchClientAdressByName((string)listCliOnline.SelectedItem) + "/ClientPuppet");
+                listCliOnline.Items.Remove((string)listCliOnline.SelectedItem);
+                cliente.KillClient();
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -126,32 +145,31 @@ namespace PuppetMaster
                 ligacao.StartServer();
                 string item = (string)listServOnline.SelectedItem;
                 listServOnline.Items.Remove(item);
-                listServOffline.Items.Add(item);
+                //listServOffline.Items.Add(item);
             }
             else  
             {
                 string item = (string)listServOnline.Items[0];
                 listServOnline.Items.RemoveAt(0);
-                listServOffline.Items.Add(item);
+             //   listServOffline.Items.Add(item);
 
                 IServerPuppet ligacao = (IServerPuppet)Activator.GetObject(
                   typeof(IServerPuppet),
                   "tcp://" + item + "/ServerPuppet");
 
-                ligacao.StartServer();
-               
+                ligacao.StartServer();    
             }
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            IServerPuppet ligacao = (IServerPuppet)Activator.GetObject(
+            IServerPuppet server = (IServerPuppet)Activator.GetObject(
               typeof(IServerPuppet),
-              "tcp://" + (string)listServOffline.SelectedItem + "/ServerPuppet");
-            ligacao.KillServer();
-            string item = (string)listServOffline.SelectedItem;
-            listServOffline.Items.Remove(item);
-            listServOnline.Items.Add(item);
+              "tcp://" + SearchServerAdressByName((string)listServOnline.SelectedItem) + "/ServerPuppet");
+            server.KillServer();
+
+            string item = (string)listServOnline.SelectedItem;
+            listServOnline.Items.Remove(item);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -201,7 +219,7 @@ namespace PuppetMaster
 
         private void listCliOffline_SelectedIndexChanged(object sender, EventArgs e)
         {
-            textBox1.Text += (string)listCliOffline.SelectedItem;
+          //  textBox1.Text += (string)listCliOffline.SelectedItem;
         }
 
         private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
@@ -219,12 +237,10 @@ namespace PuppetMaster
             string operation = textBox1.Text;
             char[] delim = { ' ', '\t' };
                     string[] arg = operation.Split(delim);
-            
-
-            
+               
             if (operation.StartsWith("BEGINTX"))
             {
-                clientsOperations[arg[1]].Add("BEGINTX");
+                    clientsOperations[arg[1]].Add("BEGINTX");
             }
             // Esta a meio de uma transacção JA EXISTE UM "BEGINTX" -- Adiciona a pilha de transaccoes
             else if (clientsOperations[arg[1]].Contains("BEGINTX"))
@@ -284,11 +300,6 @@ namespace PuppetMaster
                 }
             
             }
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
         }
 
         private void button4_Click_1(object sender, EventArgs e)
@@ -366,19 +377,195 @@ namespace PuppetMaster
             
         }
 
-        private void listServOnline_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void listServOffline_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void button3_Click_1(object sender, EventArgs e)
         {
             string selectedOperation = (string)listBox3.SelectedItem;
+
+        }
+
+        private void startClient(string clientName) 
+        {   
+            Process process = new Process();
+            string currentDirectory = Environment.CurrentDirectory;
+            string path = currentDirectory.Replace("PuppetMaster", "Client");
+            path += "/Client.exe";
+
+            clientsOperations.Add(clientName, new List<string>());
+            clientRegistersValueListbox.Add(clientName, new ListBox());
+            clientRegistersValueListboxLabel.Add(clientName, new Label());
+            clientListBoxDumpButton.Add(clientName, new Button());
+            clientListBoxToUpperButton.Add(clientName, new Button());
+            clientListBoxLowerButton.Add(clientName, new Button());
+            clientListBoxLowerTextBox.Add(clientName,new TextBox());
+            clientListBoxUpperTextBox.Add(clientName, new TextBox());
+
+            GenerateClientDumpListBox(clientName);
+            numberOfClients++;
+
+            process.StartInfo.Arguments = clientName;
+            process.StartInfo.FileName = path;
+            process.Start();
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            string clientName = null;
+
+            if (textBox2.Text.Length==0 )
+            {
+                clientName = defaultUsernames[numberOfUnamedClients];
+                numberOfUnamedClients++;
+            }
+            else
+            {
+                clientName = textBox2.Text;
+            }
+            startClient(clientName);
+            
+        }
+
+        private void GenerateClientDumpListBox(string clientName) 
+        {
+            int tableWidth = 170, tableHeight=150;
+            int startingPointX = 40 + numberOfClients * tableWidth;
+
+            clientListBoxDumpButton[clientName].Text = "Show " + clientName + " Registers (DUMP)";
+            clientListBoxDumpButton[clientName].Width = tableWidth;
+            clientListBoxDumpButton[clientName].Height = 40;
+            clientListBoxDumpButton[clientName].Click += (sender, e) => { MyHandler(sender, e,clientName); };
+            clientListBoxDumpButton[clientName].Location = new System.Drawing.Point(startingPointX, 40 + tableHeight);
+
+            clientListBoxLowerTextBox[clientName].Location = new System.Drawing.Point(startingPointX + 95, 80 + tableHeight);
+            clientListBoxLowerTextBox[clientName].Width = tableWidth / 2 - 10;
+            clientListBoxLowerTextBox[clientName].Height = 40;
+
+            clientListBoxLowerButton[clientName].Text = "Lower Case";
+            clientListBoxLowerButton[clientName].Width = tableWidth/2;
+            clientListBoxLowerButton[clientName].Height = 20;
+            clientListBoxLowerButton[clientName].Click += (sender, e) => { toLowerHandler(sender, e, clientName, Int32.Parse(clientListBoxLowerTextBox[clientName].Text)); };
+            clientListBoxLowerButton[clientName].Location = new System.Drawing.Point(startingPointX , 80 + tableHeight);
+
+            clientListBoxUpperTextBox[clientName].Location = new System.Drawing.Point(startingPointX + 95, 100 + tableHeight);
+            clientListBoxUpperTextBox[clientName].Width = tableWidth / 2 - 10;
+            clientListBoxUpperTextBox[clientName].Height = 40;
+
+            clientListBoxToUpperButton[clientName].Text = "Up Case";
+            clientListBoxToUpperButton[clientName].Width = tableWidth/2;
+            clientListBoxToUpperButton[clientName].Height = 20;
+            clientListBoxToUpperButton[clientName].Click += (sender, e) => { toUpperHandler(sender, e, clientName, Int32.Parse(clientListBoxUpperTextBox[clientName].Text)); };
+            clientListBoxToUpperButton[clientName].Location = new System.Drawing.Point(startingPointX , 100 + tableHeight);
+        
+            clientRegistersValueListboxLabel[clientName].Text = clientName;
+            clientRegistersValueListboxLabel[clientName].Location = new System.Drawing.Point(startingPointX, 20);
+
+            clientRegistersValueListbox[clientName].Location = new System.Drawing.Point(startingPointX, 40);
+            clientRegistersValueListbox[clientName].Name = "ListBox"+"clientName";
+            clientRegistersValueListbox[clientName].Size = new System.Drawing.Size(tableWidth, tableHeight);
+
+            this.tabPage2.Controls.Add(clientListBoxDumpButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxUpperTextBox[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxToUpperButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxLowerButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxLowerTextBox[clientName]);
+            this.tabPage2.Controls.Add(clientRegistersValueListbox[clientName]);
+            this.tabPage2.Controls.Add(clientRegistersValueListboxLabel[clientName]);
+            
+        
+        }
+
+        void toLowerHandler(object sender, EventArgs e, string clientName,int registerNumber) 
+        {
+            Button toLowerButton = (Button)sender;
+
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+            typeof(IClientPuppet),
+            "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
+
+            cliente.ToLower(registerNumber);
+            DumpClient(clientName);
+        }
+
+        void toUpperHandler(object sender, EventArgs e, string clientName, int registerNumber)
+        {
+            Button toLowerButton = (Button)sender;
+
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+            typeof(IClientPuppet),
+            "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
+
+            cliente.ToUpper(registerNumber);
+            DumpClient(clientName);
+        }
+
+        void DumpClient(string clientName)
+        {
+            int aux = 1;
+            //dumpButton.Text = clientName;
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+             typeof(IClientPuppet),
+             "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
+            string[] clientRegisters = new string[] { "", "", "", "", "", "", "", "", "", "", "" };
+            clientRegisters = cliente.Dump();
+
+            ListBox currentListBox = clientRegistersValueListbox[clientName];
+            currentListBox.Items.Clear();
+
+
+            foreach (string s in clientRegisters)
+            {
+                currentListBox.Items.Add("Resgisto " + aux.ToString() + "  Valor: " + s);
+                aux++;
+            }
+        }
+
+        void MyHandler(object sender, EventArgs e, string clientName) {
+            DumpClient(clientName);
+        }
+
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            Process process = new Process();
+            string currentDirectory = Environment.CurrentDirectory;
+            string path = currentDirectory.Replace("PuppetMaster", "Server");
+            path += "/Server.exe";
+            process.StartInfo.FileName = path;
+            process.Start();
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            Process[] procs = Process.GetProcessesByName("Client");
+            foreach (Process p in procs) { p.Kill(); }
+            listCliOnline.Items.Clear();
+
+            procs = Process.GetProcessesByName("Server");
+            foreach (Process p in procs) { p.Kill(); }
+            listServOnline.Items.Clear();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage2_Click(object sender, EventArgs e)
+        {
 
         }
     }
@@ -392,11 +579,12 @@ namespace PuppetMaster
             if (node.Type == NodeType.Client)
             {
                 ctx.Clients.Add(node);
-                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.IP +":"+ node.Port.ToString() });
+                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.Name });
             }
             else {
+                node.Name = "server-" + (ctx.Servers.Count + 1).ToString();
                 ctx.Servers.Add(node);
-                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.IP + ":" + node.Port.ToString() });
+                ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.Name });
             }
         }
     }

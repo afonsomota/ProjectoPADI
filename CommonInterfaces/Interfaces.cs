@@ -14,11 +14,20 @@ namespace CommonInterfaces
     public class Node
     {
         public string IP;
+        public string Name;
         public int Port;
         public NodeType Type;
 
-        public Node(string ip, int port, NodeType clientOrServer){
+        public Node(string ip, int port,string name, NodeType clientOrServer){
             IP = ip;
+            Name = name;
+            Port = port;
+            Type = clientOrServer;
+        }
+        public Node(string ip, int port, NodeType clientOrServer)
+        {
+            IP = ip;
+            Name = null;
             Port = port;
             Type = clientOrServer;
         }

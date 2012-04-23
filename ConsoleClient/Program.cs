@@ -61,9 +61,9 @@ namespace ConsoleClient
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
-            string name = args[1];
+            //string name = args[1];
 
-            Node node = new Node(host, port, name, NodeType.Client);
+            Node node = new Node(host, port, "Console", NodeType.Client);
 
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);
@@ -185,8 +185,11 @@ namespace ConsoleClient
             foreach (Node serv in serversKeys.Keys)
             {
                 IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + serv.IP + ":" + serv.Port.ToString() + "/Server");
+                Console.Write("CanCommit to server " + serv + "? ");
                 bool b1 = link.CanCommit(tctx.Txid);
                 canCommitValues.Add(serv, b1);
+                if (b1) Console.WriteLine("YES");
+                else Console.WriteLine("NO");
             }
 
             bool allCanCommit = true;
@@ -206,16 +209,20 @@ namespace ConsoleClient
                     {
                         IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
                         link.Abort(tctx.Txid);
-                        Console.WriteLine("Transaction Aborted");
-                        return;
+                       
+                        
                     }
                 }
+                Console.WriteLine("Transaction Aborted");
+                Console.ReadLine();
+                return;
             }
 
             foreach (Node n in canCommitValues.Keys)
             {
                 IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
                 link.Commit(tctx.Txid);
+                Console.WriteLine("Commiting to server " + n + ".");
             }
 
 

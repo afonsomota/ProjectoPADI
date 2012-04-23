@@ -41,6 +41,9 @@ namespace PuppetMaster
         public Dictionary<string, TextBox> clientRegistersValueListboxConcatRegister1 = new Dictionary<string,TextBox>();
         public Dictionary<string, TextBox> clientRegistersValueListboxConcatRegister2 = new Dictionary<string, TextBox>();
         public Dictionary<string, Button> clientListBoxConcatButton = new Dictionary<string, Button>();
+        public Dictionary<string,TextBox > clientListBoxPutRegisterTextBox = new Dictionary<string, TextBox>();
+        public Dictionary<string, TextBox> clientListBoxPutRegisterTextBox2 = new Dictionary<string, TextBox>();
+        public Dictionary<string, Button> clientListBoxPutRegisterButton = new Dictionary<string, Button>();
 
         int numberOfClients = 0;
         
@@ -403,6 +406,9 @@ namespace PuppetMaster
             clientRegistersValueListboxConcatRegister2.Add(clientName, new TextBox());
             clientRegistersValueListboxConcatRegister1.Add(clientName, new TextBox());
             clientListBoxConcatButton.Add(clientName, new Button());
+            clientListBoxPutRegisterTextBox.Add(clientName,new TextBox());
+            clientListBoxPutRegisterTextBox2.Add(clientName, new TextBox());
+            clientListBoxPutRegisterButton.Add(clientName,new Button());
 
 
             GenerateClientDumpListBox(clientName);
@@ -460,7 +466,7 @@ namespace PuppetMaster
             clientListBoxToUpperButton[clientName].Height = 20;
             clientListBoxToUpperButton[clientName].Click += (sender, e) => { ToUpperHandler(sender, e, clientName, Int32.Parse(clientListBoxUpperTextBox[clientName].Text)); };
             clientListBoxToUpperButton[clientName].Location = new System.Drawing.Point(startingPointX , 100 + tableHeight);
-        
+
             clientRegistersValueListboxLabel[clientName].Text = clientName;
             clientRegistersValueListboxLabel[clientName].Location = new System.Drawing.Point(startingPointX, 20);
 
@@ -478,7 +484,20 @@ namespace PuppetMaster
             clientListBoxConcatButton[clientName].Click += (sender, e) => { ConcatHandler(sender, e, clientName, Int32.Parse(clientRegistersValueListboxConcatRegister1[clientName].Text), Int32.Parse(clientRegistersValueListboxConcatRegister2[clientName].Text)); };
             clientListBoxConcatButton[clientName].Location = new System.Drawing.Point(startingPointX, 120 + tableHeight);
 
+            //Put no Register
+            clientListBoxPutRegisterTextBox[clientName].Location = new System.Drawing.Point(startingPointX + 95, 140 + tableHeight);
+            clientListBoxPutRegisterTextBox[clientName].Width = 15;
+            clientListBoxPutRegisterTextBox[clientName].Height = 40;
 
+            clientListBoxPutRegisterTextBox2[clientName].Location = new System.Drawing.Point(startingPointX + 110, 140 + tableHeight);
+            clientListBoxPutRegisterTextBox2[clientName].Width = tableWidth / 2 - 20;
+            clientListBoxPutRegisterTextBox2[clientName].Height = 40;
+
+            clientListBoxPutRegisterButton[clientName].Text = "Store";
+            clientListBoxPutRegisterButton[clientName].Width = tableWidth / 2;
+            clientListBoxPutRegisterButton[clientName].Height = 20;
+            clientListBoxPutRegisterButton[clientName].Click += (sender, e) => { PutRegisterHandler(sender, e, clientName, Int32.Parse(clientListBoxPutRegisterTextBox[clientName].Text), clientListBoxPutRegisterTextBox2[clientName].Text); };
+            clientListBoxPutRegisterButton[clientName].Location = new System.Drawing.Point(startingPointX, 140 + tableHeight);
 
             clientRegistersValueListbox[clientName].Location = new System.Drawing.Point(startingPointX, 40);
             clientRegistersValueListbox[clientName].Name = "ListBox"+"clientName";
@@ -494,7 +513,22 @@ namespace PuppetMaster
             this.tabPage2.Controls.Add(clientRegistersValueListboxConcatRegister2[clientName]);
             this.tabPage2.Controls.Add(clientRegistersValueListboxConcatRegister1[clientName]);
             this.tabPage2.Controls.Add(clientListBoxConcatButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxPutRegisterTextBox[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxPutRegisterButton[clientName]);
+            this.tabPage2.Controls.Add(clientListBoxPutRegisterTextBox2[clientName]);
         
+        }
+
+
+        void PutRegisterHandler(object sender, EventArgs e, string clientName, int registerNumber, string newValue)
+        {
+
+            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+            typeof(IClientPuppet),
+            "tcp://" + SearchClientAdressByName(clientName) + "/ClientPuppet");
+
+            cliente.Store(registerNumber,newValue);
+            DumpClient(clientName);
         }
 
         void ConcatHandler(object sender, EventArgs e, string clientName, int registerNumber, int registerNumber2)

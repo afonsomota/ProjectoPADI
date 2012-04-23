@@ -88,14 +88,11 @@ namespace Client
             CD = cd;
         }
 
-        public void StoreValue(int reg, string value){
-            Registers[reg] = value;
-        }
 
         //Adiciona o valor ao registo
         public void StoreInternal(int register, string value)
         {
-            Registers[register]=value;
+            Registers[register-1]=value;
         }
 
         //Executa um Put com o conteudo do registo "register" na key "key"

@@ -518,7 +518,7 @@ namespace PuppetMaster
             clientListBoxGetKeyButton[clientName].Text = "Get Key Value";
             clientListBoxGetKeyButton[clientName].Width = tableWidth / 2;
             clientListBoxGetKeyButton[clientName].Height = 20;
-            clientListBoxGetKeyButton[clientName].Click += (sender, e) => { GetKeyHandler(sender, e, clientName, Int32.Parse(clientListBoxPutRegisterTextBox[clientName].Text), clientListBoxPutRegisterTextBox2[clientName].Text); };
+            clientListBoxGetKeyButton[clientName].Click += (sender, e) => { GetKeyHandler(sender, e, clientName, Int32.Parse(clientListBoxGetKeyTextBox[clientName].Text), clientListBoxGetKeyTextBox2[clientName].Text); };
             clientListBoxGetKeyButton[clientName].Location = new System.Drawing.Point(startingPointX, 160 + tableHeight);
 
             clientRegistersValueListbox[clientName].Location = new System.Drawing.Point(startingPointX, 40);

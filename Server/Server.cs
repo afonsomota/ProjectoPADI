@@ -156,8 +156,8 @@ namespace Server
             {
                 return false;
             }
-            else if(State.State != KeyState.READ_LOCK && State.State != KeyState.WRITE_LOCK
-                && State.State != KeyState.NEW && State.State != KeyState.TO_REMOVE){
+            else if(State.State == KeyState.READ_LOCK || State.State == KeyState.WRITE_LOCK
+                || State.State == KeyState.NEW || State.State == KeyState.TO_REMOVE){
                 switch (State.State){
                     case KeyState.NEW:
                         State.State = KeyState.NEW_COMMITING;
@@ -230,13 +230,16 @@ namespace Server
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
 
+            
+            Console.WriteLine("Registering Server on Central Directory...");
+            Node node = new Node(host, port, NodeType.Server);
+            Server srv = new Server(node, channel, 5);
+            ServerPuppet.ctx = srv;
+            ServerRemoting.ctx = srv;
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ServerPuppet), "ServerPuppet", WellKnownObjectMode.Singleton);
             IPuppetMaster ligacao = (IPuppetMaster)Activator.GetObject(
                typeof(IPuppetMaster),
                "tcp://localhost:8090/PseudoNodeReg");
-            Console.WriteLine("Registering Server on Central Directory...");
-            Node node = new Node(host, port, NodeType.Server);
-            Server srv = new Server(node, channel, 5);
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ServerRemoting), "Server", WellKnownObjectMode.Singleton);
             ICentralDirectory central = (ICentralDirectory)Activator.GetObject(
                typeof(ICentralDirectory),
@@ -302,6 +305,7 @@ namespace Server
         }
 
         public void Abort(int txid) {
+            if (!TransactionObjects.ContainsKey(txid)) return;
                 foreach (string key in TransactionObjects[txid].Keys)
                 {
                     foreach (Semitable st in Semitables)
@@ -394,7 +398,7 @@ namespace Server
                     if (!st.ContainsKey(key))
                     {
                         List<TableValue> tvList = new List<TableValue>();
-                        tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
+                        tvList.Add(new TableValue(null, 0, new TransactionState(0, KeyState.FREE)));
                         st.Add(key, tvList);
                     }
                     int max_timestamp = -1;
@@ -428,7 +432,11 @@ namespace Server
                         Console.WriteLine(tv.Value + " " + tv.Timestamp );
                         tv.lockingVariable(txid);
                     }
-                TransactionObjects.Add(txid, objectsToLock);
+                if (!TransactionObjects.ContainsKey(txid))
+                    TransactionObjects.Add(txid, objectsToLock);
+                else foreach (string dicKey in objectsToLock.Keys) {
+                    TransactionObjects[txid].Add(dicKey, objectsToLock[dicKey]);
+                }
                 return true;
             }
             return false;
@@ -568,6 +576,7 @@ namespace Server
 
         public bool EligibleForRead(int txid, string key)
         {
+     
             foreach (string k in TransactionObjects[txid].Keys)
                 if (k == key)
                     foreach (TableValue tv in TransactionObjects[txid][k])

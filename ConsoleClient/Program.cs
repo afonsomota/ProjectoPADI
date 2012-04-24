@@ -194,6 +194,7 @@ namespace ConsoleClient
             }
             else {
                 nodes = GetAndLockKey(key);
+                AccessedKeys.Add(key);
             }
             if (nodes != null)
             {
@@ -238,6 +239,7 @@ namespace ConsoleClient
             else
             {
                 nodes = GetAndLockKey(key);
+                AccessedKeys.Add(key);
             }
             if (nodes != null)
             {

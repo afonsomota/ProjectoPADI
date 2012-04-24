@@ -780,21 +780,23 @@ namespace Server
             return ret;
         }
 
-        public void Put(int txid, string key, string new_value)
+        public bool Put(int txid, string key, string new_value)
         {
             if (ctx.EligibleForWrite(txid, key))
             {
                 ctx.Put(txid, key, new_value, false);
                 ctx.RemoveOperation(txid, OpType.PUT, key);
             }
+            return true;
         }
 
-        public void PutInner(int txid, string key, string new_value) {
+        public bool PutInner(int txid, string key, string new_value) {
             if (ctx.EligibleForWrite(txid, key))
             {
                 ctx.Put(txid, key, new_value, true);
                 ctx.RemoveOperation(txid, OpType.PUT, key);
             }
+            return true;
         }
 
         public bool Abort(int txid)

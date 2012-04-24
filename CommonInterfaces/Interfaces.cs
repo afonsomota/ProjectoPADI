@@ -218,7 +218,7 @@ namespace CommonInterfaces
         bool CanLock(int txid, string key);
         bool Lock(int txid, string key);
         string Get(int txid, string key);
-        void Put(int txid, string key, string new_value);
+        bool Put(int txid, string key, string new_value);
         bool Abort(int txid);
         bool CanCommit(int txid);
         bool Commit(int txid); 

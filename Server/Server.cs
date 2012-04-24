@@ -101,6 +101,15 @@ namespace Server
             else return false;
         }
 
+        public bool isLockable(int txid) { 
+            KeyState state = State.State;
+            if ((state < KeyState.COMMITING && txid < State.Txid && state != KeyState.FREE) || state == KeyState.FREE)
+            {
+                return true;
+            }
+            else return false;
+        }
+
         public bool isFree(int txid){
             KeyState state = State.State;
             if (state == KeyState.FREE || ((state == KeyState.READ_LOCKING || state == KeyState.WRITE_LOCKING) && txid <= State.Txid))
@@ -115,7 +124,7 @@ namespace Server
 
         public bool lockingVariable(int txid) {
             KeyState state = State.State;
-            if (state == KeyState.FREE || ((state == KeyState.READ_LOCKING || state == KeyState.WRITE_LOCKING) && txid <= State.Txid))
+            if ((state < KeyState.COMMITING && txid < State.Txid && state != KeyState.FREE) || state == KeyState.FREE)
             {
                 State.Txid = txid;
                 State.State = KeyState.READ_LOCKING;
@@ -123,37 +132,47 @@ namespace Server
             }
             else
             {
-
                 Console.WriteLine("Inconsistent State on canLock on Transaction " + txid + ": " + State);
                 return false;
             }
         }
 
-        public void lockVariable(int txid) {
-            if ((State.State != KeyState.READ_LOCKING && State.State != KeyState.WRITE_LOCKING)||State.Txid!=txid) {
-                Console.WriteLine("Inconsistent State on Lock on Transaction " + txid + ": " + State + " v:" + Value + " t:" + Timestamp);
+        public bool lockVariable(int txid) {
+            if (State.Txid != txid)
+            {
+                return false;
             }
-            State.State = KeyState.READ_LOCK;
+            else
+            {
+                if (State.State != KeyState.READ_LOCKING && State.State != KeyState.WRITE_LOCKING) 
+                    Console.WriteLine("Inconsistent State on Lock on Transaction " + txid + ": " + State + " v:" + Value + " t:" + Timestamp);
+                State.State = KeyState.READ_LOCK;
+                return true;
+            }
         }
 
-        public void commitingVariable(int txid) {
-            if ((State.State != KeyState.READ_LOCK && State.State != KeyState.WRITE_LOCK
-                && State.State != KeyState.NEW && State.State != KeyState.TO_REMOVE) || State.Txid != txid)
+        public bool commitingVariable(int txid) {
+            if (State.Txid != txid)
             {
-                Console.WriteLine("Inconsistent State on canCommit on Transaction " + txid + ": " + State + " v:" + Value + " t:" + Timestamp);
+                return false;
             }
-            switch (State.State) { 
-                case KeyState.NEW:
-                    State.State = KeyState.NEW_COMMITING;
-                    break;
-                case KeyState.TO_REMOVE:
-                    State.State = KeyState.TO_REMOVE_COMMITING;
-                    break;
-                default:
-                    State.State = KeyState.COMMITING;
-                    break;
+            else if(State.State != KeyState.READ_LOCK && State.State != KeyState.WRITE_LOCK
+                && State.State != KeyState.NEW && State.State != KeyState.TO_REMOVE){
+                switch (State.State){
+                    case KeyState.NEW:
+                        State.State = KeyState.NEW_COMMITING;
+                        break;
+                    case KeyState.TO_REMOVE:
+                        State.State = KeyState.TO_REMOVE_COMMITING;
+                        break;
+                    default:
+                        State.State = KeyState.COMMITING;
+                        break;
+                }
+                return true;
             }
-            
+            Console.WriteLine("Inconsistent State on canCommit on Transaction " + txid + ": " + State + " v:" + Value + " t:" + Timestamp);
+            return false;
         }
 
         public void commitVariable(int txid) {
@@ -215,7 +234,6 @@ namespace Server
             IPuppetMaster ligacao = (IPuppetMaster)Activator.GetObject(
                typeof(IPuppetMaster),
                "tcp://localhost:8090/PseudoNodeReg");
-
             Console.WriteLine("Registering Server on Central Directory...");
             Node node = new Node(host, port, NodeType.Server);
             Server srv = new Server(node, channel, 5);
@@ -255,8 +273,6 @@ namespace Server
             K = k;
             Semitables = new Semitable[2];
             TransactionObjects = new Dictionary<int, Dictionary<string,List<TableValue>>>();
-            OperationList = new Dictionary<int, List<Operation>>();
-            KeysAdded = new Dictionary<int, List<string>>();
         }
 
         public void InitializeSemitables(uint minST1, uint maxST1,Node replica)
@@ -288,17 +304,6 @@ namespace Server
         }
 
         public void Abort(int txid) {
-            bool isTxLocked = true;
-            foreach (List<TableValue> list in TransactionObjects[txid].Values)
-                foreach (TableValue tv in list)
-                {
-                    if (tv.isLocked(txid))
-                    {
-                        isTxLocked = true;
-                        break;
-                    }
-                }
-            if (isTxLocked) {
                 foreach (string key in TransactionObjects[txid].Keys)
                 {
                     foreach (Semitable st in Semitables)
@@ -307,7 +312,7 @@ namespace Server
                         {
                             List<TableValue> tvToRemove = new List<TableValue>();
                             foreach (TableValue tv in st[key])
-                                if (tv.State.State == KeyState.NEW && tv.State.Txid == txid)
+                                if (tv.State.State == KeyState.NEW && tv.State.Txid == txid || tv.Value == null)
                                     tvToRemove.Add(tv);
                             foreach (TableValue tv in tvToRemove)
                             {
@@ -319,7 +324,7 @@ namespace Server
                         }
                     }
                 }
-            }
+            
             foreach (List<TableValue> list in TransactionObjects[txid].Values)
                 foreach (TableValue tv in list)
                 {
@@ -348,73 +353,70 @@ namespace Server
                 foreach (TableValue tv in list)
                     tv.commitVariable(txid);
             TransactionObjects.Remove(txid);
-            OperationList.Remove(txid);
-            KeysAdded.Remove(txid);
             return true;
         }
 
         public bool IsFinished(int txid) {
-            if (OperationList[txid].Count == 0)
-            {
-                foreach (string key in TransactionObjects[txid].Keys)
-                    foreach (TableValue tv in TransactionObjects[txid][key])
+            bool allAbleToCommit = true;
+            List<TableValue> valuesToRemove = new List<TableValue>();
+            foreach (string key in TransactionObjects[txid].Keys){
+                foreach (TableValue tv in TransactionObjects[txid][key]){
+                    if (!tv.commitingVariable(txid))
                     {
-                        tv.commitingVariable(txid);
-                    }
-                return true;
-            }
-            else {
-                return false; 
-            }
-        }
-
-        public bool LockTransactionVariables(int txid) {
-            foreach (List<TableValue> list in TransactionObjects[txid].Values)
-                    foreach(TableValue tv in list)
-                        tv.lockVariable(txid);   
-            
-            return true;
-        }
-        
-        
-        public bool AreKeysFree(int txid, List<Operation> ops) {
-            Dictionary<string,List< TableValue>> objectsToLock = new Dictionary<string, List<TableValue>>();
-            List<Operation> localOperations = new List<Operation>();
-            KeysAdded.Add(txid, new List<string>());
-            foreach (Operation op in ops)
-            {
-                string key = op.Key;
-                uint hash = MD5Hash(key);
-                if(op.Type == OpType.PUT) 
-                    foreach (Semitable st in Semitables)
-                    {
-                        if (hash >= st.MinInterval && hash <= st.MaxInterval) {
-                            localOperations.Add(op);
-                            if (!st.ContainsKey(key))
-                            {
-                                KeysAdded[txid].Add(key);
-                                List<TableValue> tvList = new List<TableValue>();
-                                tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
-                                st.Add(key, tvList);
-                            }
-                            int max_timestamp = -1;
-                            TableValue valueToAdd = null;
-                            foreach (TableValue tv in st[key]) {
-                                if (!tv.isFree(txid)) return false;
-                                else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
-                            }
-                            bool objectsContainsKeys = false;
-                            foreach (string dicKey in objectsToLock.Keys)
-                                if (key == dicKey) objectsContainsKeys = true;
-                            if (!objectsContainsKeys)
-                            {
-                                List<TableValue> list = new List<TableValue>();
-                                list.Add(valueToAdd);
-                                objectsToLock.Add(key, list);
-                            }
-                        }
+                        allAbleToCommit = false;
+                        valuesToRemove.Add(tv);
                     }
                 }
+                foreach (TableValue tv in valuesToRemove)
+                    TransactionObjects[txid][key].Remove(tv);
+            }
+            return allAbleToCommit;
+        }
+
+        public bool LockTransactionVariables(int txid,string key) {
+            bool allLocked = true;
+            List<TableValue> valuesToRemove = new List<TableValue>();
+            foreach (TableValue tv in TransactionObjects[txid][key])
+                if (!tv.lockVariable(txid)){
+                    allLocked = false;
+                    valuesToRemove.Add(tv);
+                }
+            foreach (TableValue tv in valuesToRemove)
+                TransactionObjects[txid][key].Remove(tv);
+            return allLocked;
+        }
+        
+        
+        public bool AreKeysFree(int txid, string key) {
+            Dictionary<string,List< TableValue>> objectsToLock = new Dictionary<string, List<TableValue>>();
+            uint hash = MD5Hash(key);
+            foreach (Semitable st in Semitables)
+            {
+                if (hash >= st.MinInterval && hash <= st.MaxInterval) {
+                    if (!st.ContainsKey(key))
+                    {
+                        List<TableValue> tvList = new List<TableValue>();
+                        tvList.Add(new TableValue(null, 0, new TransactionState(txid, KeyState.READ_LOCKING)));
+                        st.Add(key, tvList);
+                    }
+                    int max_timestamp = -1;
+                    TableValue valueToAdd = null;
+                    foreach (TableValue tv in st[key]) {
+                        if (!tv.isLockable(txid)) return false;
+                        else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
+                    }
+                    bool objectsContainsKeys = false;
+                    foreach (string dicKey in objectsToLock.Keys)
+                        if (key == dicKey) objectsContainsKeys = true;
+                    if (!objectsContainsKeys)
+                    {
+                        List<TableValue> list = new List<TableValue>();
+                        list.Add(valueToAdd);
+                        objectsToLock.Add(key, list);
+                    }
+                }
+            }
+                
             if (objectsToLock.Count > 0)
             {
                 foreach(List<TableValue> list in objectsToLock.Values)
@@ -424,7 +426,6 @@ namespace Server
                         tv.lockingVariable(txid);
                     }
                 TransactionObjects.Add(txid, objectsToLock);
-                OperationList.Add(txid, localOperations);
                 return true;
             }
             return false;

@@ -58,6 +58,12 @@ namespace CentralDirectory
 
        public  bool firstPut = false;
        public bool firstTime = false;
+       public bool miss = false;
+       public int txid = 0;
+       public uint semiTablemin1 = 0;
+       public uint semiTablemax1 = 0;
+       public uint semiTablemin2 = 0;
+       public uint semiTablemax2 = 0;
        List<CommonInterfaces.Node> listClient = new List<CommonInterfaces.Node>();
        List<CommonInterfaces.Node> listServer = new List<CommonInterfaces.Node>();
        List<Interval> tableOfLocation = new List<Interval>();
@@ -369,17 +375,54 @@ namespace CentralDirectory
            }
             return listAux;
        }
+
+       public bool InsertServer(Node node)
+       {
+           List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
+           if (miss == true)
+           {
+               for (int i = 0; i < Location.Count; i++)
+               {
+                   if (Location[i].min == semiTablemin1 && Location[i].max == semiTablemax1)
+                   {
+                       Console.WriteLine("Sending restructure request to: " + Location[i].IP[0]);
+                       IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
+                       Location[i].IP.Add(node);
+                       link.CopySemiTable(Location[i].min, node);
+                   }
+
+                   else if (Location[i].min == semiTablemin2 && Location[i].max == semiTablemax2)
+                   {
+                       Console.WriteLine("Sending restructure request to: " + Location[i].IP[0]);
+                       IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
+                       Location[i].IP.Add(node);
+                       link.CopySemiTable(Location[i].min, node);
+                   }
+               }
+               miss = false;
+           }
+
+
+           else if (firstTime == true)
+           {
+               listAux = DimensionOfServers(ListServer);
+               Restructure(MaxSemiTable(listAux), node);
+           }
+
+
+           Server = node;
+           Send(ListClient, ListServer);
+           return true;
+       }
+
+
     }
     class CentralDirectoryRemoting : MarshalByRefObject, CommonInterfaces.ICentralDirectory 
     {
 
         public static CentralDirectory ctx;
-        public int txid = 0;
-        public uint semiTablemin1 = 0;
-        public uint semiTablemax1 = 0;
-        public uint semiTablemin2 = 0;
-        public uint semiTablemax2 = 0;
-        public bool miss = false;
+        
+        
         public List<TransactionContext> listTransactionContext = new List<TransactionContext>();
         public List<Node> listOfServersStanby = new List<Node>(); 
         
@@ -397,56 +440,20 @@ namespace CentralDirectory
             return true;
         }
 
-        public bool RegisterServer(CommonInterfaces.Node node)
+        public void RegisterServer(CommonInterfaces.Node node)
         {
             Console.WriteLine("Registred" + node.IP + "on port" + node.Port);
-            List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
+           
 
-            foreach(TransactionContext tc in listTransactionContext)
+            foreach (TransactionContext tc in listTransactionContext)
                 if (tc.State != TransactionContext.states.aborted && tc.State != TransactionContext.states.commited)
                 {
                     listOfServersStanby.Add(node);
-                    return false;
+                    return;
                 }
-
-            if (miss == true)
-            {
-                for (int i = 0; i < ctx.Location.Count; i++)
-                {
-                    if (ctx.Location[i].min == semiTablemin1 && ctx.Location[i].max == semiTablemax1)
-                    {
-                        Console.WriteLine("Sending restructure request to: " + ctx.Location[i].IP[0]);
-                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + ctx.Location[i].IP[0].IP + ":" + ctx.Location[i].IP[0].Port.ToString() + "/Server");
-                        ctx.Location[i].IP.Add(node);
-                        link.CopySemiTable(ctx.Location[i].min,node);
-                    }
-
-                    else if (ctx.Location[i].min == semiTablemin2 && ctx.Location[i].max == semiTablemax2)
-                    {
-                        Console.WriteLine("Sending restructure request to: " + ctx.Location[i].IP[0]);
-                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + ctx.Location[i].IP[0].IP + ":" + ctx.Location[i].IP[0].Port.ToString() + "/Server");
-                        ctx.Location[i].IP.Add(node);
-                        link.CopySemiTable(ctx.Location[i].min, node);
-                    }
-                }
-                miss = false;
-            }
-
-            
-            else if (ctx.firstTime == true)
-            {
-                listAux = ctx.DimensionOfServers(ctx.ListServer);
-                ctx.Restructure(ctx.MaxSemiTable(listAux), node);
-            }
-
-                       
-            ctx.Server = node;
-            ctx.Send(ctx.ListClient, ctx.ListServer);
-            return true;
+            ctx.InsertServer(node);
+               
         }
-
-        
-        
 
         //falta completar
         /*public Dictionary<string, List<CommonInterfaces.Node>> GetServers(List<string> keys)
@@ -481,10 +488,10 @@ namespace CentralDirectory
         
         public TransactionContext BeginTx(){
             TransactionContext tc = new TransactionContext();
-            tc.Txid = txid;
+            tc.Txid = ctx.txid;
             tc.State = TransactionContext.states.initiated;
             listTransactionContext.Add(tc);
-            txid++;
+            ctx.txid++;
             return tc;
         }
 
@@ -569,14 +576,14 @@ namespace CentralDirectory
                    Node nodeToRemove = null;
                   if (j == 1)
                   {
-                       semiTablemin1 = ctx.Location[i].min;
-                       semiTablemax1 = ctx.Location[i].max;
+                       ctx.semiTablemin1 = ctx.Location[i].min;
+                       ctx.semiTablemax1 = ctx.Location[i].max;
                        j = 2;
                    }
                    else if (j == 2)
                    {
-                       semiTablemin2 = ctx.Location[i].min;
-                       semiTablemax2 = ctx.Location[i].max;
+                       ctx.semiTablemin2 = ctx.Location[i].min;
+                       ctx.semiTablemax2 = ctx.Location[i].max;
                        j = 1;
                    }
                   foreach (Node n in ctx.Location[i].IP)
@@ -589,9 +596,9 @@ namespace CentralDirectory
 
            }
             
-           miss = true;
-           Console.WriteLine("min1 - " + semiTablemin1 + " max1 - " + semiTablemax1);
-           Console.WriteLine("min2 - " + semiTablemin2 + " max2 - " + semiTablemax2);
+           ctx.miss = true;
+           Console.WriteLine("min1 - " + ctx.semiTablemin1 + " max1 - " + ctx.semiTablemax1);
+           Console.WriteLine("min2 - " + ctx.semiTablemin2 + " max2 - " + ctx.semiTablemax2);
            ctx.Send(ctx.ListClient, ctx.ListServer);
         }
 
@@ -605,7 +612,11 @@ namespace CentralDirectory
                         transactionToRemove = listTransactionContext[i];
 
                 listTransactionContext.Remove(transactionToRemove);
-            }
+                
+                foreach (Node node in listOfServersStanby)
+                    RegisterServer(node);
+           }
+
         }
         
 

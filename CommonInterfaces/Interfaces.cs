@@ -199,7 +199,7 @@ namespace CommonInterfaces
         //public Dictionary<string, List<Node>> GetServers(List<string> keys);
         void UpdateTransactionState(TransactionContext tctx);
         TransactionContext BeginTx();
-        Node GetServers(string key);
+        List<Node> GetServers(string key);
         void ServerDown(Node server);
     }
 

@@ -263,8 +263,6 @@ namespace Server
         public int K;
         private int tableToInit = 0;
         public Dictionary<int, Dictionary<string,List<TableValue>>> TransactionObjects;
-        public Dictionary<int, List<Operation>> OperationList;
-        public Dictionary<int, List<string>> KeysAdded;
 
         public Server(Node info, TcpChannel channel, int k)
         {
@@ -699,18 +697,7 @@ namespace Server
             return all;
         }
 
-        public void RemoveOperation(int txid,OpType type, string key) {
-            List<Operation> ops = OperationList[txid];
-            Operation opToRemove = null;
-            foreach (Operation op in ops) {
-                if (op.Key == key && op.Type == type){
-                    opToRemove = op;
-                    break;
-                }
-            }
-            if (opToRemove != null) ops.Remove(opToRemove);
-            else Console.WriteLine("Inconsistent state for Remove Operation");
-        }
+       
 
        
     }
@@ -779,7 +766,6 @@ namespace Server
             if (ctx.EligibleForRead(txid, key) && ctx.ContainsKey(key))
             {
                 ret =  ctx.Get(key);
-                ctx.RemoveOperation(txid, OpType.GET, key);
             }
 
             return ret;
@@ -790,7 +776,6 @@ namespace Server
             if (ctx.EligibleForWrite(txid, key))
             {
                 ctx.Put(txid, key, new_value, false);
-                ctx.RemoveOperation(txid, OpType.PUT, key);
             }
             return true;
         }
@@ -799,7 +784,6 @@ namespace Server
             if (ctx.EligibleForWrite(txid, key))
             {
                 ctx.Put(txid, key, new_value, true);
-                ctx.RemoveOperation(txid, OpType.PUT, key);
             }
             return true;
         }

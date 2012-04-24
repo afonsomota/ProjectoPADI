@@ -214,7 +214,9 @@ namespace ConsoleClient
                     catch
                     {
                         value = null;
+                        throw;
                     }
+                    throw;
                 }
                 if (value == null)
                 {
@@ -256,7 +258,9 @@ namespace ConsoleClient
                     catch
                     {
                         success = false;
+                        throw;
                     }
+                    throw;
                 }
                 if (!success)
                 {

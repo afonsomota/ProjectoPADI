@@ -144,6 +144,7 @@ namespace ConsoleClient
             NodesLocation = new Dictionary<string, List<Node>>();
             Nodes = new List<Node>();
             Tctx = tctx;
+            Central = central;
         }
 
         List<Node> GetAndLockKey(string key) {

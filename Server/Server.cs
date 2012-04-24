@@ -402,7 +402,11 @@ namespace Server
                     int max_timestamp = -1;
                     TableValue valueToAdd = null;
                     foreach (TableValue tv in st[key]) {
-                        if (!tv.isLockable(txid)) return false;
+                        if (!tv.isLockable(txid))
+                        {
+                            Console.WriteLine("CANNOT BE LOCKED " + tv.State);
+                            return false;
+                        }
                         else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
                     }
                     bool objectsContainsKeys = false;
@@ -416,7 +420,8 @@ namespace Server
                     }
                 }
             }
-                
+
+
             if (objectsToLock.Count > 0)
             {
                 foreach(List<TableValue> list in objectsToLock.Values)

@@ -755,16 +755,16 @@ namespace Server
             ctx.CopySemitables(st1, st2);
         }
 
-        public bool CanLock(int txid, List<Operation> keys) {
+        public bool CanLock(int txid, string key) {
             lock (locker) {
-                return ctx.AreKeysFree(txid,keys);
+                return ctx.AreKeysFree(txid,key);
             }
         }
 
-        public bool Lock(int txid)
+        public bool Lock(int txid, string key)
         {
             lock (locker) {
-                return ctx.LockTransactionVariables(txid);
+                return ctx.LockTransactionVariables(txid,key);
             }
         }
 

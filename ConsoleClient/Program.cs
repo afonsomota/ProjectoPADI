@@ -65,49 +65,52 @@ namespace ConsoleClient
 
             Node node = new Node(host, port, "Console", NodeType.Client);
 
+            ICentralDirectory centralDirectory = (ICentralDirectory)Activator.GetObject(
+              typeof(ICentralDirectory),
+              "tcp://localhost:9090/CentralDirectory");
+            centralDirectory.RegisterClient(node);
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);
-            ICentralDirectory centralDirectory = (ICentralDirectory)Activator.GetObject(
-               typeof(ICentralDirectory),
-               "tcp://localhost:9090/CentralDirectory");
-            centralDirectory.RegisterClient(node);
+           
             Console.Write("Enter seed: ");
             string seed = Console.ReadLine();
 
             string[] fIn = { "PUT 1" + seed + " 1", "GET 1" + seed, "PUT 2" + seed + " 2", "PUT Afonso" + seed + " A", "PUT Francisco" + seed + " F", "PUT Jerome" + seed + " J", "PUT JAmbrosio" + seed + " JA", "GET JAmbrosio" + seed, "PUT 3" + seed + " 3", "PUT 4" + seed + " 4", "GET 4" + seed };
 
 
+
            TransactionContext tctx =  centralDirectory.BeginTx();
 
            Console.WriteLine(tctx);
 
-           Transaction t = new Transaction(tctx, centralDirectory);
+           Transaction t = new Transaction();
 
-            
 
-            foreach (string inp in fIn)
-            {
-                if (inp.StartsWith("GET"))
-                {
-                    char[] delim = {' ','\t'};
-                    string[] arg = inp.Split(delim);
-                    if (t.GetValue(arg[1]) == null)
-                    {
-                        Console.WriteLine("Aborted");
-                        Console.ReadLine();
-                    }
-                }
-                else if (inp.StartsWith("PUT"))
-                {
-                    char[] delim = {' ','\t'};
-                    string[] arg = inp.Split(delim);
-                    if (t.PutValue(arg[1], arg[2]))
-                    {
-                        Console.WriteLine("Aborted");
-                        Console.ReadLine();
-                    }
-                }
-            }
+           if (seed != "clean")
+               foreach (string inp in fIn)
+               {
+                   if (inp.StartsWith("GET"))
+                   {
+                       char[] delim = { ' ', '\t' };
+                       string[] arg = inp.Split(delim);
+                       if (t.GetValue(arg[1]) == null)
+                       {
+                           Console.WriteLine("Aborted");
+                           Console.ReadLine();
+                       }
+                   }
+                   else if (inp.StartsWith("PUT"))
+                   {
+                       char[] delim = { ' ', '\t' };
+                       string[] arg = inp.Split(delim);
+                       if (!t.PutValue(arg[1], arg[2]))
+                       {
+                           Console.WriteLine("Aborted");
+                           Console.ReadLine();
+                       }
+                   }
+               }
+           else Console.WriteLine("No default operations were made.");
 
             Console.WriteLine("Choose you're operations\n\nPUT <key> <value> for a put\nGET <key> for a GET\nEmpty Line to process");
             string input="";
@@ -126,7 +129,7 @@ namespace ConsoleClient
                 else if(input.StartsWith("PUT")) {
                     char[] delim = {' ','\t'};
                     string[] arg = input.Split(delim);
-                    if (t.PutValue(arg[1], arg[2]))
+                    if (!t.PutValue(arg[1], arg[2]))
                     {
                         Console.WriteLine("Aborted");
                         Console.ReadLine();
@@ -153,13 +156,15 @@ namespace ConsoleClient
         TransactionContext Tctx;
         ICentralDirectory Central;
 
-        public Transaction(TransactionContext tctx, ICentralDirectory central)
+        public Transaction()
         {
             AccessedKeys = new List<string>();
             NodesLocation = new Dictionary<string, List<Node>>();
             Nodes = new List<Node>();
-            Tctx = tctx;
-            Central = central;
+            Central = (ICentralDirectory)Activator.GetObject(
+              typeof(ICentralDirectory),
+              "tcp://localhost:9090/CentralDirectory");
+            Tctx = Central.BeginTx();
         }
 
         List<Node> GetAndLockKey(string key) {

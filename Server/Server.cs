@@ -10,6 +10,7 @@ using System.Threading;
 using System.Collections;
 using System.Security.Cryptography;
 using System.Runtime.Serialization;
+using System.Net.Sockets;
 
 namespace Server
 {
@@ -455,7 +456,17 @@ namespace Server
                     if (!isReplica && !(st.Replica.IP == Info.IP && st.Replica.Port == Info.Port))
                     {
                         ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + st.Replica.IP + ":" + st.Replica.Port.ToString() + "/Server");
-                        link.PutInner(txid, key, value);
+                        try
+                        {
+                            link.PutInner(txid, key, value);
+                        }
+                        catch(SocketException ex)
+                        {
+                            ICentralDirectory central = (ICentralDirectory)Activator.GetObject(
+                                  typeof(ICentralDirectory),
+                                  "tcp://localhost:9090/CentralDirectory");
+                            central.ServerDown(st.Replica);
+                        }
                     }
                     if (st[key][0].Value == null)
                     {
@@ -513,6 +524,11 @@ namespace Server
         }
 
         public void PrintSemiTablesValues() {
+            if (Semitables[0] == null)
+            {
+                Console.WriteLine("Server not initialize");
+                return;
+            }
             Console.Write("SemiTable 0-> ");
             Console.Write("[" + Semitables[0].MinInterval + "," + Semitables[0].MaxInterval+"]");
             Console.WriteLine("; Replica: " + Semitables[0].Replica);
@@ -565,24 +581,76 @@ namespace Server
             Semitables[1] = st2;
         }
 
-        public bool EligibleForWrite(int txid,string key) { 
+        public bool EligibleForWrite(int txid,string key) {
+            foreach (Semitable st in Semitables)
+            {
+                uint hash = MD5Hash(key);
+                if (hash >= st.MinInterval && hash <= st.MaxInterval)
+                {
+                    bool hasKey = false;
+                    foreach (string dicKey in st.Keys)
+                    {
+                        if (dicKey == key)
+                        {
+                            hasKey = true;
+                            break;
+                        }
+                    }
+                    if (hasKey)
+                    {
+                        foreach (TableValue tv in st[key])
+                        {
+                            if (tv.State.State > KeyState.WRITE_LOCKING && tv.State.State < KeyState.COMMITING && tv.State.Txid == txid)
+                                return true;
+                        }
+                    }
+                    else return false;
+                }
+            }
+                /*
             foreach(string k in TransactionObjects[txid].Keys)
                 if (k == key) 
                     foreach (TableValue tv in TransactionObjects[txid][k]) 
                         if (tv.State.State > KeyState.WRITE_LOCKING && tv.State.State < KeyState.COMMITING && tv.State.Txid == txid)
-                            return true;
+                            return true;*/
             return false;    
         }
 
         public bool EligibleForRead(int txid, string key)
         {
-     
+            foreach (Semitable st in Semitables)
+            {
+                uint hash = MD5Hash(key);
+                if (hash >= st.MinInterval && hash <= st.MaxInterval)
+                {
+                    bool hasKey = false;
+                    foreach (string dicKey in st.Keys)
+                    {
+                        if (dicKey == key)
+                        {
+                            hasKey = true;
+                            break;
+                        }
+                    }
+                    if (hasKey)
+                    {
+                        foreach (TableValue tv in st[key])
+                        {
+                            if ((tv.State.State > KeyState.WRITE_LOCKING && tv.State.State < KeyState.COMMITING && tv.State.Txid == txid) ||
+                                tv.State.State == KeyState.WRITE_LOCK) 
+                                return true;
+                        }
+                    }
+                    else return false;
+                }
+            }
+     /*
             foreach (string k in TransactionObjects[txid].Keys)
                 if (k == key)
                     foreach (TableValue tv in TransactionObjects[txid][k])
                         if ((tv.State.State > KeyState.WRITE_LOCKING && tv.State.State < KeyState.COMMITING && tv.State.Txid == txid) ||
                                 tv.State.State==KeyState.WRITE_LOCK)
-                            return true;
+                            return true;*/
             return false;
         }
 
@@ -738,22 +806,31 @@ namespace Server
 
         public void CleanSemiTable(uint semiTableToClean, Node node)
         {
-            ctx.CleanTable(semiTableToClean,0,node);
+            lock (locker)
+            {
+                ctx.CleanTable(semiTableToClean, 0, node);
+            }
         }
 
         public void CopyAndCleanTable(uint semiTableToClean, Node node)
         {
-            Semitable[] tables = ctx.DivideSemiTable(semiTableToClean);
-            ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-            Semitable st1 = tables[0];
-            Semitable st2 = tables[1];
-            link.CopyTable(st1,st2);
-            ctx.CleanTable(semiTableToClean, 1,node);
+            lock (locker)
+            {
+                Semitable[] tables = ctx.DivideSemiTable(semiTableToClean);
+                ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
+                Semitable st1 = tables[0];
+                Semitable st2 = tables[1];
+                link.CopyTable(st1, st2);
+                ctx.CleanTable(semiTableToClean, 1, node);
+            }
         }
 
         public void CopyTable(Semitable st1, Semitable st2)
         {
-            ctx.CopySemitables(st1, st2);
+            lock (locker)
+            {
+                ctx.CopySemitables(st1, st2);
+            }
         }
 
         public bool CanLock(int txid, string key) {
@@ -785,16 +862,18 @@ namespace Server
             if (ctx.EligibleForWrite(txid, key))
             {
                 ctx.Put(txid, key, new_value, false);
+                return true;
             }
-            return true;
+            else return false;
         }
 
         public bool PutInner(int txid, string key, string new_value) {
             if (ctx.EligibleForWrite(txid, key))
             {
                 ctx.Put(txid, key, new_value, true);
+                return true;
             }
-            return true;
+            else return false;
         }
 
         public bool Abort(int txid)
@@ -821,12 +900,15 @@ namespace Server
         }
 
         public void CopySemiTables(Node node) {
-            Semitable[] tables = ctx.Semitables;
-            ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-            Semitable st1 = tables[0];
-            Semitable st2 = tables[1];
-            link.CopyTable(st1, st2);
-            ctx.UpdateReplica(node);
+            lock (locker)
+            {
+                Semitable[] tables = ctx.Semitables;
+                ServerRemoting link = (ServerRemoting)Activator.GetObject(typeof(ServerRemoting), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
+                Semitable st1 = tables[0];
+                Semitable st2 = tables[1];
+                link.CopyTable(st1, st2);
+                ctx.UpdateReplica(node);
+            }
         }
 
         public void SendSemiTable(Semitable st1)

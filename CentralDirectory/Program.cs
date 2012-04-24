@@ -542,16 +542,30 @@ namespace CentralDirectory
                         Console.WriteLine("For key " + key + " hash is " + hash);
                         if (ctx.Location[j].order)
                         {
-                            listaux.Add(ctx.Location[j].IP[0]);
-                            listaux.Add(ctx.Location[j].IP[1]);
-                            Console.WriteLine("0-" + ctx.Location[j].IP[0] + " 1-" + ctx.Location[j].IP[1]);
-                            ctx.Location[j].order = false;
+                            if (ctx.Location[j].IP.Count == 2)
+                            {
+                                listaux.Add(ctx.Location[j].IP[0]);
+                                listaux.Add(ctx.Location[j].IP[1]);
+                                Console.WriteLine("0-" + ctx.Location[j].IP[0] + " 1-" + ctx.Location[j].IP[1]);
+                                ctx.Location[j].order = false;
+                            }
+                            else
+                            {
+                                listaux.Add(ctx.Location[j].IP[0]);
+                            }
                         }
                         else {
-                            listaux.Add(ctx.Location[j].IP[1]);
-                            listaux.Add(ctx.Location[j].IP[0]);
-                            Console.WriteLine("1-" + ctx.Location[j].IP[1] + " 0-" + ctx.Location[j].IP[0]);
-                            ctx.Location[j].order = true;
+                            if (ctx.Location[j].IP.Count == 2)
+                            {
+                                listaux.Add(ctx.Location[j].IP[1]);
+                                listaux.Add(ctx.Location[j].IP[0]);
+                                Console.WriteLine("1-" + ctx.Location[j].IP[1] + " 0-" + ctx.Location[j].IP[0]);
+                                ctx.Location[j].order = true;
+                            }
+                            else
+                            {
+                                listaux.Add(ctx.Location[j].IP[0]);
+                            }
                         }
                         
                         
@@ -567,6 +581,7 @@ namespace CentralDirectory
         public void ServerDown(CommonInterfaces.Node server)
         {
            int j = 1;
+           if (!ctx.ListServer.Contains(server)) return;
            ctx.ListServer.Remove(server);
            for (int i = 0; i < ctx.Location.Count; i++)
            {

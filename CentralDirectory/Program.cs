@@ -56,7 +56,8 @@ namespace CentralDirectory
           public bool order;
         };
 
-        public  bool firstPut = false;
+       public  bool firstPut = false;
+       public bool firstTime = false;
        List<CommonInterfaces.Node> listClient = new List<CommonInterfaces.Node>();
        List<CommonInterfaces.Node> listServer = new List<CommonInterfaces.Node>();
        List<Interval> tableOfLocation = new List<Interval>();
@@ -130,7 +131,7 @@ namespace CentralDirectory
 
        public void division()
        {
-           firstPut = true;
+           firstTime = true;
            uint numberofServer = (uint)listServer.Count();
            uint result = 0;
            uint aux1 = 0;
@@ -379,6 +380,8 @@ namespace CentralDirectory
         public uint semiTablemin2 = 0;
         public uint semiTablemax2 = 0;
         public bool miss = false;
+        public List<TransactionContext> listTransactionContext = new List<TransactionContext>();
+        public List<Node> listOfServersStanby = new List<Node>(); 
         
         public bool RegisterClient(CommonInterfaces.Node node)
         {
@@ -398,6 +401,13 @@ namespace CentralDirectory
         {
             Console.WriteLine("Registred" + node.IP + "on port" + node.Port);
             List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
+
+            foreach(TransactionContext tc in listTransactionContext)
+                if (tc.State != TransactionContext.states.aborted && tc.State != TransactionContext.states.commited)
+                {
+                    listOfServersStanby.Add(node);
+                    return false;
+                }
 
             if (miss == true)
             {
@@ -423,7 +433,7 @@ namespace CentralDirectory
             }
 
             
-            else if (ctx.firstPut == true)
+            else if (ctx.firstTime == true)
             {
                 listAux = ctx.DimensionOfServers(ctx.ListServer);
                 ctx.Restructure(ctx.MaxSemiTable(listAux), node);
@@ -467,46 +477,61 @@ namespace CentralDirectory
         }
         */
 
-        public CommonInterfaces.TransactionContext GetServers(List<Operation> ops)
+        
+        
+        public TransactionContext BeginTx(){
+            TransactionContext tc = new TransactionContext();
+            tc.Txid = txid;
+            tc.State = TransactionContext.states.initiated;
+            listTransactionContext.Add(tc);
+            txid++;
+            return tc;
+        }
+
+            
+        
+
+        public List<Node> GetServers(string key)
         {
-            Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
+            //Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
             //Random rd = new Random();
 
-            CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
-            transactionsContext.Txid=txid;
-            txid++;
-            Console.WriteLine("transacao identificador" + transactionsContext.Txid);
-            Console.WriteLine(txid);
-            List<string> keys = new List<string>();
+            //CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
+            //transactionsContext.Txid=txid;
+            //txid++;
+            //Console.WriteLine("transacao identificador" + transactionsContext.Txid);
+            //Console.WriteLine(txid);
+            //List<string> keys = new List<string>();
 
 
-            Dictionary<int, Operation> opsd = new Dictionary<int, Operation>();
-            int o = 0;
-            foreach (Operation op in ops) {
-                opsd.Add(++o, op);
-                if(!keys.Contains(op.Key)) keys.Add(op.Key);
-                if (op.Type == OpType.PUT)
-                {
-                    if (ctx.firstPut == false)
+            //Dictionary<int, Operation> opsd = new Dictionary<int, Operation>();
+            //int o = 0;
+            //foreach (Operation op in ops) {
+              //  opsd.Add(++o, op);
+                //if(!keys.Contains(op.Key)) keys.Add(op.Key);
+                //if (op.Type == OpType.PUT)
+                //{
+            List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
+                    if (ctx.firstTime == false)
                     {
                         ctx.division();
-                        ctx.firstPut = true;
+                        ctx.firstTime = true;
                     }
-                }
+                //}
                     
-            }
+            //}
 
-            for (int i = 0; i < keys.Count(); i++)
-            {
-                string key = keys[i];
-                uint hash = CentralDirectory.MD5Hash(keys[i]);
+            //for (int i = 0; i < keys.Count(); i++)
+            //{
+                //string key = keys[i];
+                uint hash = CentralDirectory.MD5Hash(key);
                 
                 
                 for (int j = 0; j < ctx.Location.Count(); j++)
                 {
                     if (ctx.Location[j].max > hash && ctx.Location[j].min <= hash)
                     {
-                        List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
+                        
                         Console.WriteLine("For key " + key + " hash is " + hash);
                         if (ctx.Location[j].order)
                         {
@@ -521,14 +546,13 @@ namespace CentralDirectory
                             Console.WriteLine("1-" + ctx.Location[j].IP[1] + " 0-" + ctx.Location[j].IP[0]);
                             ctx.Location[j].order = true;
                         }
-                        server.Add(key, listaux);
+                        
                         
                     }
                 }
-            }
-            transactionsContext.NodesLocation = server;
-            transactionsContext.Operations = opsd;
-            return transactionsContext;
+            //}
+            
+            return listaux;
         }
 
         
@@ -569,6 +593,19 @@ namespace CentralDirectory
            Console.WriteLine("min1 - " + semiTablemin1 + " max1 - " + semiTablemax1);
            Console.WriteLine("min2 - " + semiTablemin2 + " max2 - " + semiTablemax2);
            ctx.Send(ctx.ListClient, ctx.ListServer);
+        }
+
+        public void UpdateTransactionState(TransactionContext tctx)
+        {
+            TransactionContext transactionToRemove = null;
+            if (tctx.State == TransactionContext.states.commited || tctx.State == TransactionContext.states.aborted)
+            {
+                for (int i = 0; i < listTransactionContext.Count; i++)
+                    if (tctx.Txid == listTransactionContext[i].Txid)
+                        transactionToRemove = listTransactionContext[i];
+
+                listTransactionContext.Remove(transactionToRemove);
+            }
         }
         
 

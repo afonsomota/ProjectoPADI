@@ -91,13 +91,21 @@ namespace ConsoleClient
                 {
                     char[] delim = {' ','\t'};
                     string[] arg = inp.Split(delim);
-                    t.GetValue(arg[1]);
+                    if (t.GetValue(arg[1]) == null)
+                    {
+                        Console.WriteLine("Aborted");
+                        Console.ReadLine();
+                    }
                 }
                 else if (inp.StartsWith("PUT"))
                 {
                     char[] delim = {' ','\t'};
                     string[] arg = inp.Split(delim);
-                    t.PutValue(arg[1], arg[2]);
+                    if (t.PutValue(arg[1], arg[2]))
+                    {
+                        Console.WriteLine("Aborted");
+                        Console.ReadLine();
+                    }
                 }
             }
 
@@ -110,12 +118,19 @@ namespace ConsoleClient
                 {
                     char[] delim = {' ','\t'};
                     string[] arg = input.Split(delim);
-                    t.GetValue(arg[1]);
+                    if (t.GetValue(arg[1]) == null) {
+                        Console.WriteLine("Aborted");
+                        Console.ReadLine();
+                    }
                 }
                 else if(input.StartsWith("PUT")) {
                     char[] delim = {' ','\t'};
                     string[] arg = input.Split(delim);
-                    t.PutValue(arg[1], arg[2]);
+                    if (t.PutValue(arg[1], arg[2]))
+                    {
+                        Console.WriteLine("Aborted");
+                        Console.ReadLine();
+                    }
                 }
 
             } while (input != "");

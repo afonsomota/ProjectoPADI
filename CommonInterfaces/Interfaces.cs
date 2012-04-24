@@ -192,7 +192,7 @@ namespace CommonInterfaces
     public interface ICentralDirectory {
 
         //Servidor
-        bool RegisterServer(Node server);
+        void RegisterServer(Node server);
 
         //Cliente
         bool RegisterClient(Node client);

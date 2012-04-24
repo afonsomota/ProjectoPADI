@@ -48,10 +48,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Client\Client.csproj">
-      <Project>{A617122D-0FFB-4695-8F08-0C4057619D14}</Project>
-      <Name>Client</Name>
-    </ProjectReference>
     <ProjectReference Include="..\CommonInterfaces\CommonInterfaces.csproj">
       <Project>{840E6577-27EA-4EA9-8E59-2032EFA2BB07}</Project>
       <Name>CommonInterfaces</Name>

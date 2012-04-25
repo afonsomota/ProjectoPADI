@@ -129,6 +129,7 @@ namespace Server
             {
                 State.Txid = txid;
                 State.State = KeyState.READ_LOCKING;
+                Value = null;
                 return true;
             }
             else
@@ -331,8 +332,11 @@ namespace Server
             foreach (List<TableValue> list in TransactionObjects[txid].Values)
                 foreach (TableValue tv in list)
                 {
-                    tv.State.State = KeyState.FREE;
-                    tv.State.Txid = 0;
+                    if (tv.State.Txid == txid)
+                    {
+                        tv.State.State = KeyState.FREE;
+                        tv.State.Txid = 0;
+                    }
                 }
         }
 

@@ -6,6 +6,7 @@ using CommonInterfaces;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Net.Sockets;
 
 namespace ConsoleClient
 {
@@ -77,13 +78,7 @@ namespace ConsoleClient
 
             string[] fIn = { "PUT 1" + seed + " 1", "GET 1" + seed, "PUT 2" + seed + " 2", "PUT Afonso" + seed + " A", "PUT Francisco" + seed + " F", "PUT Jerome" + seed + " J", "PUT JAmbrosio" + seed + " JA", "GET JAmbrosio" + seed, "PUT 3" + seed + " 3", "PUT 4" + seed + " 4", "GET 4" + seed };
 
-
-
-           TransactionContext tctx =  centralDirectory.BeginTx();
-
-           Console.WriteLine(tctx);
-
-           Transaction t = new Transaction();
+            Transaction t = new Transaction();
 
 
            if (seed != "clean")
@@ -95,8 +90,8 @@ namespace ConsoleClient
                        string[] arg = inp.Split(delim);
                        if (t.GetValue(arg[1]) == null)
                        {
-                           Console.WriteLine("Aborted");
                            Console.ReadLine();
+                           return;
                        }
                    }
                    else if (inp.StartsWith("PUT"))
@@ -105,8 +100,8 @@ namespace ConsoleClient
                        string[] arg = inp.Split(delim);
                        if (!t.PutValue(arg[1], arg[2]))
                        {
-                           Console.WriteLine("Aborted");
                            Console.ReadLine();
+                           return;
                        }
                    }
                }
@@ -122,8 +117,8 @@ namespace ConsoleClient
                     char[] delim = {' ','\t'};
                     string[] arg = input.Split(delim);
                     if (t.GetValue(arg[1]) == null) {
-                        Console.WriteLine("Aborted");
                         Console.ReadLine();
+                        return;
                     }
                 }
                 else if(input.StartsWith("PUT")) {
@@ -131,8 +126,8 @@ namespace ConsoleClient
                     string[] arg = input.Split(delim);
                     if (!t.PutValue(arg[1], arg[2]))
                     {
-                        Console.WriteLine("Aborted");
                         Console.ReadLine();
+                        return;
                     }
                 }
 
@@ -165,6 +160,8 @@ namespace ConsoleClient
               typeof(ICentralDirectory),
               "tcp://localhost:9090/CentralDirectory");
             Tctx = Central.BeginTx();
+            Console.WriteLine(Tctx);
+
         }
 
         List<Node> GetAndLockKey(string key) {
@@ -297,14 +294,25 @@ namespace ConsoleClient
         public bool Commit()
         {
             bool allCanCommit = true;
+            Node nodeToRemove = null;
             foreach (Node n in Nodes) {
-                IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                if (!server.CanCommit(Tctx.Txid)) {
-                    allCanCommit = false;
-                    break;
+                try
+                {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                    if (!server.CanCommit(Tctx.Txid))
+                    {
+                        allCanCommit = false;
+                        break;
+                    }
+                }
+                catch{
+                    nodeToRemove = n;
+                    Central.ServerDown(n);
                 }
             }
+            if (nodeToRemove != null) Nodes.Remove(nodeToRemove);
             Tctx.State = TransactionContext.states.tentatively;
+            Console.WriteLine(Tctx);
             if (!allCanCommit)
             {
                 Abort();
@@ -317,6 +325,7 @@ namespace ConsoleClient
                 }
                 Tctx.State = TransactionContext.states.commited;
                 Central.UpdateTransactionState(Tctx);
+                Console.WriteLine(Tctx);
                 return true;
             }
         }
@@ -328,6 +337,8 @@ namespace ConsoleClient
             }
             Tctx.State = TransactionContext.states.aborted;
             Central.UpdateTransactionState(Tctx);
+            Console.WriteLine(Tctx);
+            
         }
     
     }

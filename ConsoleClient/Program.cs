@@ -7,6 +7,7 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace ConsoleClient
 {
@@ -159,7 +160,15 @@ namespace ConsoleClient
             Central = (ICentralDirectory)Activator.GetObject(
               typeof(ICentralDirectory),
               "tcp://localhost:9090/CentralDirectory");
-            Tctx = Central.BeginTx();
+            while (true)
+            {
+                Tctx = Central.BeginTx();
+                if (Tctx.Txid != -1)
+                    break;
+                
+                Thread.Sleep(500);
+               
+            }
             Console.WriteLine(Tctx);
 
         }

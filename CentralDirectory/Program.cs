@@ -488,10 +488,14 @@ namespace CentralDirectory
         
         public TransactionContext BeginTx(){
             TransactionContext tc = new TransactionContext();
-            tc.Txid = ctx.txid;
             tc.State = TransactionContext.states.initiated;
-            listTransactionContext.Add(tc);
-            ctx.txid++;
+            if (listOfServersStanby.Count == 0)
+            {
+                tc.Txid = ctx.txid;
+                listTransactionContext.Add(tc);
+                ctx.txid++;
+            }
+            else tc.Txid = -1;
             return tc;
         }
 
@@ -630,6 +634,8 @@ namespace CentralDirectory
                 
                 foreach (Node node in listOfServersStanby)
                     RegisterServer(node);
+
+                listOfServersStanby.Clear();
            }
 
         }

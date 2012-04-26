@@ -6,6 +6,8 @@ using CommonInterfaces;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace ConsoleClient
 {
@@ -65,35 +67,46 @@ namespace ConsoleClient
 
             Node node = new Node(host, port, "Console", NodeType.Client);
 
+            ICentralDirectory centralDirectory = (ICentralDirectory)Activator.GetObject(
+              typeof(ICentralDirectory),
+              "tcp://localhost:9090/CentralDirectory");
+            centralDirectory.RegisterClient(node);
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ClientRemoting), "Client", WellKnownObjectMode.Singleton);
-            ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
-               typeof(ICentralDirectory),
-               "tcp://localhost:9090/CentralDirectory");
-            ligacao.RegisterClient(node);
+           
             Console.Write("Enter seed: ");
             string seed = Console.ReadLine();
 
-            List<Operation> ops = new List<Operation>();
-
             string[] fIn = { "PUT 1" + seed + " 1", "GET 1" + seed, "PUT 2" + seed + " 2", "PUT Afonso" + seed + " A", "PUT Francisco" + seed + " F", "PUT Jerome" + seed + " J", "PUT JAmbrosio" + seed + " JA", "GET JAmbrosio" + seed, "PUT 3" + seed + " 3", "PUT 4" + seed + " 4", "GET 4" + seed };
 
+            Transaction t = new Transaction();
 
-            foreach (string inp in fIn)
-            {
-                if (inp.StartsWith("GET"))
-                {
-                    char[] delim = {' ','\t'};
-                    string[] arg = inp.Split(delim);
-                    ops.Add(new Operation(arg[1]));
-                }
-                else if (inp.StartsWith("PUT"))
-                {
-                    char[] delim = {' ','\t'};
-                    string[] arg = inp.Split(delim);
-                    ops.Add(new Operation(arg[1], arg[2]));
-                }
-            }
+
+           if (seed != "clean")
+               foreach (string inp in fIn)
+               {
+                   if (inp.StartsWith("GET"))
+                   {
+                       char[] delim = { ' ', '\t' };
+                       string[] arg = inp.Split(delim);
+                       if (t.GetValue(arg[1]) == null)
+                       {
+                           Console.ReadLine();
+                           return;
+                       }
+                   }
+                   else if (inp.StartsWith("PUT"))
+                   {
+                       char[] delim = { ' ', '\t' };
+                       string[] arg = inp.Split(delim);
+                       if (!t.PutValue(arg[1], arg[2]))
+                       {
+                           Console.ReadLine();
+                           return;
+                       }
+                   }
+               }
+           else Console.WriteLine("No default operations were made.");
 
             Console.WriteLine("Choose you're operations\n\nPUT <key> <value> for a put\nGET <key> for a GET\nEmpty Line to process");
             string input="";
@@ -102,136 +115,244 @@ namespace ConsoleClient
                 input = Console.ReadLine();
                 if (input.StartsWith("GET"))
                 {
-                    char[] delim = {' ','\t'}; 
+                    char[] delim = {' ','\t'};
                     string[] arg = input.Split(delim);
-                    ops.Add(new Operation(arg[1]));
+                    if (t.GetValue(arg[1]) == null) {
+                        Console.ReadLine();
+                        return;
+                    }
                 }
                 else if(input.StartsWith("PUT")) {
-                    char[] delim = {' ','\t'}; 
+                    char[] delim = {' ','\t'};
                     string[] arg = input.Split(delim);
-                    ops.Add(new Operation(arg[1], arg[2]));
+                    if (!t.PutValue(arg[1], arg[2]))
+                    {
+                        Console.ReadLine();
+                        return;
+                    }
                 }
 
             } while (input != "");
 
-
-            List<string> keys = new List<string>();
-
-            foreach (Operation op in ops) {
-                if(!keys.Contains(op.Key)) keys.Add(op.Key);
-                Console.WriteLine(op);
-            }
-
-
-            TransactionContext tctx = ligacao.GetServers(ops);
-
-            Console.WriteLine(tctx);
-
-            Dictionary<Node,List<Operation>> serversKeys = InvertNodesLocation(tctx.NodesLocation,tctx.Operations);
-
-            foreach(KeyValuePair<Node,List<Operation>> pair in serversKeys){
-                Console.Write("For node " + pair.Key + ": ");
-                foreach (Operation op in pair.Value) {
-                    Console.WriteLine(op + "; ");
-                }
-                Console.WriteLine();
-            }
-
-            Dictionary<Node, bool> canLockValues = new Dictionary<Node, bool>();
-            foreach (Node serv in serversKeys.Keys) {
-                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + serv.IP + ":" + serv.Port.ToString() + "/Server");
-                bool b1 = link.CanLock(tctx.Txid,serversKeys[serv]);
-                canLockValues.Add(serv, b1);
-            }
-
-            bool allCanLock = true;
-            foreach (bool b in canLockValues.Values) {
-                if (!b) {
-                    allCanLock = false;
-                    break;
-                }
-            }
-            if (!allCanLock) {
-                foreach (Node n in canLockValues.Keys) {
-                    if (!canLockValues[n]) {
-                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                        link.Abort(tctx.Txid);
-                        Console.WriteLine("Transaction Aborted");
-                        return;
-                    }
-                }
-            }
-
-            foreach (Node n in canLockValues.Keys) {
-                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                link.Lock(tctx.Txid);
-            }
-
-
-
-            for (int i = 1; i <= tctx.Operations.Count; i++) { 
-                Operation op = tctx.Operations[i];
-                Node srvToSend = tctx.NodesLocation[op.Key][0];
-                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srvToSend.IP + ":" + srvToSend.Port.ToString() + "/Server");
-                if (op.Type == OpType.GET){
-                    Console.WriteLine("GET(" + op.Key + ") = " + link.Get(tctx.Txid, op.Key) + " on server " + srvToSend.IP + ":" + srvToSend.Port.ToString());
-                }
-                else {
-                    link.Put(tctx.Txid, op.Key, op.Value);
-                }
-            }
-
-            Dictionary<Node, bool> canCommitValues = new Dictionary<Node, bool>();
-            foreach (Node serv in serversKeys.Keys)
-            {
-                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + serv.IP + ":" + serv.Port.ToString() + "/Server");
-                Console.Write("CanCommit to server " + serv + "? ");
-                bool b1 = link.CanCommit(tctx.Txid);
-                canCommitValues.Add(serv, b1);
-                if (b1) Console.WriteLine("YES");
-                else Console.WriteLine("NO");
-            }
-
-            bool allCanCommit = true;
-            foreach (bool b in canCommitValues.Values)
-            {
-                if (!b)
-                {
-                    allCanCommit = false;
-                    break;
-                }
-            }
-            if (!allCanCommit)
-            {
-                foreach (Node n in canCommitValues.Keys)
-                {
-                    if (!canCommitValues[n])
-                    {
-                        IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                        link.Abort(tctx.Txid);
-                       
-                        
-                    }
-                }
-                Console.WriteLine("Transaction Aborted");
-                Console.ReadLine();
-                return;
-            }
-
-            foreach (Node n in canCommitValues.Keys)
-            {
-                IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                link.Commit(tctx.Txid);
-                Console.WriteLine("Commiting to server " + n + ".");
-            }
-
-
-
-            
+            t.Commit();
 
             Console.ReadLine();
         }
+
+
+        
     }
+
+
+    class Transaction {
+
+        List<string> AccessedKeys;
+        Dictionary<string,List<Node>> NodesLocation;
+        List<Node> Nodes;
+        TransactionContext Tctx;
+        ICentralDirectory Central;
+
+        public Transaction()
+        {
+            AccessedKeys = new List<string>();
+            NodesLocation = new Dictionary<string, List<Node>>();
+            Nodes = new List<Node>();
+            Central = (ICentralDirectory)Activator.GetObject(
+              typeof(ICentralDirectory),
+              "tcp://localhost:9090/CentralDirectory");
+            while (true)
+            {
+                Tctx = Central.BeginTx();
+                if (Tctx.Txid != -1)
+                    break;
+                
+                Thread.Sleep(500);
+               
+            }
+            Console.WriteLine(Tctx);
+
+        }
+
+        List<Node> GetAndLockKey(string key) {
+            List<Node> nodes = Central.GetServers(key);
+            foreach (Node n in nodes)
+                if (!Nodes.Contains(n))
+                    Nodes.Add(n);
+            NodesLocation.Add(key, nodes);
+            bool allCanLock = true;
+            bool allLocked = true;
+            foreach (Node n in nodes)
+            {
+                IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                if (!server.CanLock(Tctx.Txid, key)) allCanLock = false;
+            }
+            if (!allCanLock)
+            {
+                Abort();
+                return null;
+            }
+            else
+            {
+                foreach (Node n in nodes)
+                {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                    if (!server.Lock(Tctx.Txid, key))
+                    {
+                        allLocked = false;
+                        break;
+                    }
+                }
+                if (!allLocked)
+                {
+                    Abort();
+                    return null;
+                }
+            }
+            return nodes;
+        }
+
+        public string GetValue(string key)
+        {
+            List<Node> nodes = null;
+            if (AccessedKeys.Contains(key))
+            {
+                nodes = NodesLocation[key];
+            }
+            else {
+                nodes = GetAndLockKey(key);
+                AccessedKeys.Add(key);
+            }
+            if (nodes != null)
+            {
+                IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
+                string value;
+                try
+                {
+                    value = serv.Get(Tctx.Txid, key);
+                }
+                catch
+                {
+                    IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
+                    try
+                    {
+                        value = servBackup.Get(Tctx.Txid, key);
+                        Central.ServerDown(nodes[0]);
+                    }
+                    catch
+                    {
+                        value = null;
+                        throw;
+                    }
+                    throw;
+                }
+                if (value == null)
+                {
+                    Abort();
+                    return null;
+                }
+                else return value;
+            }
+            else return null;
+        }
+
+        public bool PutValue(string key,string value)
+        {
+            List<Node> nodes = null;
+            if (AccessedKeys.Contains(key))
+            {
+                nodes = NodesLocation[key];
+            }
+            else
+            {
+                nodes = GetAndLockKey(key);
+                AccessedKeys.Add(key);
+            }
+            if (nodes != null)
+            {
+                IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
+                bool success;
+                try
+                {
+                    success = serv.Put(Tctx.Txid, key,value);
+                }
+                catch
+                {
+                    IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
+                    try
+                    {
+                        success = servBackup.Put(Tctx.Txid, key,value);
+                        Central.ServerDown(nodes[0]);
+                    }
+                    catch
+                    {
+                        success = false;
+                        throw;
+                    }
+                    throw;
+                }
+                if (!success)
+                {
+                    Abort();
+                    return false;
+                }
+                else return success;
+            }
+            else return false;
+        }
+
+        public bool Commit()
+        {
+            bool allCanCommit = true;
+            Node nodeToRemove = null;
+            foreach (Node n in Nodes) {
+                try
+                {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                    if (!server.CanCommit(Tctx.Txid))
+                    {
+                        allCanCommit = false;
+                        break;
+                    }
+                }
+                catch{
+                    nodeToRemove = n;
+                    Central.ServerDown(n);
+                }
+            }
+            if (nodeToRemove != null) Nodes.Remove(nodeToRemove);
+            Tctx.State = TransactionContext.states.tentatively;
+            Console.WriteLine(Tctx);
+            if (!allCanCommit)
+            {
+                Abort();
+                return false;
+            }
+            else {
+                foreach (Node n in Nodes) {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                    server.Commit(Tctx.Txid);
+                }
+                Tctx.State = TransactionContext.states.commited;
+                Central.UpdateTransactionState(Tctx);
+                Console.WriteLine(Tctx);
+                return true;
+            }
+        }
+
+        public void Abort() {
+            foreach (Node n in Nodes) {
+                IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                server.Abort(Tctx.Txid);
+            }
+            Tctx.State = TransactionContext.states.aborted;
+            Central.UpdateTransactionState(Tctx);
+            Console.WriteLine(Tctx);
+            
+        }
+    
+    }
+
+
     class ClientRemoting : MarshalByRefObject, IClient
     {
         public void GetNetworkUpdate(List<Node> network)

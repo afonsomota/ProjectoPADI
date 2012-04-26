@@ -149,8 +149,9 @@ namespace CommonInterfaces
         public enum states { initiated, tentatively, commited, aborted };
         public int Txid;
         public states State;
-        public Dictionary<int, Operation> Operations;
-        public Dictionary<string, List<Node>> NodesLocation;
+        //public Dictionary<int, Operation> Operations;
+        //public Dictionary<string, List<Node>> NodesLocation;
+
 
         public override string ToString()
         {
@@ -172,7 +173,7 @@ namespace CommonInterfaces
                 default:
                     ret += "No State";
                     break;
-            }
+            }/*
             ret += "Operations:\n";
             foreach (KeyValuePair<int,Operation> op in Operations)
             {
@@ -182,7 +183,7 @@ namespace CommonInterfaces
             foreach (KeyValuePair<string,List<Node>> n in NodesLocation)
             {
                 ret += n.Key + " - " + n.Value[0].ToString() + " and " + n.Value[1].ToString() + "\n";
-            }
+            }*/
             return ret;
         }
 
@@ -191,12 +192,14 @@ namespace CommonInterfaces
     public interface ICentralDirectory {
 
         //Servidor
-        bool RegisterServer(Node server);
+        void RegisterServer(Node server);
 
         //Cliente
         bool RegisterClient(Node client);
         //public Dictionary<string, List<Node>> GetServers(List<string> keys);
-        TransactionContext GetServers(List<Operation> ops);
+        void UpdateTransactionState(TransactionContext tctx);
+        TransactionContext BeginTx();
+        List<Node> GetServers(string key);
         void ServerDown(Node server);
     }
 
@@ -212,13 +215,13 @@ namespace CommonInterfaces
         void CopySemiTable(uint semiTableToCopy, Node nodeToCopy);// Caso em que um servidor vai abaixo e outro vem acima
 
         //Cliente
-        bool CanLock(int txid, List<Operation> ops);
-        bool Lock(int txid);
+        bool CanLock(int txid, string key);
+        bool Lock(int txid, string key);
         string Get(int txid, string key);
-        void Put(int txid, string key, string new_value);
+        bool Put(int txid, string key, string new_value);
         bool Abort(int txid);
         bool CanCommit(int txid);
-        bool Commit(int txid);  
+        bool Commit(int txid); 
     }
 
     public interface IServerPuppet {

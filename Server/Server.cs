@@ -520,11 +520,25 @@ namespace Server
             }
         }
 
+
         public bool ContainsKey(string key){
             foreach (Semitable st in Semitables) 
                 if (st.ContainsKey(key)) 
                     return true;
             return false;
+        }
+
+        public string GetAll(string key) {
+            string ret = "";
+            foreach (Semitable st in Semitables) { 
+                if(st.ContainsKey(key)){
+                    foreach (TableValue tv in Semitables[0][key])
+                    {
+                        ret += ("Value: " + tv.Value + "; Timestamp: " + tv.Timestamp + "; State: " + tv.State + "\r\n");
+                    }
+                }
+            }
+            return ret;
         }
 
         public void PrintSemiTablesValues() {
@@ -728,6 +742,9 @@ namespace Server
                 {
                     if (hashs.Count == 1) semiCount.Add(hashs[0], hashs.Count);
                     else semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], hashs.Count);
+                }
+                else {
+                    semiCount.Add(st.MinInterval + (st.MaxInterval-st.MinInterval)/2, 0);
                 }
             }
             return semiCount;
@@ -940,6 +957,10 @@ namespace Server
     class ServerPuppet : MarshalByRefObject, IServerPuppet
     {
         public static Server ctx;
+
+        public string GetAll(string key) {
+            return ctx.GetAll(key);
+        }
 
         public void StartServer()
         {

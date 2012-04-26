@@ -227,6 +227,7 @@ namespace CommonInterfaces
     public interface IServerPuppet {
         void KillServer();
         void StartServer();
+        string GetAll(string key);
     }
 
 

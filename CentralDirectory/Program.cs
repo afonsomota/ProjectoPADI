@@ -155,12 +155,10 @@ namespace CentralDirectory
                st1.min = UInt32.MinValue;
                st1.max = UInt32.MaxValue/2;
                st1.IP.Add(srv);
-               st1.IP.Add(srv);
                Interval st2 = new Interval();
                st2.IP = new List<Node>();
                st2.min = UInt32.MaxValue / 2 + 1;
                st2.max = UInt32.MaxValue;
-               st2.IP.Add(srv);
                st2.IP.Add(srv);
 
                IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srv.IP + ":" + srv.Port.ToString() + "/Server");
@@ -285,10 +283,10 @@ namespace CentralDirectory
             if (numberofServer == 1)
             {
                 Console.WriteLine("Replicating... ");
-                IServer oldNode = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[0].IP[1].IP + ":" + Location[0].IP[1].Port.ToString() + "/Server");
+                IServer oldNode = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[0].IP[0].IP + ":" + Location[0].IP[0].Port.ToString() + "/Server");
                 oldNode.CopySemiTables(d);
-                Location[0].IP[1] = d;
-                Location[1].IP[0] = d;
+                Location[0].IP.Add(d);
+                Location[1].IP.Insert(0,d);
                 return;
             }
 

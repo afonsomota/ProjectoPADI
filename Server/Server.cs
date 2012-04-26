@@ -411,7 +411,6 @@ namespace Server
                     foreach (TableValue tv in st[key]) {
                         if (!tv.isLockable(txid))
                         {
-                            Console.WriteLine("CANNOT BE LOCKED " + tv.State);
                             return false;
                         }
                         else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
@@ -434,7 +433,6 @@ namespace Server
                 foreach(List<TableValue> list in objectsToLock.Values)
                     foreach (TableValue tv in list)
                     {
-                        Console.WriteLine(tv.Value + " " + tv.Timestamp );
                         tv.lockingVariable(txid);
                     }
                 if (!TransactionObjects.ContainsKey(txid))
@@ -450,7 +448,6 @@ namespace Server
 
         public void Put(int txid, string key, string value, bool isReplica)
         {
-            Console.WriteLine("PUT " + key + " " + value);
             TransactionState tvState = new TransactionState(txid, KeyState.NEW);
             foreach (Semitable st in Semitables)
             {
@@ -514,7 +511,6 @@ namespace Server
                         List<TableValue> values = new List<TableValue>();
                         values.Add(tv);
                         st.Add(key, values);
-                        Console.WriteLine("Inserted Key: " + key);
                     }
                 }
             }
@@ -544,7 +540,7 @@ namespace Server
         public void PrintSemiTablesValues() {
             if (Semitables[0] == null)
             {
-                Console.WriteLine("Server not initialize");
+                Console.WriteLine("Server Not Initialized.");
                 return;
             }
             Console.Write("SemiTable 0-> ");

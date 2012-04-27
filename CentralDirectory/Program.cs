@@ -360,7 +360,13 @@ namespace CentralDirectory
                foreach (CommonInterfaces.Node node in servers)
                {
                    IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-                   if (link != null) link.GetNetworkUpdate(listUpDate);
+                   try
+                   {
+                       if (link != null) link.GetNetworkUpdate(listUpDate);
+                   }
+                   catch { 
+                       
+                   }
                }
            }
        }

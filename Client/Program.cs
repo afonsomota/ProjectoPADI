@@ -84,6 +84,8 @@ namespace Client
         public List<Node> NetworkTopology;
         public IPuppetMaster Puppet;
         public ICentralDirectory CD;
+        Transaction SuperTransaction;
+        bool transactionAborted = false;
  
         public Client(Node info,TcpChannel channel,  IPuppetMaster puppet, ICentralDirectory cd){
             Registers = new string[10];
@@ -103,31 +105,37 @@ namespace Client
         //Executa um Put com o conteudo do registo "register" na key "key"
         public void PutInternal(int register, string key)
         {
-            
+            if (SuperTransaction != null &&
+                SuperTransaction.PutValue(key, Registers[register - 1]) == false) 
+            {
+                Console.BackgroundColor = ConsoleColor.Red;
+                SuperTransaction = null;
+            }
         }
 
         //Executa um get na key "key" e guarda o conteudo no register
         public void GetInternal(int register, string key)
         {
-            List<Operation> ops = new List<Operation>();
-            Operation op =new Operation(key);
-            ops.Add(op);
-            TransactionContext transaction = new TransactionContext();
-
-            ICentralDirectory cd = (ICentralDirectory)Activator.GetObject(
-             typeof(ICentralDirectory),
-             "tcp://localhost:9090/CentralDirectory");
-
-            transaction = cd.GetServers(ops);
-
-            IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + transaction.NodesLocation[key][0].IP +":" +transaction.NodesLocation[key][0].Port + "/Server");
-            Registers[register] = server.Get(transaction.Txid,key);
+            string returnValue =null;
+            if(SuperTransaction!=null) returnValue=  SuperTransaction.GetValue(key);
+            if (returnValue == null)
+            {
+                Console.BackgroundColor = ConsoleColor.Red;
+                SuperTransaction = null;
+            }
+            else Registers[register - 1] = returnValue; 
+             
         }
 
         //mete o valor "value" na key "key"
-        public void PutVAlInternal(string key, int value)
+        public void PutVAlInternal(string key, string value)
         {
-
+            if (SuperTransaction != null &&
+                SuperTransaction.PutValue(key, value) == false)
+            {
+                Console.BackgroundColor = ConsoleColor.Red;
+                SuperTransaction = null;
+            }
         }
 
         //change the value of the key in the register number to lower case
@@ -151,10 +159,18 @@ namespace Client
         //faz commit da transacção
         public void CommitTxInternal()
         {
-
+           if(SuperTransaction!=null) SuperTransaction.Commit();
         }
 
+        public void BeginTxInternal() 
+        {
+            SuperTransaction = new Transaction();  
+        }
 
+        public void WaitInternal(int ms) 
+        {
+            Thread.Sleep(ms); 
+        }
         }
     class ClientRemoting : MarshalByRefObject, IClient
     {
@@ -242,6 +258,11 @@ namespace Client
         public void CommitTx()
         {
             ctx.CommitTxInternal();
+        }
+
+        public void BeginTx()
+        {
+            ctx.BeginTxInternal();
         }
 
         public string[] Dump()
@@ -336,7 +357,6 @@ namespace Client
                     }
                 }
 
-                Transaction transaction = new Transaction();
 
                 for (int aux = 1; clientOperations[aux].Count != aux; aux++)
                 {

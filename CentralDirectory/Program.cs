@@ -68,6 +68,8 @@ namespace CentralDirectory
        List<CommonInterfaces.Node> listServer = new List<CommonInterfaces.Node>();
        List<Interval> tableOfLocation = new List<Interval>();
        uint max = UInt32.MaxValue;
+       object insertLocker =  new System.Object();
+       public object nodesListLocker = new System.Object();
 
 
        public CentralDirectory()
@@ -137,103 +139,106 @@ namespace CentralDirectory
 
        public void division()
        {
-           firstTime = true;
-           uint numberofServer = (uint)listServer.Count();
-           uint result = 0;
-           uint aux1 = 0;
-           
-           //int aux3 = 0;
-           result = max / numberofServer;
-           uint aux2 = result;
-           
-           List<string> aux4 = new List<string>();
-
-           if (numberofServer == 1) {
-               Node srv = new Node(listServer[0].IP, listServer[0].Port, NodeType.Server);
-               Interval st1 = new Interval();
-               st1.IP = new List<Node>();
-               st1.min = UInt32.MinValue;
-               st1.max = UInt32.MaxValue/2;
-               st1.IP.Add(srv);
-               Interval st2 = new Interval();
-               st2.IP = new List<Node>();
-               st2.min = UInt32.MaxValue / 2 + 1;
-               st2.max = UInt32.MaxValue;
-               st2.IP.Add(srv);
-
-               IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srv.IP + ":" + srv.Port.ToString() + "/Server");
-               link1.GetInitialIntervals(st1.min, st1.max, srv);
-               IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srv.IP + ":" + srv.Port.ToString() + "/Server");
-               link2.GetInitialIntervals(st2.min, st2.max, srv);
-
-               tableOfLocation.Add(st1);
-               tableOfLocation.Add(st2);
-
-               return;
-           }
-
-           for (int i = 0; i < numberofServer; i++)
+           lock (insertLocker)
            {
+               firstTime = true;
+               uint numberofServer = (uint)listServer.Count();
+               uint result = 0;
+               uint aux1 = 0;
 
-               Interval st = new Interval();
-               st.IP = new List<Node>();
-               st.min = aux1;
-               st.max = aux2;
-              
-               
-               if (i == numberofServer - 1)
+               //int aux3 = 0;
+               result = max / numberofServer;
+               uint aux2 = result;
+
+               List<string> aux4 = new List<string>();
+
+               if (numberofServer == 1)
                {
-                   Node node1 = new Node(listServer[i].IP, listServer[i].Port, NodeType.Server);
-                   Node a = new Node (listServer[0].IP,listServer[0].Port, NodeType.Server);
-                   //node1.IP = listServer[i].IP;
-                   //node1.Port = listServer[i].Port;
-                   //node2.IP = listServer[0].IP;
-                   //node2.Port = listServer[0].Port;
-                   st.IP.Add(node1);
-                   st.IP.Add(a);
-                   //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
-                   //st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
+                   Node srv = new Node(listServer[0].IP, listServer[0].Port, NodeType.Server);
+                   Interval st1 = new Interval();
+                   st1.IP = new List<Node>();
+                   st1.min = UInt32.MinValue;
+                   st1.max = UInt32.MaxValue / 2;
+                   st1.IP.Add(srv);
+                   Interval st2 = new Interval();
+                   st2.IP = new List<Node>();
+                   st2.min = UInt32.MaxValue / 2 + 1;
+                   st2.max = UInt32.MaxValue;
+                   st2.IP.Add(srv);
 
-                   IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
-                   link1.GetInitialIntervals(aux1, aux2,listServer[0]);
+                   IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srv.IP + ":" + srv.Port.ToString() + "/Server");
+                   link1.GetInitialIntervals(st1.min, st1.max, srv);
+                   IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + srv.IP + ":" + srv.Port.ToString() + "/Server");
+                   link2.GetInitialIntervals(st2.min, st2.max, srv);
 
-                   IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[0].IP + ":" + listServer[0].Port.ToString() + "/Server");
-                   link2.GetInitialIntervals(aux1, aux2,listServer[i]);
+                   tableOfLocation.Add(st1);
+                   tableOfLocation.Add(st2);
 
-
-               }
-               else
-               {
-                   Node node1 = new Node(listServer[i].IP, listServer[i].Port, NodeType.Server);
-                   Node a = new Node(listServer[i+1].IP, listServer[i+1].Port, NodeType.Server);
-                   //node1.IP = listServer[i].IP;
-                   //node1.Port = listServer[i].Port;
-                   //node2.IP = listServer[i + 1].IP;
-                   //node2.Port = listServer[i + 1].Port;
-                   st.IP.Add(node1);
-                   st.IP.Add(a);
-                   //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
-                   //st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
-
-                   IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
-                   link1.GetInitialIntervals(aux1, aux2,listServer[i+1]);
-
-                   IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString() + "/Server");
-                   link2.GetInitialIntervals(aux1, aux2,listServer[i]);
+                   return;
                }
 
-               tableOfLocation.Add(st);
+               for (int i = 0; i < numberofServer; i++)
+               {
+
+                   Interval st = new Interval();
+                   st.IP = new List<Node>();
+                   st.min = aux1;
+                   st.max = aux2;
 
 
-               if (aux1 == 0)
-                   aux1 = aux1 + result + 1;
-               else aux1 = aux1 + result;
-               
-               aux2 = aux2 + result;
+                   if (i == numberofServer - 1)
+                   {
+                       Node node1 = new Node(listServer[i].IP, listServer[i].Port, NodeType.Server);
+                       Node a = new Node(listServer[0].IP, listServer[0].Port, NodeType.Server);
+                       //node1.IP = listServer[i].IP;
+                       //node1.Port = listServer[i].Port;
+                       //node2.IP = listServer[0].IP;
+                       //node2.Port = listServer[0].Port;
+                       st.IP.Add(node1);
+                       st.IP.Add(a);
+                       //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
+                       //st.IP.Add(listServer[0].IP + ":" + listServer[0].Port.ToString());
+
+                       IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
+                       link1.GetInitialIntervals(aux1, aux2, listServer[0]);
+
+                       IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[0].IP + ":" + listServer[0].Port.ToString() + "/Server");
+                       link2.GetInitialIntervals(aux1, aux2, listServer[i]);
+
+
+                   }
+                   else
+                   {
+                       Node node1 = new Node(listServer[i].IP, listServer[i].Port, NodeType.Server);
+                       Node a = new Node(listServer[i + 1].IP, listServer[i + 1].Port, NodeType.Server);
+                       //node1.IP = listServer[i].IP;
+                       //node1.Port = listServer[i].Port;
+                       //node2.IP = listServer[i + 1].IP;
+                       //node2.Port = listServer[i + 1].Port;
+                       st.IP.Add(node1);
+                       st.IP.Add(a);
+                       //st.IP.Add(listServer[i].IP + ":" + listServer[i].Port.ToString());
+                       //st.IP.Add(listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString());
+
+                       IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i].IP + ":" + listServer[i].Port.ToString() + "/Server");
+                       link1.GetInitialIntervals(aux1, aux2, listServer[i + 1]);
+
+                       IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + listServer[i + 1].IP + ":" + listServer[i + 1].Port.ToString() + "/Server");
+                       link2.GetInitialIntervals(aux1, aux2, listServer[i]);
+                   }
+
+                   tableOfLocation.Add(st);
+
+
+                   if (aux1 == 0)
+                       aux1 = aux1 + result + 1;
+                   else aux1 = aux1 + result;
+
+                   aux2 = aux2 + result;
+
+               }
 
            }
-
-           
        }
 
        public uint MaxSemiTable(List<Dictionary<uint, int>> table)
@@ -276,55 +281,57 @@ namespace CentralDirectory
        }
 
         public void Restructure(uint semiTable,Node d){
-            uint max_aux = 0;
-            uint numberofServer = (uint)listServer.Count();
+
+                uint max_aux = 0;
+                uint numberofServer = (uint)listServer.Count();
 
 
-            if (numberofServer == 1)
-            {
-                Console.WriteLine("Replicating... ");
-                IServer oldNode = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[0].IP[0].IP + ":" + Location[0].IP[0].Port.ToString() + "/Server");
-                oldNode.CopySemiTables(d);
-                Location[0].IP.Add(d);
-                Location[1].IP.Insert(0,d);
-                return;
-            }
-
-            for (int i = 0; i < Location.Count(); i++)
-            {
-
-                if (Location[i].min < semiTable && Location[i].max > semiTable)
+                if (numberofServer == 1)
                 {
-                    Console.WriteLine("Restructuring... " + semiTable);
-
-                    Interval st = new Interval();
-                    st.IP = new List<Node>();
-                    max_aux = Location[i].max;
-                    Location[i].max = semiTable - 1;
-                    st.min = semiTable;
-                    st.max = max_aux;
-                    st.IP.Add(d);
-                    st.IP.Add(Location[i].IP[1]);
-
-
-                    tableOfLocation.Add(st);
-                    IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
-                    link1.CleanSemiTable(semiTable,d);
-                    IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[1].Port.ToString() + "/Server");
-                    link2.CopyAndCleanTable(semiTable, d);
-                    Location[i].IP[1] = d;
-                    break;
+                    Console.WriteLine("Replicating... ");
+                    IServer oldNode = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[0].IP[0].IP + ":" + Location[0].IP[0].Port.ToString() + "/Server");
+                    oldNode.CopySemiTables(d);
+                    Location[0].IP.Add(d);
+                    Location[1].IP.Insert(0, d);
+                    return;
                 }
-            }
 
-            for (int i = 0; i < Location.Count; i++)
-            {
-                Console.WriteLine("min: " + Location[i].min + " max: " + Location[i].max + "   IP1: " + Location[i].IP[0].Port + "  IP2: " + Location[i].IP[1].Port);
-            }
-               //link.GetNetworkUpdate(listUpDate);
-             //CleanSemiTable(uint semiTableToClean);
-            //CopyAndCleanTable(uint semiTableToClean);
-        }
+                for (int i = 0; i < Location.Count(); i++)
+                {
+
+                    if (Location[i].min < semiTable && Location[i].max > semiTable)
+                    {
+                        Console.WriteLine("Restructuring... " + semiTable);
+
+                        Interval st = new Interval();
+                        st.IP = new List<Node>();
+                        max_aux = Location[i].max;
+                        Location[i].max = semiTable - 1;
+                        st.min = semiTable;
+                        st.max = max_aux;
+                        st.IP.Add(d);
+                        st.IP.Add(Location[i].IP[1]);
+
+
+                        tableOfLocation.Add(st);
+                        IServer link1 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
+                        link1.CleanSemiTable(semiTable, d);
+                        IServer link2 = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[1].IP + ":" + Location[i].IP[1].Port.ToString() + "/Server");
+                        link2.CopyAndCleanTable(semiTable, d);
+                        Location[i].IP[1] = d;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < Location.Count; i++)
+                {
+                    Console.WriteLine("min: " + Location[i].min + " max: " + Location[i].max + "   IP1: " + Location[i].IP[0].Port + "  IP2: " + Location[i].IP[1].Port);
+                }
+                //link.GetNetworkUpdate(listUpDate);
+                //CleanSemiTable(uint semiTableToClean);
+                //CopyAndCleanTable(uint semiTableToClean);
+            
+       }
 
         public void Send(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
        {
@@ -335,22 +342,26 @@ namespace CentralDirectory
 
        public void UpDate(List<CommonInterfaces.Node> clients, List<CommonInterfaces.Node> servers)
        {
-           List<Node> listUpDate = new List<Node>();
-           listUpDate.AddRange(clients);
-           listUpDate.AddRange(servers);
-           foreach (CommonInterfaces.Node node in clients)
+           lock (nodesListLocker)
            {
-               IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Client");
-               try
+               List<Node> listUpDate = new List<Node>();
+               listUpDate.AddRange(clients);
+               listUpDate.AddRange(servers);
+
+               foreach (CommonInterfaces.Node node in clients)
                {
+                   IClient link = (IClient)Activator.GetObject(typeof(IClient), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Client");
+                   try
+                   {
+                       if (link != null) link.GetNetworkUpdate(listUpDate);
+                   }
+                   catch { }
+               }
+               foreach (CommonInterfaces.Node node in servers)
+               {
+                   IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
                    if (link != null) link.GetNetworkUpdate(listUpDate);
                }
-               catch { }
-           }
-           foreach (CommonInterfaces.Node node in servers)
-           {
-               IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + node.IP + ":" + node.Port.ToString() + "/Server");
-               if (link != null) link.GetNetworkUpdate(listUpDate);
            }
        }
 
@@ -376,41 +387,46 @@ namespace CentralDirectory
 
        public bool InsertServer(Node node)
        {
-           List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
-           if (miss == true)
+           lock (insertLocker)
            {
-               for (int i = 0; i < Location.Count; i++)
+               List<Dictionary<uint, int>> listAux = new List<Dictionary<uint, int>>();
+               if (miss == true)
                {
-                   if (Location[i].min == semiTablemin1 && Location[i].max == semiTablemax1)
+                   for (int i = 0; i < Location.Count; i++)
                    {
-                       Console.WriteLine("Sending restructure request to: " + Location[i].IP[0]);
-                       IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
-                       Location[i].IP.Add(node);
-                       link.CopySemiTable(Location[i].min, node);
-                   }
+                       if (Location[i].min == semiTablemin1 && Location[i].max == semiTablemax1)
+                       {
+                           Console.WriteLine("Sending restructure request to: " + Location[i].IP[0]);
+                           IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
+                           Location[i].IP.Add(node);
+                           link.CopySemiTable(Location[i].min, node);
+                       }
 
-                   else if (Location[i].min == semiTablemin2 && Location[i].max == semiTablemax2)
-                   {
-                       Console.WriteLine("Sending restructure request to: " + Location[i].IP[0]);
-                       IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
-                       Location[i].IP.Add(node);
-                       link.CopySemiTable(Location[i].min, node);
+                       else if (Location[i].min == semiTablemin2 && Location[i].max == semiTablemax2)
+                       {
+                           Console.WriteLine("Sending restructure request to: " + Location[i].IP[0]);
+                           IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + Location[i].IP[0].IP + ":" + Location[i].IP[0].Port.ToString() + "/Server");
+                           Location[i].IP.Add(node);
+                           link.CopySemiTable(Location[i].min, node);
+                       }
                    }
+                   miss = false;
                }
-               miss = false;
+
+
+               else if (firstTime == true)
+               {
+                   listAux = DimensionOfServers(ListServer);
+                   Restructure(MaxSemiTable(listAux), node);
+               }
+
+               lock (nodesListLocker)
+               {
+                   Server = node;
+               }
+               Send(ListClient, ListServer);
+               return true;
            }
-
-
-           else if (firstTime == true)
-           {
-               listAux = DimensionOfServers(ListServer);
-               Restructure(MaxSemiTable(listAux), node);
-           }
-
-
-           Server = node;
-           Send(ListClient, ListServer);
-           return true;
        }
 
 
@@ -432,8 +448,10 @@ namespace CentralDirectory
                 return false;
             }
 
-            
-            ctx.Client = node;
+            lock (ctx.nodesListLocker)
+            {
+                ctx.Client = node;
+            }
             ctx.Send(ctx.ListClient, ctx.ListServer);
             return true;
         }

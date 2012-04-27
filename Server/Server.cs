@@ -411,7 +411,6 @@ namespace Server
                     foreach (TableValue tv in st[key]) {
                         if (!tv.isLockable(txid))
                         {
-                            Console.WriteLine("CANNOT BE LOCKED " + tv.State);
                             return false;
                         }
                         else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
@@ -434,7 +433,6 @@ namespace Server
                 foreach(List<TableValue> list in objectsToLock.Values)
                     foreach (TableValue tv in list)
                     {
-                        Console.WriteLine(tv.Value + " " + tv.Timestamp );
                         tv.lockingVariable(txid);
                     }
                 if (!TransactionObjects.ContainsKey(txid))
@@ -450,7 +448,6 @@ namespace Server
 
         public void Put(int txid, string key, string value, bool isReplica)
         {
-            Console.WriteLine("PUT " + key + " " + value);
             TransactionState tvState = new TransactionState(txid, KeyState.NEW);
             foreach (Semitable st in Semitables)
             {
@@ -514,11 +511,11 @@ namespace Server
                         List<TableValue> values = new List<TableValue>();
                         values.Add(tv);
                         st.Add(key, values);
-                        Console.WriteLine("Inserted Key: " + key);
                     }
                 }
             }
         }
+
 
         public bool ContainsKey(string key){
             foreach (Semitable st in Semitables) 
@@ -527,10 +524,23 @@ namespace Server
             return false;
         }
 
+        public string GetAll(string key) {
+            string ret = "";
+            foreach (Semitable st in Semitables) { 
+                if(st.ContainsKey(key)){
+                    foreach (TableValue tv in Semitables[0][key])
+                    {
+                        ret += ("Value: " + tv.Value + "; Timestamp: " + tv.Timestamp + "; State: " + tv.State + "\r\n");
+                    }
+                }
+            }
+            return ret;
+        }
+
         public void PrintSemiTablesValues() {
             if (Semitables[0] == null)
             {
-                Console.WriteLine("Server not initialize");
+                Console.WriteLine("Server Not Initialized.");
                 return;
             }
             Console.Write("SemiTable 0-> ");
@@ -724,10 +734,13 @@ namespace Server
                     hashs.Add(hash);
                 }
                 hashs.Sort();
-                if (hashs.Count != 0)
+                if (hashs.Count > 1)
                 {
                     if (hashs.Count == 1) semiCount.Add(hashs[0], hashs.Count);
                     else semiCount.Add(hashs[hashs.Count / 2 + hashs.Count % 2], hashs.Count);
+                }
+                else {
+                    semiCount.Add(st.MinInterval + (st.MaxInterval - st.MinInterval) / 2, hashs.Count);
                 }
             }
             return semiCount;
@@ -940,6 +953,10 @@ namespace Server
     class ServerPuppet : MarshalByRefObject, IServerPuppet
     {
         public static Server ctx;
+
+        public string GetAll(string key) {
+            return ctx.GetAll(key);
+        }
 
         public void StartServer()
         {

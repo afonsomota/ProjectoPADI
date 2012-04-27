@@ -54,6 +54,11 @@ namespace Client
             clt.Registers[2] = "pReto";
             clt.Registers[3] = "PATO";
             clt.Registers[4] = "porCo";
+            clt.Registers[5] = "para";
+            clt.Registers[6] = "pedra";
+            clt.Registers[7] = "peneu";
+            clt.Registers[8] = "paralizado";
+            clt.Registers[9] = "princesa";
 
             clt.ToLowerInternal(2);
 
@@ -88,14 +93,11 @@ namespace Client
             CD = cd;
         }
 
-        public void StoreValue(int reg, string value){
-            Registers[reg] = value;
-        }
 
         //Adiciona o valor ao registo
         public void StoreInternal(int register, string value)
         {
-            Registers[register]=value;
+            Registers[register-1]=value;
         }
 
         //Executa um Put com o conteudo do registo "register" na key "key"
@@ -107,7 +109,19 @@ namespace Client
         //Executa um get na key "key" e guarda o conteudo no register
         public void GetInternal(int register, string key)
         {
+            List<Operation> ops = new List<Operation>();
+            Operation op =new Operation(key);
+            ops.Add(op);
+            TransactionContext transaction = new TransactionContext();
 
+            ICentralDirectory cd = (ICentralDirectory)Activator.GetObject(
+             typeof(ICentralDirectory),
+             "tcp://localhost:9090/CentralDirectory");
+
+            transaction = cd.GetServers(ops);
+
+            IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + transaction.NodesLocation[key][0].IP +":" +transaction.NodesLocation[key][0].Port + "/Server");
+            Registers[register] = server.Get(transaction.Txid,key);
         }
 
         //mete o valor "value" na key "key"
@@ -131,7 +145,7 @@ namespace Client
         //concata a string do registo 2 no registo 1
         public void ConcatInternal(int register1, int register2)
         {
-            Registers[register1] = Registers[register1] + Registers[register2];
+            Registers[register1-1] = Registers[register1-1] + Registers[register2-1];
         }
 
         //faz commit da transacção

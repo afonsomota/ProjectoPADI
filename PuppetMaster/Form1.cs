@@ -337,7 +337,7 @@ namespace PuppetMaster
                             typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                         cliente.CommitTx();
                     }
-                    else if (operation.StartsWith("PUT"))
+                    else if (operation.StartsWith("PUT "))
                     {
                         IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                             typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
@@ -389,6 +389,10 @@ namespace PuppetMaster
                     else if (operation.StartsWith("DUMP"))
                     {
                         DumpClient(arg[1]);
+                    }
+                    else if (operation.StartsWith("CONNECT"))
+                    {
+                        startClient(arg[1]);
                     }
                 
                 }

@@ -349,7 +349,7 @@ namespace Server
                         List<TableValue> tvToRemove = new List<TableValue>();
                         foreach (TableValue tv in st[key])
                         {
-                            if (tv.State.State == KeyState.TO_REMOVE_COMMITING && tv.State.Txid == txid)
+                            if (tv.State.State == KeyState.TO_REMOVE_COMMITING && tv.State.Txid == txid || tv.Value == null)
                                 tvToRemove.Add(tv);
                         }
                         foreach (TableValue tv in tvToRemove) {

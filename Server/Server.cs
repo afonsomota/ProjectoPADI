@@ -817,8 +817,11 @@ namespace Server
                             }
                             else
                             {
-                                max_timestamp = tv.Timestamp;
-                                max_tv = tv;
+                                if (tv.Value != null)
+                                {
+                                    max_timestamp = tv.Timestamp;
+                                    max_tv = tv;
+                                }
                             }
                         }
                     }

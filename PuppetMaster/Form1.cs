@@ -30,6 +30,8 @@ namespace PuppetMaster
         string[] defaultUsernames = new string[] { "caravela", "adamastor", "pedro", "carro", "kika", "antonio", "shelf", "chapeu", "frigorifico", "porta", "papel", "computador", "livro", "caneta", "lapiseira", "rato" };
         public string[] userScriptList;
         public string[] testes;
+        public Dictionary<string, Process> runningProcesses = new Dictionary<string, Process>();
+
         public Dictionary<string, List<string>> clientsOperations = new Dictionary<string, List<string>>();
         public Dictionary<string, ListBox> clientRegistersValueListbox = new Dictionary<string, ListBox>();
         public Dictionary<string, Label> clientRegistersValueListboxLabel = new Dictionary<string, Label>();
@@ -130,11 +132,10 @@ namespace PuppetMaster
 
         private void button2_Click(object sender, EventArgs e)
         {
-            IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-              typeof(IClientPuppet),
-              "tcp://" + SearchClientAdressByName((string)listCliOnline.SelectedItem) + "/ClientPuppet");
-                listCliOnline.Items.Remove((string)listCliOnline.SelectedItem);
-                cliente.KillClient();
+
+
+            string clientName = (string)listCliOnline.SelectedItem;
+            stopClient(clientName);
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -394,6 +395,10 @@ namespace PuppetMaster
                     {
                         startClient(arg[1]);
                     }
+                    else if (operation.StartsWith("DISCONNECT"))
+                    {
+                        stopClient(arg[1]);
+                    }
                 
                 }
             }
@@ -408,10 +413,10 @@ namespace PuppetMaster
 
         private void startClient(string clientName) 
         {   
-            Process process = new Process();
             string currentDirectory = Environment.CurrentDirectory;
             string path = currentDirectory.Replace("PuppetMaster", "Client");
             path += "/Client.exe";
+            runningProcesses.Add(clientName,new Process());
 
             clientsOperations.Add(clientName, new List<string>());
             clientRegistersValueListbox.Add(clientName, new ListBox());
@@ -431,14 +436,35 @@ namespace PuppetMaster
             clientListBoxGetKeyTextBox2.Add(clientName, new TextBox());
             clientListBoxGetKeyButton.Add(clientName, new Button());
 
-
-
             GenerateClientDumpListBox(clientName);
             numberOfClients++;
 
-            process.StartInfo.Arguments = clientName;
-            process.StartInfo.FileName = path;
-            process.Start();
+            runningProcesses[clientName].StartInfo.Arguments = clientName;
+            runningProcesses[clientName].StartInfo.FileName = path;
+            runningProcesses[clientName].Start(); 
+        }
+
+        private void stopClient(string clientName) 
+        {
+          //  clientsOperations[clientName]
+            //clientRegistersValueListbox[clientName].Dispose();
+            //clientRegistersValueListboxLabel[clientName].Dispose();
+            //clientListBoxDumpButton[clientName].Dispose();
+            //clientListBoxToUpperButton[clientName].Dispose();
+            //clientListBoxLowerButton[clientName].Dispose();
+            //clientListBoxLowerTextBox[clientName].Dispose();
+            //clientListBoxUpperTextBox[clientName].Dispose();
+            //clientRegistersValueListboxConcatRegister2[clientName].Dispose(); 
+            //clientRegistersValueListboxConcatRegister1[clientName].Dispose();
+            //clientListBoxConcatButton[clientName].Dispose();
+            //clientListBoxPutRegisterTextBox[clientName].Dispose();
+            //clientListBoxPutRegisterTextBox2[clientName].Dispose();
+            //clientListBoxPutRegisterButton[clientName].Dispose();
+            //clientListBoxGetKeyTextBox[clientName].Dispose();
+            //clientListBoxGetKeyTextBox2[clientName].Dispose();
+            //clientListBoxGetKeyButton[clientName].Dispose();
+
+            runningProcesses[clientName].Kill();
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -455,7 +481,6 @@ namespace PuppetMaster
                 clientName = textBox2.Text;
             }
             startClient(clientName);
-            
         }
 
         private void GenerateClientDumpListBox(string clientName) 

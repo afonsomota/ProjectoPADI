@@ -41,8 +41,6 @@ namespace CentralDirectory
                 Console.WriteLine(n.min+" - "+n.max + ":  " + n.IP[0] + ";  " + n.IP[1]);
             }
 
-            
-
             System.Console.WriteLine("<enter> para sair...");
             System.Console.ReadLine();
         }

@@ -238,11 +238,12 @@ namespace CommonInterfaces
         void Store(int register, string value);
         void Put(int register, string key);
         void Get(int register, string key);
-        void PutVAl(string key, int value);
+        void PutVAl(string key, string value);
         void ToLower(int register);
         void ToUpper(int register);
         void Concat(int register1, int register2);
         void CommitTx();
+        void Sleep(int ms);
         string[] Dump();
         void ExeScript(List<string> operations);
     }

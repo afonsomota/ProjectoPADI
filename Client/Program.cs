@@ -232,7 +232,7 @@ namespace Client
         }
 
         //mete o valor "value" na key "key"
-        public void PutVAl(string key, int value)
+        public void PutVAl(string key, string value)
         {
             ctx.PutVAlInternal(key, value);
         }
@@ -313,7 +313,7 @@ namespace Client
                     else if (instructions[0].StartsWith("STORE"))
                         this.Store(Int32.Parse(arg[1]), arg[2]);
                     else if (instructions[0].StartsWith("PUTVAL"))
-                        this.PutVAl(arg[1], Int32.Parse(arg[2]));
+                        this.PutVAl(arg[1], arg[2]);
                     else if (instructions[0].StartsWith("TOLOWER"))
                         this.ToLower(Int32.Parse(arg[1]));
                     else if (instructions[0].StartsWith("TOUPPER"))
@@ -345,7 +345,7 @@ namespace Client
                         if (clientOperations[aux][aux2].StartsWith("STORE"))
                             this.Store(Int32.Parse(arg[1]), arg[2]);
                         else if (clientOperations[aux][aux2].StartsWith("PUTVAL"))
-                            this.PutVAl(arg[1], Int32.Parse(arg[2]));
+                            this.PutVAl(arg[1], arg[2]);
                         else if (clientOperations[aux][aux2].StartsWith("TOLOWER"))
                             this.ToLower(Int32.Parse(arg[1]));
                         else if (clientOperations[aux][aux2].StartsWith("TOUPPER"))
@@ -367,7 +367,7 @@ namespace Client
                     if (clientOperations[aux][aux2].StartsWith("STORE"))
                         this.Store(Int32.Parse(arg[1]), arg[2]);
                     else if (clientOperations[aux][aux2].StartsWith("PUTVAL"))
-                        this.PutVAl(arg[1], Int32.Parse(arg[2]));
+                        this.PutVAl(arg[1], arg[2]);
                     else if (clientOperations[aux][aux2].StartsWith("TOLOWER"))
                         this.ToLower(Int32.Parse(arg[1]));
                     else if (clientOperations[aux][aux2].StartsWith("TOUPPER"))

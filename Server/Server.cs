@@ -268,7 +268,7 @@ namespace Server
         public int K;
         private int tableToInit = 0;
         public Dictionary<int, Dictionary<string,List<TableValue>>> TransactionObjects;
-        public Dictionary<uint, bool> ReadOnlyTransation;
+        public Dictionary<int, bool> ReadOnlyTransation;
 
         public Server(Node info, TcpChannel channel, int k)
         {
@@ -386,8 +386,19 @@ namespace Server
             List<TableValue> valuesToRemove = new List<TableValue>();
             foreach (TableValue tv in TransactionObjects[txid][key])
                 if (!tv.lockVariable(txid)){
-                    allLocked = false;
-                    valuesToRemove.Add(tv);
+                    if (ReadOnlyTransation.ContainsKey(txid))
+                    {
+                        if (ReadOnlyTransation[txid]) return true;
+                        else {
+                            allLocked = false;
+                            valuesToRemove.Add(tv);
+                        }
+                    }
+                    else
+                    {
+                        ReadOnlyTransation.Add(txid, true);
+                        return true;
+                    }
                 }
             foreach (TableValue tv in valuesToRemove)
                 TransactionObjects[txid][key].Remove(tv);
@@ -412,7 +423,13 @@ namespace Server
                     foreach (TableValue tv in st[key]) {
                         if (!tv.isLockable(txid))
                         {
-                            return false;
+                            if(ReadOnlyTransation.ContainsKey(txid)){
+                                if (ReadOnlyTransation[txid]) return true;
+                                else return false;
+                            }else{
+                                ReadOnlyTransation.Add(txid,true);
+                                return true;
+                            }
                         }
                         else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
                     }
@@ -443,7 +460,16 @@ namespace Server
                 }
                 return true;
             }
-            return false;
+            if (ReadOnlyTransation.ContainsKey(txid))
+            {
+                if (ReadOnlyTransation[txid]) return true;
+                else return false;
+            }
+            else
+            {
+                ReadOnlyTransation.Add(txid, true);
+                return true;
+            }
         }
 
 
@@ -763,7 +789,7 @@ namespace Server
             return null;
         }
 
-        public string Get(string key)
+        public string Get(int txid, string key)
         {
             foreach (Semitable st in Semitables)
                 if (st.ContainsKey(key)){
@@ -771,8 +797,18 @@ namespace Server
                     TableValue max_tv = st[key][0];
                     foreach (TableValue tv in st[key]){
                         if (tv.Timestamp > max_timestamp){
-                            max_timestamp = tv.Timestamp;
-                            max_tv = tv;
+                            if (ReadOnlyTransation.ContainsKey(txid))
+                            {
+                                if (ReadOnlyTransation[txid] && tv.State.State == KeyState.FREE) {
+                                    max_timestamp = tv.Timestamp;
+                                    max_tv = tv;
+                                }
+                            }
+                            else
+                            {
+                                max_timestamp = tv.Timestamp;
+                                max_tv = tv;
+                            }
                         }
                     }
                     return max_tv.Value;
@@ -867,9 +903,9 @@ namespace Server
         public string Get(int txid, string key)
         {
             string ret = null;
-            if (ctx.EligibleForRead(txid, key) && ctx.ContainsKey(key))
+            if ((ctx.EligibleForRead(txid, key) || ctx.ReadOnlyTransation[txid]) && ctx.ContainsKey(key))
             {
-                ret =  ctx.Get(key);
+                ret =  ctx.Get(txid, key);
             }
 
             return ret;
@@ -879,6 +915,11 @@ namespace Server
         {
             if (ctx.EligibleForWrite(txid, key))
             {
+                if (ctx.ReadOnlyTransation[txid])
+                {
+                    ctx.ReadOnlyTransation[txid] = false;
+                    return false;
+                }
                 ctx.Put(txid, key, new_value, false);
                 return true;
             }
@@ -888,6 +929,11 @@ namespace Server
         public bool PutInner(int txid, string key, string new_value) {
             if (ctx.EligibleForWrite(txid, key))
             {
+                if (ctx.ReadOnlyTransation[txid])
+                {
+                    ctx.ReadOnlyTransation[txid] = false;
+                    return false;
+                }
                 ctx.Put(txid, key, new_value, true);
                 return true;
             }

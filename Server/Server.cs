@@ -277,6 +277,7 @@ namespace Server
             K = k;
             Semitables = new Semitable[2];
             TransactionObjects = new Dictionary<int, Dictionary<string,List<TableValue>>>();
+            ReadOnlyTransation = new Dictionary<int, bool>();
         }
 
         public void InitializeSemitables(uint minST1, uint maxST1,Node replica)
@@ -384,21 +385,16 @@ namespace Server
         public bool LockTransactionVariables(int txid,string key) {
             bool allLocked = true;
             List<TableValue> valuesToRemove = new List<TableValue>();
+            if (ReadOnlyTransation.ContainsKey(txid))
+            {
+                if (ReadOnlyTransation[txid]) return true;
+            }
+            
             foreach (TableValue tv in TransactionObjects[txid][key])
                 if (!tv.lockVariable(txid)){
-                    if (ReadOnlyTransation.ContainsKey(txid))
-                    {
-                        if (ReadOnlyTransation[txid]) return true;
-                        else {
-                            allLocked = false;
-                            valuesToRemove.Add(tv);
-                        }
-                    }
-                    else
-                    {
-                        ReadOnlyTransation.Add(txid, true);
-                        return true;
-                    }
+
+                    allLocked = false;
+                    valuesToRemove.Add(tv);   
                 }
             foreach (TableValue tv in valuesToRemove)
                 TransactionObjects[txid][key].Remove(tv);
@@ -431,7 +427,12 @@ namespace Server
                                 return true;
                             }
                         }
-                        else if (tv.Timestamp >= max_timestamp) valueToAdd = tv;
+                        else if (tv.Timestamp >= max_timestamp)
+                        {
+                            if (tv.Value == null)
+                                valueToAdd = tv;
+                            else valueToAdd = new TableValue(null, 0, new TransactionState(0, KeyState.FREE));
+                        }
                     }
                     bool objectsContainsKeys = false;
                     foreach (string dicKey in objectsToLock.Keys)
@@ -903,7 +904,7 @@ namespace Server
         public string Get(int txid, string key)
         {
             string ret = null;
-            if ((ctx.EligibleForRead(txid, key) || ctx.ReadOnlyTransation[txid]) && ctx.ContainsKey(key))
+            if ((ctx.EligibleForRead(txid, key) || (ctx.ReadOnlyTransation.ContainsKey(txid) && ctx.ReadOnlyTransation[txid])) && ctx.ContainsKey(key))
             {
                 ret =  ctx.Get(txid, key);
             }
@@ -915,10 +916,17 @@ namespace Server
         {
             if (ctx.EligibleForWrite(txid, key))
             {
-                if (ctx.ReadOnlyTransation[txid])
+                if (ctx.ReadOnlyTransation.ContainsKey(txid))
                 {
-                    ctx.ReadOnlyTransation[txid] = false;
-                    return false;
+                    if (ctx.ReadOnlyTransation[txid])
+                    {
+                        ctx.ReadOnlyTransation[txid] = false;
+                        return false;
+                    }
+                }
+                else
+                {
+                    ctx.ReadOnlyTransation.Add(txid, false);
                 }
                 ctx.Put(txid, key, new_value, false);
                 return true;
@@ -929,11 +937,20 @@ namespace Server
         public bool PutInner(int txid, string key, string new_value) {
             if (ctx.EligibleForWrite(txid, key))
             {
-                if (ctx.ReadOnlyTransation[txid])
+
+                if (ctx.ReadOnlyTransation.ContainsKey(txid))
                 {
-                    ctx.ReadOnlyTransation[txid] = false;
-                    return false;
+                    if (ctx.ReadOnlyTransation[txid])
+                    {
+                        ctx.ReadOnlyTransation[txid] = false;
+                        return false;
+                    }
                 }
+                else
+                {
+                    ctx.ReadOnlyTransation.Add(txid, false);
+                }
+                
                 ctx.Put(txid, key, new_value, true);
                 return true;
             }

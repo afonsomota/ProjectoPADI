@@ -116,11 +116,14 @@ namespace ConsoleClient
                 if (input.StartsWith("GET"))
                 {
                     char[] delim = {' ','\t'};
+                    string val = null;
                     string[] arg = input.Split(delim);
-                    if (t.GetValue(arg[1]) == null) {
+                    val = t.GetValue(arg[1]);
+                    if (val ==  null) {
                         Console.ReadLine();
                         return;
                     }
+                    Console.WriteLine(val);
                 }
                 else if(input.StartsWith("PUT")) {
                     char[] delim = {' ','\t'};

@@ -85,7 +85,6 @@ namespace Client
         public IPuppetMaster Puppet;
         public ICentralDirectory CD;
         Transaction SuperTransaction;
-        bool transactionAborted = false;
  
         public Client(Node info,TcpChannel channel,  IPuppetMaster puppet, ICentralDirectory cd){
             Registers = new string[10];
@@ -275,133 +274,62 @@ namespace Client
             ctx.WaitInternal(ms);
         }
 
-        public void ExeScript(List<string> instructions)
-        {
-            Dictionary<int, List<string>> clientOperations = new Dictionary<int, List<string>>();
-            int numberOfTransactions = -1;
-            bool inTransaction = false;
-
-            for (; instructions.Count != 0; instructions.Remove(instructions[0]))
-            {
+        //public void ExeScript(List<string> instructions)
+        //{
 
 
-                if (instructions[0].StartsWith("BEGINTX"))
-                {
-                    inTransaction = true;
-                    numberOfTransactions++;
-                    continue;
-                }
-                if (instructions[0].StartsWith("COMMITTX"))
-                {
-                    inTransaction = false;
-                    continue;
-                }
+        //    for (; instructions.Count != 0; instructions.Remove(instructions[0]))
+        //    {
 
-                if (inTransaction)
-                {
-                    clientOperations[numberOfTransactions].Add(instructions[0]);
-                    continue;
-                }
-                else
-                {
-                    char[] delim = { ' ', '\t' };
-                    string[] arg = instructions[0].Split(delim);
 
-                    if (instructions[0].StartsWith("GET"))
-                    {
+        //        if (instructions[0].StartsWith("BEGINTX"))
 
-                    }
-                    else if (instructions[0].StartsWith("PUT"))
-                    {
+        //        if (instructions[0].StartsWith("COMMITTX"))
 
-                    }
-                    else if (instructions[0].StartsWith("STORE"))
-                        this.Store(Int32.Parse(arg[1]), arg[2]);
-                    else if (instructions[0].StartsWith("PUTVAL"))
-                        this.PutVAl(arg[1], arg[2]);
-                    else if (instructions[0].StartsWith("TOLOWER"))
-                        this.ToLower(Int32.Parse(arg[1]));
-                    else if (instructions[0].StartsWith("TOUPPER"))
-                        this.ToUpper(Int32.Parse(arg[1]));
-                    else if (instructions[0].StartsWith("CONCAT"))
-                        this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
-                    else if (instructions[0].StartsWith("DUMP"))
-                        this.Dump();
-                }
-            }
+
+        //       if (instructions[0].StartsWith("GET"))
+
+
+        //       if (instructions[0].StartsWith("PUT"))
+
+        //        if (instructions[0].StartsWith("STORE"))
+        //            this.Store(Int32.Parse(arg[1]), arg[2]);
+        //        else if (instructions[0].StartsWith("PUTVAL"))
+        //            this.PutVAl(arg[1], arg[2]);
+        //        else if (instructions[0].StartsWith("TOLOWER"))
+        //            this.ToLower(Int32.Parse(arg[1]));
+        //        else if (instructions[0].StartsWith("TOUPPER"))
+        //            this.ToUpper(Int32.Parse(arg[1]));
+        //        else if (instructions[0].StartsWith("CONCAT"))
+        //            this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
+        //        else if (instructions[0].StartsWith("DUMP"))
+        //                this.Dump();
+        //        }
+        //    }
         }
 
-        public void ExecuteTransactions(Dictionary<int, List<string>> clientOperations)
-        {
-            List<Operation> operationsLocations = new List<Operation>();
-            char[] delim = { ' ', '\t' };
+        //public void ExecuteTransactions(Dictionary<int, List<string>> clientOperations)
+        //{
+        //    char[] delim = { ' ', '\t' };
 
-            for (int aux2 = 1; clientOperations.Count != aux2; aux2++)
-            {
-               // operationsLocations = GetOperationsLocation(clientOperations[aux2]);
+        //    for (int aux = 1; clientOperations[aux].Count != aux; aux++)
+        //    {
+        //        string[] arg = clientOperations[aux][aux2].Split(delim);
 
-                //Nao ha gets nem puts... é correr tudo....
-                if (operationsLocations.Count == 0)
-                {
-                    for (int aux = 1; clientOperations[aux].Count != aux; aux++)
-                    {
-                        string[] arg = clientOperations[aux][aux2].Split(delim);
-
-                        if (clientOperations[aux][aux2].StartsWith("STORE"))
-                            this.Store(Int32.Parse(arg[1]), arg[2]);
-                        else if (clientOperations[aux][aux2].StartsWith("PUTVAL"))
-                            this.PutVAl(arg[1], arg[2]);
-                        else if (clientOperations[aux][aux2].StartsWith("TOLOWER"))
-                            this.ToLower(Int32.Parse(arg[1]));
-                        else if (clientOperations[aux][aux2].StartsWith("TOUPPER"))
-                            this.ToUpper(Int32.Parse(arg[1]));
-                        else if (clientOperations[aux][aux2].StartsWith("CONCAT"))
-                            this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
-                        else if (clientOperations[aux][aux2].StartsWith("DUMP"))
-                            this.Dump();
-                    }
-                }
-
-
-                for (int aux = 1; clientOperations[aux].Count != aux; aux++)
-                {
-
-                    string[] arg = clientOperations[aux][aux2].Split(delim);
-
-                    //standart stuff
-                    if (clientOperations[aux][aux2].StartsWith("STORE"))
-                        this.Store(Int32.Parse(arg[1]), arg[2]);
-                    else if (clientOperations[aux][aux2].StartsWith("PUTVAL"))
-                        this.PutVAl(arg[1], arg[2]);
-                    else if (clientOperations[aux][aux2].StartsWith("TOLOWER"))
-                        this.ToLower(Int32.Parse(arg[1]));
-                    else if (clientOperations[aux][aux2].StartsWith("TOUPPER"))
-                        this.ToUpper(Int32.Parse(arg[1]));
-                    else if (clientOperations[aux][aux2].StartsWith("CONCAT"))
-                        this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
-                    else if (clientOperations[aux][aux2].StartsWith("DUMP"))
-                        this.Dump();
-
-
-                    //get e sets...
-                    //else if (clientOperations[aux][aux2].StartsWith("GET"))
-                    //{
-                    //    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + transaction.NodesLocation[arg[2]] + "/Server");
-                    //    ctx.Registers[Int32.Parse(arg[1])] = server.Get(transaction.Txid, arg[2]);
-
-                    //}
-                    //else if (clientOperations[aux][aux2].StartsWith("SET"))
-                    //{
-                    //    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + transaction.NodesLocation[arg[2]] + "/Server");
-                    //    server.Put(transaction.Txid, arg[1], ctx.Registers[Int32.Parse(arg[1])]);
-                    //}
-                }
-
-            }
-
-        }
-
-    }
+        //        if (clientOperations[aux][aux2].StartsWith("STORE"))
+        //            this.Store(Int32.Parse(arg[1]), arg[2]);
+        //        else if (clientOperations[aux][aux2].StartsWith("PUTVAL"))
+        //            this.PutVAl(arg[1], arg[2]);
+        //        else if (clientOperations[aux][aux2].StartsWith("TOLOWER"))
+        //            this.ToLower(Int32.Parse(arg[1]));
+        //        else if (clientOperations[aux][aux2].StartsWith("TOUPPER"))
+        //            this.ToUpper(Int32.Parse(arg[1]));
+        //        else if (clientOperations[aux][aux2].StartsWith("CONCAT"))
+        //            this.Concat(Int32.Parse(arg[1]), Int32.Parse(arg[2]));
+        //        else if (clientOperations[aux][aux2].StartsWith("DUMP"))
+        //            this.Dump();
+        //    }
+        //}
 
     class Transaction
     {

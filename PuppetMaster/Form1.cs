@@ -245,69 +245,73 @@ namespace PuppetMaster
             string operation = textBox1.Text;
             char[] delim = { ' ', '\t' };
                     string[] arg = operation.Split(delim);
-               
+      
             if (operation.StartsWith("BEGINTX"))
             {
-                    clientsOperations[arg[1]].Add("BEGINTX");
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet),
+                "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.BeginTx();
             }
-            // Esta a meio de uma transacção JA EXISTE UM "BEGINTX" -- Adiciona a pilha de transaccoes
-            else if (clientsOperations[arg[1]].Contains("BEGINTX"))
+            else if (operation.StartsWith("COMMITTX"))
             {
-                if (operation.StartsWith("STORE") || operation.StartsWith("PUTVAL") || operation.StartsWith("CONCAT") || operation.StartsWith("PUT") || operation.StartsWith("GET"))
-                {
-                    clientsOperations[arg[1]].Add(arg[0] + " " + arg[2] + " " + arg[3]);
-                }
-                else if (operation.StartsWith("TOLOWER") || operation.StartsWith("TOUPPER"))
-                {
-                    clientsOperations[arg[1]].Add(arg[0] + " " + arg[2]);
-                }
-                else if (operation.StartsWith("DUMP"))
-                {
-                    clientsOperations[arg[1]].Add(arg[0]);
-                }
-                else if (operation.StartsWith("COMMITTX"))
-                {
-                    clientsOperations[arg[1]].Add("COMMITTX");
-                    IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-                    typeof(IClientPuppet),
-                    "tcp://" + arg[1] + "/ClientPuppet");
-                    ligacao.ExeScript(clientsOperations[arg[1]]);
-                    clientsOperations[arg[1]]=new List<string>();
-                }
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.CommitTx();
             }
-
-            //Nao tem nenhum begin, é para executar logo 
-            else {
-                if (operation.StartsWith("STORE") || operation.StartsWith("PUTVAL") || operation.StartsWith("CONCAT"))
-                {
-                    IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-                    typeof(IClientPuppet),
-                    "tcp://" + arg[1] + "/ClientPuppet");
-                    List<string> umaInstrucao = new List<string>();
-                    umaInstrucao.Add(arg[0] + " " + arg[2] + " " + arg[3]);
-                    ligacao.ExeScript(umaInstrucao);
-                }
-                else if (operation.StartsWith("TOLOWER") || operation.StartsWith("TOUPPER"))
-                {
-                    IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-                    typeof(IClientPuppet),
-                    "tcp://" + arg[1] + "/ClientPuppet");
-                    List<string> umaInstrucao = new List<string>();
-                    umaInstrucao.Add(arg[0] + " " + arg[2]);
-                    ligacao.ExeScript(umaInstrucao);
-                    
-                }
-                else if (operation.StartsWith("DUMP"))
-                {
-                    IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-                     typeof(IClientPuppet),
-                     "tcp://" + arg[1] + "/ClientPuppet");
-                    List<string> umaInstrucao = new List<string>();
-                    umaInstrucao.Add(arg[0]);
-                    ligacao.ExeScript(umaInstrucao);
-                }
-            
+            else if (operation.StartsWith("PUT"))
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.Put(Int32.Parse(arg[2]),arg[3]);
             }
+            else if (operation.StartsWith("GET"))
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.Get(Int32.Parse(arg[2]), arg[3]);
+            }
+            else if (operation.StartsWith("WAIT"))
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.Sleep(Int32.Parse(arg[1]));
+            }
+            else if (operation.StartsWith("STORE"))
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.Store(Int32.Parse(arg[2]),arg[3]);
+                
+            }
+            else if (operation.StartsWith("PUTVAL")) 
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                  typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.PutVAl(arg[2], arg[3]);
+            }
+            else if (operation.StartsWith("CONCAT")) 
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.Concat(Int32.Parse(arg[2]), Int32.Parse(arg[3]));   
+            }
+            else if (operation.StartsWith("TOLOWER"))
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.ToLower(Int32.Parse(arg[2]));   
+            }
+            else if (operation.StartsWith("TOUPPER")) 
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.ToUpper(Int32.Parse(arg[2]));   
+            }
+            else if (operation.StartsWith("DUMP"))
+            {
+                DumpClient(arg[1]);
+            }     
         }
 
         private void button4_Click_1(object sender, EventArgs e)
@@ -316,70 +320,77 @@ namespace PuppetMaster
             {
                 foreach (string operation in listBox3.Items)
                 {
+      
                     char[] delim = { ' ', '\t' };
                     string[] arg = operation.Split(delim);
 
                     if (operation.StartsWith("BEGINTX"))
                     {
-                        clientsOperations[arg[1]].Add("BEGINTX");
-                    }
-                    // Esta a meio de uma transacção JA EXISTE UM "BEGINTX" -- Adiciona a pilha de transaccoes
-                    else if (clientsOperations[arg[1]].Contains("BEGINTX"))
-                    {
-                        if (operation.StartsWith("STORE") || operation.StartsWith("PUTVAL") || operation.StartsWith("CONCAT") || operation.StartsWith("PUT") || operation.StartsWith("GET"))
-                        {
-                            clientsOperations[arg[1]].Add(arg[0] + " " + arg[2] + " " + arg[3]);
-                        }
-                        else if (operation.StartsWith("TOLOWER") || operation.StartsWith("TOUPPER"))
-                        {
-                            clientsOperations[arg[1]].Add(arg[0] + " " + arg[2]);
-                        }
-                        else if (operation.StartsWith("DUMP"))
-                        {
-                            clientsOperations[arg[1]].Add(arg[0]);
-                        }
-                        else if (operation.StartsWith("COMMITTX"))
-                        {
-                            clientsOperations[arg[1]].Add("COMMITTX");
-                            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                             typeof(IClientPuppet),
-                            "tcp://" + arg[1] + "/ClientPuppet");
-                            ligacao.ExeScript(clientsOperations[arg[1]]);
-                            clientsOperations[arg[1]] = new List<string>();
-                        }
+                        "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.BeginTx();
                     }
+                    else if (operation.StartsWith("COMMITTX"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.CommitTx();
+                    }
+                    else if (operation.StartsWith("PUT"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.Put(Int32.Parse(arg[2]), arg[3]);
+                    }
+                    else if (operation.StartsWith("GET"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.Get(Int32.Parse(arg[2]), arg[3]);
+                    }
+                    else if (operation.StartsWith("WAIT"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.Sleep(Int32.Parse(arg[1]));
+                    }
+                    else if (operation.StartsWith("STORE"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.Store(Int32.Parse(arg[2]), arg[3]);
 
-                    //Nao tem nenhum begin, é para executar logo 
-                    else
-                    {
-                        if (operation.StartsWith("STORE") || operation.StartsWith("PUTVAL") || operation.StartsWith("CONCAT"))
-                        {
-                            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet),
-                            "tcp://" + arg[1] + "/ClientPuppet");
-                            List<string> umaInstrucao = new List<string>();
-                            umaInstrucao.Add(arg[0] + " " + arg[2] + " " + arg[3]);
-                            ligacao.ExeScript(umaInstrucao);
-                        }
-                        else if (operation.StartsWith("TOLOWER") || operation.StartsWith("TOUPPER"))
-                        {
-                            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet),
-                            "tcp://" + arg[1] + "/ClientPuppet");
-                            List<string> umaInstrucao = new List<string>();
-                            umaInstrucao.Add(arg[0] + " " + arg[2]);
-                            ligacao.ExeScript(umaInstrucao);
-                        }
-                        else if (operation.StartsWith("DUMP"))
-                        {
-                            IClientPuppet ligacao = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet),
-                            "tcp://" + arg[1] + "/ClientPuppet");
-                            List<string> umaInstrucao = new List<string>();
-                            umaInstrucao.Add(arg[0]);
-                            ligacao.ExeScript(umaInstrucao);
-                        }
                     }
+                    else if (operation.StartsWith("PUTVAL"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                          typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.PutVAl(arg[2], arg[3]);
+                    }
+                    else if (operation.StartsWith("CONCAT"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.Concat(Int32.Parse(arg[2]), Int32.Parse(arg[3]));
+                    }
+                    else if (operation.StartsWith("TOLOWER"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.ToLower(Int32.Parse(arg[2]));
+                    }
+                    else if (operation.StartsWith("TOUPPER"))
+                    {
+                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                        cliente.ToUpper(Int32.Parse(arg[2]));
+                    }
+                    else if (operation.StartsWith("DUMP"))
+                    {
+                        DumpClient(arg[1]);
+                    }
+                
                 }
             }
             
@@ -669,6 +680,11 @@ namespace PuppetMaster
         }
 
         private void tabPage2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button6_Click(object sender, EventArgs e)
         {
 
         }

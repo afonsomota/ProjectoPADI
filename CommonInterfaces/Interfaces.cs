@@ -233,6 +233,8 @@ namespace CommonInterfaces
 
     public interface IClientPuppet
     {
+        void BeginTx();
+        void CommitTx();
         void StartClient();
         void KillClient();
         void Store(int register, string value);
@@ -242,10 +244,8 @@ namespace CommonInterfaces
         void ToLower(int register);
         void ToUpper(int register);
         void Concat(int register1, int register2);
-        void CommitTx();
         void Sleep(int ms);
         string[] Dump();
-        void ExeScript(List<string> operations);
     }
 
     public interface IClient {

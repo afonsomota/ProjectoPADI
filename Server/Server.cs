@@ -392,10 +392,10 @@ namespace Server
             
             foreach (TableValue tv in TransactionObjects[txid][key])
                 if (!tv.lockVariable(txid)){
-
                     allLocked = false;
                     valuesToRemove.Add(tv);   
                 }
+            PrintSemiTablesValues();
             foreach (TableValue tv in valuesToRemove)
                 TransactionObjects[txid][key].Remove(tv);
             return allLocked;
@@ -408,17 +408,18 @@ namespace Server
             foreach (Semitable st in Semitables)
             {
                 if (hash >= st.MinInterval && hash <= st.MaxInterval) {
+                    TableValue valueToAdd = null;
                     if (!st.ContainsKey(key))
                     {
                         List<TableValue> tvList = new List<TableValue>();
-                        tvList.Add(new TableValue(null, 0, new TransactionState(0, KeyState.FREE)));
                         st.Add(key, tvList);
+                        valueToAdd = new TableValue(null, 0, new TransactionState(0, KeyState.FREE));
                     }
                     int max_timestamp = -1;
-                    TableValue valueToAdd = null;
                     foreach (TableValue tv in st[key]) {
                         if (!tv.isLockable(txid))
                         {
+                            Console.WriteLine("ReadOnly so far...");
                             if(ReadOnlyTransation.ContainsKey(txid)){
                                 if (ReadOnlyTransation[txid]) return true;
                                 else return false;
@@ -429,11 +430,16 @@ namespace Server
                         }
                         else if (tv.Timestamp >= max_timestamp)
                         {
-                            if (tv.Value == null)
-                                valueToAdd = tv;
-                            else valueToAdd = new TableValue(null, 0, new TransactionState(0, KeyState.FREE));
+                            max_timestamp = tv.Timestamp;
+                        }
+                        if (tv.Value == null)
+                            valueToAdd = tv;
+                        else
+                        {
+                            valueToAdd = new TableValue(null, max_timestamp + 1, new TransactionState(0, KeyState.FREE));
                         }
                     }
+                    st[key].Add(valueToAdd);
                     bool objectsContainsKeys = false;
                     foreach (string dicKey in objectsToLock.Keys)
                         if (key == dicKey) objectsContainsKeys = true;
@@ -445,14 +451,13 @@ namespace Server
                     }
                 }
             }
-
-
             if (objectsToLock.Count > 0)
             {
                 foreach(List<TableValue> list in objectsToLock.Values)
                     foreach (TableValue tv in list)
                     {
                         tv.lockingVariable(txid);
+                        PrintSemiTablesValues();
                     }
                 if (!TransactionObjects.ContainsKey(txid))
                     TransactionObjects.Add(txid, objectsToLock);
@@ -497,24 +502,29 @@ namespace Server
                             central.ServerDown(st.Replica);
                         }
                     }
-                    if (st[key][0].Value == null)
-                    {
-                        st[key][0].Value = value;
-                        st[key][0].State.State = KeyState.NEW;
-                        return;
-                    }
+                    
                     TableValue min_tv = st[key][0];
                     int max_timestamp = 0;
                     int min_timestamp = Int32.MaxValue;
+                    TableValue max_tv = st[key][0];
                     foreach (TableValue tv in st[key])
                     {
                         if (tv.Timestamp > max_timestamp)
+                        {
                             max_timestamp = tv.Timestamp;
+                            max_tv = tv;
+                        }
                         if (tv.State.State != KeyState.TO_REMOVE && tv.Timestamp < min_timestamp)
                         {
                             min_timestamp = tv.Timestamp;
                             min_tv = tv;
                         }
+                    }
+                    if (max_tv.Value == null)
+                    {
+                        max_tv.Value = value;
+                        max_tv.State.State = KeyState.NEW;
+                        return;
                     }
                     if (st[key].Count >= K)
                     {

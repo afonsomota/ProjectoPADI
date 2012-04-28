@@ -268,6 +268,7 @@ namespace Server
         public int K;
         private int tableToInit = 0;
         public Dictionary<int, Dictionary<string,List<TableValue>>> TransactionObjects;
+        public Dictionary<uint, bool> ReadOnlyTransation;
 
         public Server(Node info, TcpChannel channel, int k)
         {

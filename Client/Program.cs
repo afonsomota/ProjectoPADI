@@ -270,6 +270,11 @@ namespace Client
             return ctx.Registers;
         }
 
+        public void Sleep(int ms) 
+        {
+            ctx.WaitInternal(ms);
+        }
+
         public void ExeScript(List<string> instructions)
         {
             Dictionary<int, List<string>> clientOperations = new Dictionary<int, List<string>>();

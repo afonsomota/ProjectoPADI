@@ -34,6 +34,8 @@
             this.button5 = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.button11 = new System.Windows.Forms.Button();
+            this.button10 = new System.Windows.Forms.Button();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -109,6 +111,8 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.button11);
+            this.tabPage1.Controls.Add(this.button10);
             this.tabPage1.Controls.Add(this.listBox1);
             this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.label1);
@@ -139,6 +143,26 @@
             this.tabPage1.Text = "Basic Controls";
             this.tabPage1.UseVisualStyleBackColor = true;
             this.tabPage1.Click += new System.EventHandler(this.tabPage1_Click);
+            // 
+            // button11
+            // 
+            this.button11.Location = new System.Drawing.Point(710, 402);
+            this.button11.Name = "button11";
+            this.button11.Size = new System.Drawing.Size(72, 23);
+            this.button11.TabIndex = 33;
+            this.button11.Text = "Stop CD";
+            this.button11.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.button11_Click);
+            // 
+            // button10
+            // 
+            this.button10.Location = new System.Drawing.Point(608, 402);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(72, 23);
+            this.button10.TabIndex = 32;
+            this.button10.Text = "Start CD";
+            this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.button10_Click);
             // 
             // listBox1
             // 
@@ -214,9 +238,9 @@
             // 
             this.button9.BackColor = System.Drawing.Color.Red;
             this.button9.Font = new System.Drawing.Font("Comic Sans MS", 25F);
-            this.button9.Location = new System.Drawing.Point(584, 396);
+            this.button9.Location = new System.Drawing.Point(584, 453);
             this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(255, 91);
+            this.button9.Size = new System.Drawing.Size(255, 34);
             this.button9.TabIndex = 28;
             this.button9.Text = "Tirar Senha";
             this.button9.UseVisualStyleBackColor = false;
@@ -229,6 +253,7 @@
             this.listServOnline.Name = "listServOnline";
             this.listServOnline.Size = new System.Drawing.Size(132, 82);
             this.listServOnline.TabIndex = 7;
+            this.listServOnline.SelectedIndexChanged += new System.EventHandler(this.listServOnline_SelectedIndexChanged);
             // 
             // textBox2
             // 
@@ -393,6 +418,8 @@
         private System.Windows.Forms.ListBox listBox3;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.Button button11;
+        private System.Windows.Forms.Button button10;
     }
 }
 

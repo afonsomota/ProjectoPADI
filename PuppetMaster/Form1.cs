@@ -31,6 +31,7 @@ namespace PuppetMaster
         public string[] userScriptList;
         public string[] testes;
         public Dictionary<string, Process> runningProcesses = new Dictionary<string, Process>();
+        public Dictionary<int, Process> runningServers = new Dictionary<int, Process>();
 
         public Dictionary<string, List<string>> clientsOperations = new Dictionary<string, List<string>>();
         public Dictionary<string, ListBox> clientRegistersValueListbox = new Dictionary<string, ListBox>();
@@ -51,7 +52,10 @@ namespace PuppetMaster
         public Dictionary<string, Button> clientListBoxGetKeyButton = new Dictionary<string, Button>();
 
         int numberOfClients = 0;
-        
+        int numberOfServers = 1;
+
+        public Process CentralDirectory = new Process();
+
         public string ip;
         
 
@@ -132,8 +136,6 @@ namespace PuppetMaster
 
         private void button2_Click(object sender, EventArgs e)
         {
-
-
             string clientName = (string)listCliOnline.SelectedItem;
             stopClient(clientName);
         }
@@ -172,13 +174,11 @@ namespace PuppetMaster
 
         private void button3_Click(object sender, EventArgs e)
         {
-            IServerPuppet server = (IServerPuppet)Activator.GetObject(
-              typeof(IServerPuppet),
-              "tcp://" + SearchServerAdressByName((string)listServOnline.SelectedItem) + "/ServerPuppet");
-            server.KillServer();
+            string serter = (string)listServOnline.SelectedItem;
+            char[] delim = { '-'};
+            string[] arg = serter.Split(delim);
 
-            string item = (string)listServOnline.SelectedItem;
-            listServOnline.Items.Remove(item);
+            stopServer(Int32.Parse(arg[1]));
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -321,7 +321,7 @@ namespace PuppetMaster
             {
                 foreach (string operation in listBox3.Items)
                 {
-      
+
                     char[] delim = { ' ', '\t' };
                     string[] arg = operation.Split(delim);
 
@@ -397,18 +397,66 @@ namespace PuppetMaster
                     }
                     else if (operation.StartsWith("DISCONNECT"))
                     {
-                        stopClient(arg[1]);
+                        if (arg[1].StartsWith("server-"))
+                        {
+                            char[] lol = { '-'};
+                            string[] argt = operation.Split(lol);
+                            startServer(Int32.Parse(argt[1]));
+                        }
+                        else if (arg[1] == "central")
+                        {
+                            stopCentral();
+                        }
+                        else stopClient(arg[1]);
                     }
-                
+
                 }
             }
+        }
             
+        private void stopCentral()
+        {
+            CentralDirectory.Kill();
+        }
+        
+        private void startCentral()
+        {
+            string currentDirectory = Environment.CurrentDirectory;
+            string path = currentDirectory.Replace("PuppetMaster", "CentralDirectory");
+            path += "/CentralDirectory.exe";
+            CentralDirectory.StartInfo.FileName = path;
+            CentralDirectory.Start();
+        }
+
+        private void startServer(int n)
+        {
+            //TODO Interface
+            runningServers.Add(n,new Process());
+            string currentDirectory = Environment.CurrentDirectory;
+            string path = currentDirectory.Replace("PuppetMaster", "Server");
+            path += "/Server.exe";
+            runningServers[n].StartInfo.FileName = path;
+            runningServers[n].Start();
+            numberOfServers++;
+        }
+
+        private void stopServer(int n)
+        {
+            
+            IServerPuppet server = (IServerPuppet)Activator.GetObject(
+                typeof(IServerPuppet),
+                "tcp://" + SearchServerAdressByName("server-" + n.ToString()) + "/ServerPuppet");
+            server.KillServer();
+
+            string item = "server-" + n.ToString();
+            listServOnline.Items.Remove(item);
+
+            //runningServers[n].Kill();
         }
 
         private void button3_Click_1(object sender, EventArgs e)
         {
             string selectedOperation = (string)listBox3.SelectedItem;
-
         }
 
         private void startClient(string clientName) 
@@ -446,23 +494,23 @@ namespace PuppetMaster
 
         private void stopClient(string clientName) 
         {
-          //  clientsOperations[clientName]
-            //clientRegistersValueListbox[clientName].Dispose();
-            //clientRegistersValueListboxLabel[clientName].Dispose();
-            //clientListBoxDumpButton[clientName].Dispose();
-            //clientListBoxToUpperButton[clientName].Dispose();
-            //clientListBoxLowerButton[clientName].Dispose();
-            //clientListBoxLowerTextBox[clientName].Dispose();
-            //clientListBoxUpperTextBox[clientName].Dispose();
-            //clientRegistersValueListboxConcatRegister2[clientName].Dispose(); 
-            //clientRegistersValueListboxConcatRegister1[clientName].Dispose();
-            //clientListBoxConcatButton[clientName].Dispose();
-            //clientListBoxPutRegisterTextBox[clientName].Dispose();
-            //clientListBoxPutRegisterTextBox2[clientName].Dispose();
-            //clientListBoxPutRegisterButton[clientName].Dispose();
-            //clientListBoxGetKeyTextBox[clientName].Dispose();
-            //clientListBoxGetKeyTextBox2[clientName].Dispose();
-            //clientListBoxGetKeyButton[clientName].Dispose();
+
+            clientRegistersValueListbox[clientName].Dispose();
+            clientRegistersValueListboxLabel[clientName].Dispose();
+            clientListBoxDumpButton[clientName].Dispose();
+            clientListBoxToUpperButton[clientName].Dispose();
+            clientListBoxLowerButton[clientName].Dispose();
+            clientListBoxLowerTextBox[clientName].Dispose();
+            clientListBoxUpperTextBox[clientName].Dispose();
+            clientRegistersValueListboxConcatRegister2[clientName].Dispose(); 
+            clientRegistersValueListboxConcatRegister1[clientName].Dispose();
+            clientListBoxConcatButton[clientName].Dispose();
+            clientListBoxPutRegisterTextBox[clientName].Dispose();
+            clientListBoxPutRegisterTextBox2[clientName].Dispose();
+            clientListBoxPutRegisterButton[clientName].Dispose();
+            clientListBoxGetKeyTextBox[clientName].Dispose();
+            clientListBoxGetKeyTextBox2[clientName].Dispose();
+            clientListBoxGetKeyButton[clientName].Dispose();
 
             runningProcesses[clientName].Kill();
         }
@@ -669,12 +717,8 @@ namespace PuppetMaster
 
         private void button8_Click(object sender, EventArgs e)
         {
-            Process process = new Process();
-            string currentDirectory = Environment.CurrentDirectory;
-            string path = currentDirectory.Replace("PuppetMaster", "Server");
-            path += "/Server.exe";
-            process.StartInfo.FileName = path;
-            process.Start();
+            startServer(numberOfServers);
+
         }
 
         private void button9_Click(object sender, EventArgs e)
@@ -716,6 +760,21 @@ namespace PuppetMaster
         private void button6_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void listServOnline_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            startCentral();
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            stopCentral();
         }
     }
 

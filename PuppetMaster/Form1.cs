@@ -332,8 +332,8 @@ namespace PuppetMaster
                 if (arg[1].StartsWith("server-"))
                 {
                     char[] lol = { '-' };
-                    string[] argt = operation.Split(lol);
-                    startServer(Int32.Parse(argt[1]));
+                    string[] argt = arg[1].Split(lol);
+                    stopServer(Int32.Parse(argt[1]));
                 }
                 else if (arg[1] == "central")
                 {

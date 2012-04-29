@@ -12,6 +12,8 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting;
 using System.IO;
 using CommonInterfaces;
+using System.Threading;
+
 
 namespace PuppetMaster
 {
@@ -426,12 +428,18 @@ namespace PuppetMaster
                             char[] lol = { '-' };
                             string[] argt = arg[1].Split(lol);
                             startServer(Int32.Parse(argt[1]));
+                            Thread.Sleep(1000);
                         }
                         else if (arg[1] == "central")
                         {
                             startCentral();
+                            Thread.Sleep(1000);
                         }
-                        else startClient(arg[1]);
+                        else
+                        {
+                            startClient(arg[1]);
+                            Thread.Sleep(1000);
+                        }
                     }
                     else if (operation.StartsWith("DISCONNECT"))
                     {

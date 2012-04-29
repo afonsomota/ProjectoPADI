@@ -312,7 +312,25 @@ namespace PuppetMaster
             else if (operation.StartsWith("DUMP"))
             {
                 DumpClient(arg[1]);
-            }     
+            }
+            else if (operation.StartsWith("CONNECT"))
+            {
+                startClient(arg[1]);
+            }
+            else if (operation.StartsWith("DISCONNECT"))
+            {
+                if (arg[1].StartsWith("server-"))
+                {
+                    char[] lol = { '-' };
+                    string[] argt = operation.Split(lol);
+                    startServer(Int32.Parse(argt[1]));
+                }
+                else if (arg[1] == "central")
+                {
+                    stopCentral();
+                }
+                else stopClient(arg[1]);
+            }
         }
 
         private void button4_Click_1(object sender, EventArgs e)

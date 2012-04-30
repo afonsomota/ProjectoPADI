@@ -1029,6 +1029,11 @@ namespace Server
             ctx.UpdateReplica(semiTableToCopy, node);
         }
 
+        public string GetAll(string key)
+        {
+            return ctx.GetAll(key);
+        }
+
     }
 
     class ServerPuppet : MarshalByRefObject, IServerPuppet

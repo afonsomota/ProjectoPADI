@@ -600,7 +600,20 @@ namespace CentralDirectory
             return listaux;
         }
 
-        
+        public string GetAll(string key) {
+            string keyInfo = "";
+            foreach (Node n in GetServers(key)) {
+                try
+                {
+                    IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                    keyInfo += "In " + n.IP + ":"+ n.Port.ToString()+":\r\n";
+                    keyInfo += link.GetAll(key);
+                }
+                catch { 
+                }
+            }
+            return keyInfo;
+        }
 
         public void ServerDown(CommonInterfaces.Node server)
         {

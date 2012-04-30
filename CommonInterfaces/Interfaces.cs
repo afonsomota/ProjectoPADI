@@ -248,6 +248,7 @@ namespace CommonInterfaces
         void Concat(int register1, int register2);
         void Sleep(int ms);
         string[] Dump();
+        void Runscript(List<string> operations);
     }
 
     public interface IClient {

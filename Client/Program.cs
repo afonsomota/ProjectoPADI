@@ -60,7 +60,7 @@ namespace Client
             //clt.Registers[8] = "paralizado";
             //clt.Registers[9] = "princesa";
 
-            clt.ToLowerInternal(2);
+            //clt.ToLowerInternal(2);
 
             //Testes
            // System.Console.ReadLine();

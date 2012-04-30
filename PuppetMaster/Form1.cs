@@ -52,7 +52,7 @@ namespace PuppetMaster
         public Dictionary<string, TextBox> clientListBoxGetKeyTextBox = new Dictionary<string, TextBox>();
         public Dictionary<string, TextBox> clientListBoxGetKeyTextBox2 = new Dictionary<string, TextBox>();
         public Dictionary<string, Button> clientListBoxGetKeyButton = new Dictionary<string, Button>();
-        private System.Object locker = new System.Object(); 
+        public System.Object locker = new System.Object(); 
 
         int numberOfClients = 0;
         int numberOfServers = 1;
@@ -759,15 +759,21 @@ namespace PuppetMaster
 
         public void RegisterPseudoNode(Node node)
         {
+            
+            
             if (node.Type == NodeType.Client)
             {
-                ctx.Clients.Add(node);
+                lock (ctx.locker)
+                {
+                    ctx.Clients.Add(node);
+                }
                 ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.Name });
             }
             else {
                 node.Name = "server-" + (ctx.Servers.Count + 1).ToString();
-                ctx.Servers.Add(node);
+                lock(ctx.locker) {ctx.Servers.Add(node);}
                 ctx.Invoke(ctx.WriteHostDelegate, new Object[] { node.Type, node.Name });
+            
             }
         }
     }

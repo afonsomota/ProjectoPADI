@@ -800,6 +800,8 @@ namespace PuppetMaster
             procs = Process.GetProcessesByName("Server");
             foreach (Process p in procs) { p.Kill(); }
             listServOnline.Items.Clear();
+
+            if (CentralDirectory != null) CentralDirectory.Kill();
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -849,11 +851,44 @@ namespace PuppetMaster
 
         private void button12_Click(object sender, EventArgs e)
         {
-            if (textBox3.Text != null) 
+            if (textBox3.Text != null)
             {
+                if (CentralDirectory != null)
+                {
 
-                DataColumn column = new DataColumn();
-                column.ColumnName = "";
+                    ICentralDirectory cd = (ICentralDirectory)Activator.GetObject(
+                        typeof(ICentralDirectory),
+                        "tcp://" + "localhost:9090" + "/CentralDirectory");
+                    string getAll = cd.GetAll(textBox3.Text);
+                    char[] delim = { ';' };
+                    string[] output = getAll.Split(delim);
+                    string serverLol = null;
+
+                    ListViewItem server = new ListViewItem("server");
+                    foreach (Node node in Servers)
+                    {
+
+                        if (node.IP + ":" + node.Port == output[0])
+                        {
+                            serverLol = node.Name;
+                        }
+
+                        server.SubItems.Add(serverLol);
+
+                        ListViewItem value = new ListViewItem("value");
+                        value.SubItems.Add(output[1]);
+
+                        ListViewItem timestamp = new ListViewItem("timestamp");
+                        timestamp.SubItems.Add(output[2]);
+
+                        ListViewItem state = new ListViewItem("state");
+                        state.SubItems.Add(output[3]);
+
+                        listView1.Items.AddRange(new ListViewItem[] { server, value, timestamp, state });
+
+                    }
+
+                }
             }
         }
 
@@ -863,6 +898,11 @@ namespace PuppetMaster
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox3_TextChanged(object sender, EventArgs e)
         {
 
         }

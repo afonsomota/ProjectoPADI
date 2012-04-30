@@ -36,7 +36,7 @@ namespace CentralDirectory
 
             CentralDirectoryRemoting.ctx.division();
 
-            foreach (CentralDirectory.Interval n in central.Location)
+            foreach (CentralDirectory.Interval n in central.Location) 
             {
                 Console.WriteLine(n.min+" - "+n.max + ":  " + n.IP[0] + ";  " + n.IP[1]);
             }
@@ -606,7 +606,7 @@ namespace CentralDirectory
                 try
                 {
                     IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                    keyInfo += "In " + n.IP + ":"+ n.Port.ToString()+":\r\n";
+                    keyInfo += n.IP + ":"+ n.Port.ToString()+"\r\n";
                     keyInfo += link.GetAll(key);
                 }
                 catch { 

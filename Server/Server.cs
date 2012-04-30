@@ -343,6 +343,8 @@ namespace Server
         }
 
         public bool Finish(int txid) {
+            if (ReadOnlyTransation.ContainsKey(txid) && ReadOnlyTransation[txid])
+                return true;
             foreach (string key in TransactionObjects[txid].Keys) {
                 foreach (Semitable st in Semitables) {
                     if (st.ContainsKey(key)) { 

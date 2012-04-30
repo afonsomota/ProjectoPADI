@@ -446,21 +446,30 @@ namespace Server
                             max_tv = tv;
                         }
                         if (tv.Value == null)
+                        {
                             valueToAdd = tv;
+                            break;
+                        }
                     }
-                    if (valueToAdd == null) {
-                        if (max_tv != null && max_tv.State.State!=KeyState.FREE)
+                    if (valueToAdd == null)
+                    {
+                        if (max_tv != null && max_tv.State.State != KeyState.FREE)
                         {
                             max_tv.State.State = KeyState.FREE;
                             max_tv.State.Txid = txid;
                             max_tv.Value = null;
                             valueToAdd = max_tv;
                         }
-                        else {
+                        else
+                        {
                             valueToAdd = new TableValue(null, max_timestamp + 1, new TransactionState(0, KeyState.FREE));
+                            st[key].Add(valueToAdd);
                         }
                     }
-                    st[key].Add(valueToAdd);
+                    else
+                    {
+                        st[key].Add(valueToAdd);
+                    }
                     bool objectsContainsKeys = false;
                     foreach (string dicKey in objectsToLock.Keys)
                         if (key == dicKey) objectsContainsKeys = true;

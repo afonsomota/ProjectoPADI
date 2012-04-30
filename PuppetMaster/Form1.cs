@@ -860,7 +860,7 @@ namespace PuppetMaster
                         typeof(ICentralDirectory),
                         "tcp://" + "localhost:9090" + "/CentralDirectory");
                     string getAll = cd.GetAll(textBox3.Text);
-                    char[] delim = { ';' };
+                    char[] delim = { '\n' };
                     string[] output = getAll.Split(delim);
                     string serverLol = null;
 
@@ -884,7 +884,7 @@ namespace PuppetMaster
                         ListViewItem state = new ListViewItem("state");
                         state.SubItems.Add(output[3]);
 
-                        listView1.Items.AddRange(new ListViewItem[] { server, value, timestamp, state });
+                        listView1.Items.AddRange(new ListViewItem[] {server,value,timestamp,state});
 
                     }
 

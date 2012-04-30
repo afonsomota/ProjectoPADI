@@ -1062,7 +1062,7 @@ namespace Server
             ICentralDirectory ligacao = (ICentralDirectory)Activator.GetObject(
               typeof(ICentralDirectory),
               "tcp://localhost:9090/CentralDirectory");
-            ligacao.ServerDown(ctx.Info);
+            //ligacao.ServerDown(ctx.Info);
             Environment.Exit(0);
         }
     }

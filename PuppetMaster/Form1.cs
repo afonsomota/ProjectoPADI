@@ -52,6 +52,7 @@ namespace PuppetMaster
         public Dictionary<string, TextBox> clientListBoxGetKeyTextBox = new Dictionary<string, TextBox>();
         public Dictionary<string, TextBox> clientListBoxGetKeyTextBox2 = new Dictionary<string, TextBox>();
         public Dictionary<string, Button> clientListBoxGetKeyButton = new Dictionary<string, Button>();
+        private System.Object locker = new System.Object(); 
 
         int numberOfClients = 0;
         int numberOfServers = 1;
@@ -71,7 +72,7 @@ namespace PuppetMaster
             Clients = new List<Node>();
             Servers = new List<Node>();
             WriteHostDelegate = new WriteHost(WriteHostMethod);
-
+            
            // WriteUserScriptsDelegate = new WriteUserScripts(WriteUserScriptsMethod);
             
         }
@@ -116,24 +117,30 @@ namespace PuppetMaster
 
         private string SearchClientAdressByName(string name) 
         {
-            string address=null;
-            foreach (Node p in Clients)
+            lock (locker)
             {
-                if (name==p.Name)
-                    address = p.IP +":"+ p.Port;
-            }
-            return address;
+                string address = null;
+                foreach (Node p in Clients)
+                {
+                    if (name == p.Name)
+                        address = p.IP + ":" + p.Port;
+                }
+                return address;
+            }   
         }
         
         private string SearchServerAdressByName(string name)
         {
-            string address = null;
-            foreach (Node p in Servers)
+            lock (locker)
             {
-                if (name == p.Name)
-                    address = p.IP + ":" + p.Port;
+                string address = null;
+                foreach (Node p in Servers)
+                {
+                    if (name == p.Name)
+                        address = p.IP + ":" + p.Port;
+                }
+                return address;
             }
-            return address;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -256,7 +263,7 @@ namespace PuppetMaster
 
             if (operation.StartsWith("BEGINTX"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1])==null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet),
                 "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
@@ -264,35 +271,35 @@ namespace PuppetMaster
             }
             else if (operation.StartsWith("COMMITTX"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.CommitTx();
             }
             else if (operation.StartsWith("PUT"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Put(Int32.Parse(arg[2]), arg[3]);
             }
             else if (operation.StartsWith("GET"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Get(Int32.Parse(arg[2]), arg[3]);
             }
             else if (operation.StartsWith("WAIT"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Sleep(Int32.Parse(arg[1]));
             }
             else if (operation.StartsWith("STORE"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Store(Int32.Parse(arg[2]), arg[3]);
@@ -300,35 +307,35 @@ namespace PuppetMaster
             }
             else if (operation.StartsWith("PUTVAL"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                   typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.PutVAl(arg[2], arg[3]);
             }
             else if (operation.StartsWith("CONCAT"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Concat(Int32.Parse(arg[2]), Int32.Parse(arg[3]));
             }
             else if (operation.StartsWith("TOLOWER"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.ToLower(Int32.Parse(arg[2]));
             }
             else if (operation.StartsWith("TOUPPER"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.ToUpper(Int32.Parse(arg[2]));
             }
             else if (operation.StartsWith("DUMP"))
             {
-                while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                while (SearchClientAdressByName(arg[1]) == null) { }
                 DumpClient(arg[1]);
             }
             else if (operation.StartsWith("CONNECT"))
@@ -338,7 +345,7 @@ namespace PuppetMaster
                     char[] lol = { '-' };
                     string[] argt = arg[1].Split(lol);
                     startServer(Int32.Parse(argt[1]));
-                    runningServers.ContainsKey(Int32.Parse(argt[1]));
+                    //while (SearchServerAdressByName(arg[1]) == null) { }
                 }
                 else if (arg[1] == "central" || arg[1]=="CENTRAL")
                 {
@@ -352,6 +359,7 @@ namespace PuppetMaster
                 {
                     char[] lol = { '-' };
                     string[] argt = arg[1].Split(lol);
+                    while (SearchServerAdressByName(arg[1]) == null) { }
                     stopServer(Int32.Parse(argt[1]));
                 }
                 else if (arg[1] == "central" || arg[1] == "CENTRAL")
@@ -360,7 +368,7 @@ namespace PuppetMaster
                 }
                 else
                 {
-                    while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                    while (SearchClientAdressByName(arg[1]) == null) { }
                     stopClient(arg[1]);
                 }
             }
@@ -420,9 +428,10 @@ namespace PuppetMaster
 
         private void button3_Click_1(object sender, EventArgs e)
         {
+            
             string operation = (string)listBox3.SelectedItem;
             RunInstruction(operation);
-            listBox3.SelectedIndex++;
+            if (listBox3.SelectedIndex!= listBox3.Items.Count)listBox3.SelectedIndex++;
         }
 
         private void startClient(string clientName) 

@@ -1,0 +1,21 @@
+CONNECT central
+CONNECT caravela
+CONNECT adamastor
+CONNECT pedro
+CONNECT server-1
+CONNECT server-2
+CONNECT server-3
+BEGINTX caravela
+BEGINTX adamastor
+BEGINTX pedro
+PUTVAL caravela 1 1
+DISCONNECT server-2
+GET adamastor 7 1
+COMMITTX caravela
+GET pedro 3 1
+PUT pedro 3 2
+CONNECT server-4
+PUT adamastor 2 2
+PUT adamastor 5 1
+COMMITTX adamastor
+COMMITTX pedro

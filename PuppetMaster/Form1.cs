@@ -244,11 +244,18 @@ namespace PuppetMaster
         }
 
         private void button5_Click(object sender, EventArgs e)
-        {   
+        {
             string operation = textBox1.Text;
+            RunInstruction(operation);
+        }
+
+        private void RunInstruction(string operation) 
+        {
+
+
             char[] delim = { ' ', '\t' };
-                    string[] arg = operation.Split(delim);
-      
+            string[] arg = operation.Split(delim);
+
             if (operation.StartsWith("BEGINTX"))
             {
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
@@ -266,7 +273,7 @@ namespace PuppetMaster
             {
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                cliente.Put(Int32.Parse(arg[2]),arg[3]);
+                cliente.Put(Int32.Parse(arg[2]), arg[3]);
             }
             else if (operation.StartsWith("GET"))
             {
@@ -284,32 +291,32 @@ namespace PuppetMaster
             {
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                cliente.Store(Int32.Parse(arg[2]),arg[3]);
-                
+                cliente.Store(Int32.Parse(arg[2]), arg[3]);
+
             }
-            else if (operation.StartsWith("PUTVAL")) 
+            else if (operation.StartsWith("PUTVAL"))
             {
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                   typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.PutVAl(arg[2], arg[3]);
             }
-            else if (operation.StartsWith("CONCAT")) 
+            else if (operation.StartsWith("CONCAT"))
             {
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                cliente.Concat(Int32.Parse(arg[2]), Int32.Parse(arg[3]));   
+                cliente.Concat(Int32.Parse(arg[2]), Int32.Parse(arg[3]));
             }
             else if (operation.StartsWith("TOLOWER"))
             {
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                cliente.ToLower(Int32.Parse(arg[2]));   
+                cliente.ToLower(Int32.Parse(arg[2]));
             }
-            else if (operation.StartsWith("TOUPPER")) 
+            else if (operation.StartsWith("TOUPPER"))
             {
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                cliente.ToUpper(Int32.Parse(arg[2]));   
+                cliente.ToUpper(Int32.Parse(arg[2]));
             }
             else if (operation.StartsWith("DUMP"))
             {
@@ -343,6 +350,7 @@ namespace PuppetMaster
                 }
                 else stopClient(arg[1]);
             }
+        
         }
 
         private void button4_Click_1(object sender, EventArgs e)
@@ -502,7 +510,9 @@ namespace PuppetMaster
 
         private void button3_Click_1(object sender, EventArgs e)
         {
-            string selectedOperation = (string)listBox3.SelectedItem;
+            string operation = (string)listBox3.SelectedItem;
+            RunInstruction(operation);
+            listBox3.SelectedIndex++;
         }
 
         private void startClient(string clientName) 

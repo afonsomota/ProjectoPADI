@@ -572,7 +572,7 @@ namespace Server
                 if(st.ContainsKey(key)){
                     foreach (TableValue tv in Semitables[0][key])
                     {
-                        ret += ("Value: " + tv.Value + "; Timestamp: " + tv.Timestamp + "; State: " + tv.State + "\r\n");
+                        ret += (tv.Value + ";" + tv.Timestamp + ";" + tv.State + "\r\n");
                     }
                 }
             }

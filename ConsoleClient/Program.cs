@@ -14,46 +14,6 @@ namespace ConsoleClient
     class Program
     {
 
-        static Dictionary<Node, List<Operation>> InvertNodesLocation(Dictionary<string, List<Node>> nodesLocation, Dictionary<int,Operation> operations)
-        {
-            Dictionary<Node, List<Operation>> serversKeys = new Dictionary<Node, List<Operation>>();
-            foreach (KeyValuePair<string, List<Node>> servers in nodesLocation)
-            {
-                foreach (Node serv in servers.Value)
-                {
-                    bool servExists = false;
-                    Node existingServ = null;
-                    foreach (Node s in serversKeys.Keys) {
-                        if (s == serv) { 
-                            servExists = true;
-                            existingServ = s;
-                            break;
-                        }
-                    }
-                    if (!servExists)
-                    {
-                        List<Operation> new_list = new List<Operation>();
-                        foreach(Operation op in operations.Values){
-                            if (servers.Key == op.Key)
-                                new_list.Add(op);
-                        }
-                        serversKeys.Add(serv, new_list);
-                        existingServ = serv;
-                    }
-                    else foreach (Operation op in operations.Values)
-                        {
-                            if (servers.Key == op.Key)
-                            {
-                                if (!serversKeys[existingServ].Contains(op))
-                                    serversKeys[existingServ].Add(op);
-                                else break;
-                            } 
-                        } 
-                }
-            }
-            return serversKeys;
-        }
-
         static void Main(string[] args)
         {
 

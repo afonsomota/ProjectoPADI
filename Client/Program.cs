@@ -49,16 +49,16 @@ namespace Client
             Console.WriteLine("Press Enter to Test...");
 
             //Testes by Bernardo
-            clt.Registers[0] = "pEdro";
-            clt.Registers[1] = "paUlo";
-            clt.Registers[2] = "pReto";
-            clt.Registers[3] = "PATO";
-            clt.Registers[4] = "porCo";
-            clt.Registers[5] = "para";
-            clt.Registers[6] = "pedra";
-            clt.Registers[7] = "peneu";
-            clt.Registers[8] = "paralizado";
-            clt.Registers[9] = "princesa";
+            //clt.Registers[0] = "pEdro";
+            //clt.Registers[1] = "paUlo";
+            //clt.Registers[2] = "pReto";
+            //clt.Registers[3] = "PATO";
+            //clt.Registers[4] = "porCo";
+            //clt.Registers[5] = "para";
+            //clt.Registers[6] = "pedra";
+            //clt.Registers[7] = "peneu";
+            //clt.Registers[8] = "paralizado";
+            //clt.Registers[9] = "princesa";
 
             clt.ToLowerInternal(2);
 

@@ -251,13 +251,12 @@ namespace PuppetMaster
 
         private void RunInstruction(string operation) 
         {
-
-
             char[] delim = { ' ', '\t' };
             string[] arg = operation.Split(delim);
 
             if (operation.StartsWith("BEGINTX"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet),
                 "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
@@ -265,30 +264,35 @@ namespace PuppetMaster
             }
             else if (operation.StartsWith("COMMITTX"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.CommitTx();
             }
             else if (operation.StartsWith("PUT"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Put(Int32.Parse(arg[2]), arg[3]);
             }
             else if (operation.StartsWith("GET"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Get(Int32.Parse(arg[2]), arg[3]);
             }
             else if (operation.StartsWith("WAIT"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Sleep(Int32.Parse(arg[1]));
             }
             else if (operation.StartsWith("STORE"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Store(Int32.Parse(arg[2]), arg[3]);
@@ -296,41 +300,47 @@ namespace PuppetMaster
             }
             else if (operation.StartsWith("PUTVAL"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                   typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.PutVAl(arg[2], arg[3]);
             }
             else if (operation.StartsWith("CONCAT"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.Concat(Int32.Parse(arg[2]), Int32.Parse(arg[3]));
             }
             else if (operation.StartsWith("TOLOWER"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.ToLower(Int32.Parse(arg[2]));
             }
             else if (operation.StartsWith("TOUPPER"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
                 cliente.ToUpper(Int32.Parse(arg[2]));
             }
             else if (operation.StartsWith("DUMP"))
             {
+                while (runningProcesses.ContainsKey(arg[1]) != true) { }
                 DumpClient(arg[1]);
             }
             else if (operation.StartsWith("CONNECT"))
             {
-                if (arg[1].StartsWith("server-"))
+                if (arg[1].StartsWith("server-") || arg[1].StartsWith("SERVER-"))
                 {
                     char[] lol = { '-' };
                     string[] argt = arg[1].Split(lol);
                     startServer(Int32.Parse(argt[1]));
+                    runningServers.ContainsKey(Int32.Parse(argt[1]));
                 }
-                else if (arg[1] == "central")
+                else if (arg[1] == "central" || arg[1]=="CENTRAL")
                 {
                     startCentral();
                 }
@@ -338,17 +348,21 @@ namespace PuppetMaster
             }
             else if (operation.StartsWith("DISCONNECT"))
             {
-                if (arg[1].StartsWith("server-"))
+                if (arg[1].StartsWith("server-") || arg[1].StartsWith("SERVER-"))
                 {
                     char[] lol = { '-' };
                     string[] argt = arg[1].Split(lol);
                     stopServer(Int32.Parse(argt[1]));
                 }
-                else if (arg[1] == "central")
+                else if (arg[1] == "central" || arg[1] == "CENTRAL")
                 {
                     stopCentral();
                 }
-                else stopClient(arg[1]);
+                else
+                {
+                    while (runningProcesses.ContainsKey(arg[1]) != true) { }
+                    stopClient(arg[1]);
+                }
             }
         
         }
@@ -359,111 +373,7 @@ namespace PuppetMaster
             {
                 foreach (string operation in listBox3.Items)
                 {
-
-                    char[] delim = { ' ', '\t' };
-                    string[] arg = operation.Split(delim);
-
-                    if (operation.StartsWith("BEGINTX"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet),
-                        "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.BeginTx();
-                    }
-                    else if (operation.StartsWith("COMMITTX"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.CommitTx();
-                    }
-                    else if (operation.StartsWith("PUT "))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.Put(Int32.Parse(arg[2]), arg[3]);
-                    }
-                    else if (operation.StartsWith("GET"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.Get(Int32.Parse(arg[2]), arg[3]);
-                    }
-                    else if (operation.StartsWith("WAIT"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.Sleep(Int32.Parse(arg[1]));
-                    }
-                    else if (operation.StartsWith("STORE"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.Store(Int32.Parse(arg[2]), arg[3]);
-
-                    }
-                    else if (operation.StartsWith("PUTVAL"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                          typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.PutVAl(arg[2], arg[3]);
-                    }
-                    else if (operation.StartsWith("CONCAT"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.Concat(Int32.Parse(arg[2]), Int32.Parse(arg[3]));
-                    }
-                    else if (operation.StartsWith("TOLOWER"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.ToLower(Int32.Parse(arg[2]));
-                    }
-                    else if (operation.StartsWith("TOUPPER"))
-                    {
-                        IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
-                            typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
-                        cliente.ToUpper(Int32.Parse(arg[2]));
-                    }
-                    else if (operation.StartsWith("DUMP"))
-                    {
-                        DumpClient(arg[1]);
-                    }
-                    else if (operation.StartsWith("CONNECT"))
-                    {
-                        if (arg[1].StartsWith("server-"))
-                        {
-                            char[] lol = { '-' };
-                            string[] argt = arg[1].Split(lol);
-                            startServer(Int32.Parse(argt[1]));
-                            Thread.Sleep(1000);
-                        }
-                        else if (arg[1] == "central")
-                        {
-                            startCentral();
-                            Thread.Sleep(1000);
-                        }
-                        else
-                        {
-                            startClient(arg[1]);
-                            Thread.Sleep(1000);
-                        }
-                    }
-                    else if (operation.StartsWith("DISCONNECT"))
-                    {
-                        if (arg[1].StartsWith("server-"))
-                        {
-                            char[] lol = { '-'};
-                            string[] argt = operation.Split(lol);
-                            stopServer(Int32.Parse(argt[1]));
-                        }
-                        else if (arg[1] == "central")
-                        {
-                            stopCentral();
-                        }
-                        else stopClient(arg[1]);
-                    }
-
+                    RunInstruction(operation);
                 }
             }
         }

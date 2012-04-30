@@ -343,6 +343,8 @@ namespace Server
         }
 
         public bool Finish(int txid) {
+            if (ReadOnlyTransation.ContainsKey(txid) && ReadOnlyTransation[txid])
+                return true;
             foreach (string key in TransactionObjects[txid].Keys) {
                 foreach (Semitable st in Semitables) {
                     if (st.ContainsKey(key)) { 
@@ -368,6 +370,8 @@ namespace Server
         public bool IsFinished(int txid) {
             bool allAbleToCommit = true;
             List<TableValue> valuesToRemove = new List<TableValue>();
+            if (ReadOnlyTransation.ContainsKey(txid) && ReadOnlyTransation[txid])
+                return true;
             foreach (string key in TransactionObjects[txid].Keys){
                 foreach (TableValue tv in TransactionObjects[txid][key]){
                     if (!tv.commitingVariable(txid))

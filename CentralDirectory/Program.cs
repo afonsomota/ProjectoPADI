@@ -653,7 +653,7 @@ namespace CentralDirectory
                 listTransactionContext.Remove(transactionToRemove);
                 
                 foreach (Node node in listOfServersStanby)
-                    RegisterServer(node);
+                    ctx.InsertServer(node);
 
                 listOfServersStanby.Clear();
            }

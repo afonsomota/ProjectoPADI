@@ -58,11 +58,6 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.listView1 = new System.Windows.Forms.ListView();
-            this.Key = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.Node = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.Value = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.Timestamp = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.State = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.button12 = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
@@ -393,12 +388,6 @@
             // 
             // listView1
             // 
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.Key,
-            this.Node,
-            this.Value,
-            this.Timestamp,
-            this.State});
             this.listView1.Location = new System.Drawing.Point(325, 12);
             this.listView1.Name = "listView1";
             this.listView1.Size = new System.Drawing.Size(262, 52);
@@ -412,6 +401,7 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(197, 20);
             this.textBox3.TabIndex = 1;
+            this.textBox3.TextChanged += new System.EventHandler(this.textBox3_TextChanged);
             // 
             // button12
             // 
@@ -493,11 +483,6 @@
         private System.Diagnostics.EventLog eventLog1;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ListView listView1;
-        private System.Windows.Forms.ColumnHeader Key;
-        private System.Windows.Forms.ColumnHeader Node;
-        private System.Windows.Forms.ColumnHeader Value;
-        private System.Windows.Forms.ColumnHeader Timestamp;
-        private System.Windows.Forms.ColumnHeader State;
     }
 }
 

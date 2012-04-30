@@ -44,36 +44,11 @@ namespace Client
             Client clt = new Client(node,channel,puppet,cd);
             ClientPuppet.ctx = clt;
             ClientRemoting.ctx = clt;
-            puppet.RegisterPseudoNode(node);
+            try { puppet.RegisterPseudoNode(node); }
+            catch { System.Console.WriteLine("We Dont Need No Puppet Master"); } 
             System.Console.WriteLine(host + ":" + port.ToString());
             Console.WriteLine("Press Enter to Test...");
-
-            //Testes by Bernardo
-            //clt.Registers[0] = "pEdro";
-            //clt.Registers[1] = "paUlo";
-            //clt.Registers[2] = "pReto";
-            //clt.Registers[3] = "PATO";
-            //clt.Registers[4] = "porCo";
-            //clt.Registers[5] = "para";
-            //clt.Registers[6] = "pedra";
-            //clt.Registers[7] = "peneu";
-            //clt.Registers[8] = "paralizado";
-            //clt.Registers[9] = "princesa";
-
-            //clt.ToLowerInternal(2);
-
-            //Testes
-           // System.Console.ReadLine();
-           // List<string> testList = new List<string>();
-           // testList.Add("Afonso");
-            //testList.Add("Rui");
-            //testList.Add("Chinchila");
-           // testList.Add("Power Ranger");
-           // testList.Add("Pokemon");
-           // testList.Add("Mais uma string qualquer");
-            System.Console.ReadLine();    
-        
-            
+            System.Console.ReadLine();        
         }
     }
 

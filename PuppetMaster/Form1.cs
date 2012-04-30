@@ -447,7 +447,7 @@ namespace PuppetMaster
             
             string operation = (string)listBox3.SelectedItem;
             RunInstruction(operation);
-            if (listBox3.SelectedIndex!= listBox3.Items.Count)listBox3.SelectedIndex++;
+            if (listBox3.SelectedIndex+1!= listBox3.Items.Count)listBox3.SelectedIndex++;
         }
 
         private void startClient(string clientName) 

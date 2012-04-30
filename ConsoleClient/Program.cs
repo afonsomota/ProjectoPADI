@@ -184,28 +184,44 @@ namespace ConsoleClient
             NodesLocation.Add(key, nodes);
             bool allCanLock = true;
             bool allLocked = true;
+            int serversDown = 0;
             foreach (Node n in nodes)
             {
-                IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                if (!server.CanLock(Tctx.Txid, key)) allCanLock = false;
+                try
+                {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                    if (!server.CanLock(Tctx.Txid, key)) allCanLock = false;
+                }
+                catch {
+                    serversDown++;
+                    Central.ServerDown(n);
+                }
             }
-            if (!allCanLock)
+            if (!allCanLock || serversDown == 2)
             {
                 Abort();
                 return null;
             }
             else
             {
+                serversDown = 0;
                 foreach (Node n in nodes)
                 {
-                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                    if (!server.Lock(Tctx.Txid, key))
+                    try
                     {
-                        allLocked = false;
-                        break;
+                        IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                        if (!server.Lock(Tctx.Txid, key))
+                        {
+                            allLocked = false;
+                            break;
+                        }
+                    }
+                    catch {
+                        serversDown++;
+                        Central.ServerDown(n);   
                     }
                 }
-                if (!allLocked)
+                if (!allLocked || serversDown == 2)
                 {
                     Abort();
                     return null;
@@ -244,9 +260,7 @@ namespace ConsoleClient
                     catch
                     {
                         value = null;
-                        throw;
                     }
-                    throw;
                 }
                 if (value == null)
                 {
@@ -289,9 +303,7 @@ namespace ConsoleClient
                     catch
                     {
                         success = false;
-                        throw;
                     }
-                    throw;
                 }
                 if (!success)
                 {
@@ -307,6 +319,7 @@ namespace ConsoleClient
         {
             bool allCanCommit = true;
             Node nodeToRemove = null;
+            int serversDown = 0;
             foreach (Node n in Nodes) {
                 try
                 {
@@ -318,6 +331,7 @@ namespace ConsoleClient
                     }
                 }
                 catch{
+                    serversDown++; 
                     nodeToRemove = n;
                     Central.ServerDown(n);
                 }
@@ -325,7 +339,7 @@ namespace ConsoleClient
             if (nodeToRemove != null) Nodes.Remove(nodeToRemove);
             Tctx.State = TransactionContext.states.tentatively;
             Console.WriteLine(Tctx);
-            if (!allCanCommit)
+            if (!allCanCommit || serversDown == 2)
             {
                 Abort();
                 return false;
@@ -344,8 +358,14 @@ namespace ConsoleClient
 
         public void Abort() {
             foreach (Node n in Nodes) {
-                IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                server.Abort(Tctx.Txid);
+                try
+                {
+                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                    server.Abort(Tctx.Txid);
+                }
+                catch {
+                    Central.ServerDown(n);
+                }
             }
             Tctx.State = TransactionContext.states.aborted;
             Central.UpdateTransactionState(Tctx);

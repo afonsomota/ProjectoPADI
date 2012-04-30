@@ -201,6 +201,7 @@ namespace CommonInterfaces
         TransactionContext BeginTx();
         List<Node> GetServers(string key);
         void ServerDown(Node server);
+        string GetAll(string key);
     }
 
 
@@ -213,6 +214,7 @@ namespace CommonInterfaces
         void GetNetworkUpdate(List<Node> network);
         void CopySemiTables(Node newNode);//Caso especial em que se comeca com um servidor e adiciona-se outro
         void CopySemiTable(uint semiTableToCopy, Node nodeToCopy);// Caso em que um servidor vai abaixo e outro vem acima
+        string GetAll(string key);
 
         //Cliente
         bool CanLock(int txid, string key);

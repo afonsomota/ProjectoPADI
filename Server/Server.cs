@@ -250,7 +250,14 @@ namespace Server
             Console.WriteLine("Server Online.");
             ServerPuppet.ctx = srv;
             ServerRemoting.ctx = srv;
-            ligacao.RegisterPseudoNode(node);
+            try
+            {
+                ligacao.RegisterPseudoNode(node);
+            }
+            catch
+            {
+                Console.WriteLine("We Don't Need No PuppetMaster");
+            }
             System.Console.WriteLine(host + ":" + port.ToString());
             while(true){
                 Console.ReadLine();
@@ -420,6 +427,7 @@ namespace Server
                         valueToAdd = new TableValue(null, 0, new TransactionState(0, KeyState.FREE));
                     }
                     int max_timestamp = -1;
+                    TableValue max_tv = null;
                     foreach (TableValue tv in st[key]) {
                         if (!tv.isLockable(txid))
                         {
@@ -435,11 +443,20 @@ namespace Server
                         else if (tv.Timestamp >= max_timestamp)
                         {
                             max_timestamp = tv.Timestamp;
+                            max_tv = tv;
                         }
                         if (tv.Value == null)
                             valueToAdd = tv;
-                        else
+                    }
+                    if (valueToAdd == null) {
+                        if (max_tv != null && max_tv.State.State!=KeyState.FREE)
                         {
+                            max_tv.State.State = KeyState.FREE;
+                            max_tv.State.Txid = txid;
+                            max_tv.Value = null;
+                            valueToAdd = max_tv;
+                        }
+                        else {
                             valueToAdd = new TableValue(null, max_timestamp + 1, new TransactionState(0, KeyState.FREE));
                         }
                     }
@@ -572,7 +589,7 @@ namespace Server
                 if(st.ContainsKey(key)){
                     foreach (TableValue tv in Semitables[0][key])
                     {
-                        ret += (tv.Value + ";" + tv.Timestamp + ";" + tv.State + "\r\n");
+                        ret += (tv.Value + ";" + tv.Timestamp + ";" + tv.State + "\n");
                     }
                 }
             }

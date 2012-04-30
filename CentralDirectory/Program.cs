@@ -606,7 +606,7 @@ namespace CentralDirectory
                 try
                 {
                     IServer link = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                    keyInfo += n.IP + ":"+ n.Port.ToString()+"\r\n";
+                    keyInfo += n.IP + ":"+ n.Port.ToString()+"\n";
                     keyInfo += link.GetAll(key);
                 }
                 catch { 

@@ -237,12 +237,12 @@
             // button9
             // 
             this.button9.BackColor = System.Drawing.Color.Red;
-            this.button9.Font = new System.Drawing.Font("Comic Sans MS", 25F);
+            this.button9.Font = new System.Drawing.Font("Comic Sans MS", 15F);
             this.button9.Location = new System.Drawing.Point(584, 453);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(255, 34);
             this.button9.TabIndex = 28;
-            this.button9.Text = "Tirar Senha";
+            this.button9.Text = "KILL ALL";
             this.button9.UseVisualStyleBackColor = false;
             this.button9.Click += new System.EventHandler(this.button9_Click);
             // 

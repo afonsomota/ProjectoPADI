@@ -372,6 +372,22 @@ namespace PuppetMaster
                     stopClient(arg[1]);
                 }
             }
+            else if (operation.StartsWith("EXESCRIPT")) 
+            {
+                List<string> operations = new List<string>();
+                string scriptLine = null;
+                string scriptPath = arg[2];
+                StreamReader userscript = new StreamReader(scriptPath);
+
+                listBox3.Items.Clear();
+                while ((scriptLine = userscript.ReadLine()) != null)
+                {
+                    operations.Add(scriptLine);
+                }
+                while (SearchClientAdressByName(arg[1]) == null) { }
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+                    typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+            }
         
         }
 

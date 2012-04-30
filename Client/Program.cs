@@ -170,6 +170,26 @@ namespace Client
         {
             Thread.Sleep(ms); 
         }
+
+        public void RunScriptInternal(List<string> operations) 
+        {
+            foreach(string operation in operations){
+            char[] delim = { ' ' };
+            string[] arg = operation.Split(delim);
+
+            if (arg[0] == "BEGINTX") BeginTxInternal();
+            else if (arg[0] == "STORE") StoreInternal(Int32.Parse(arg[2]), arg[3]);
+            else if (arg[0] == "PUT") PutInternal(Int32.Parse(arg[2]), arg[3]);
+            else if (arg[0] == "GET") GetInternal(Int32.Parse(arg[2]), arg[3]);
+            else if (arg[0] == "PUTVAL") PutVAlInternal(arg[2], arg[3]);
+            else if (arg[0] == "TOLOWER") ToLowerInternal(Int32.Parse(arg[2]));
+            else if (arg[0] == "TOUPPER") ToUpperInternal(Int32.Parse(arg[2]));
+            else if (arg[0] == "CONCAT") ConcatInternal(Int32.Parse(arg[2]), Int32.Parse(arg[3]));
+            else if (arg[0] == "COMMITTX") CommitTxInternal();
+            else if (arg[0] == "WAIT") WaitInternal(Int32.Parse(arg[2]));    
+        
+            }
+        }
         }
     class ClientRemoting : MarshalByRefObject, IClient
     {
@@ -197,7 +217,12 @@ namespace Client
             Console.WriteLine("Client Online");
         }
 
-
+        public void Runscript(List<string> operations) 
+        {
+                ThreadStart ts = delegate() { ctx.RunScriptInternal(operations); };
+                Thread t = new Thread(ts);
+                t.Start();       
+        }
 
         public void KillClient()
         {

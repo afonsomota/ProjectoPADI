@@ -13,6 +13,7 @@ using System.Runtime.Remoting;
 using System.IO;
 using CommonInterfaces;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 
 namespace PuppetMaster
@@ -52,6 +53,11 @@ namespace PuppetMaster
         public Dictionary<string, TextBox> clientListBoxGetKeyTextBox = new Dictionary<string, TextBox>();
         public Dictionary<string, TextBox> clientListBoxGetKeyTextBox2 = new Dictionary<string, TextBox>();
         public Dictionary<string, Button> clientListBoxGetKeyButton = new Dictionary<string, Button>();
+
+        //Server Interface
+        public Dictionary<int, DataTable> serverSemiTable1 = new Dictionary<int, DataTable>();
+        public Dictionary<int, DataTable> serverSemiTable2 = new Dictionary<int, DataTable>();
+
         public System.Object locker = new System.Object(); 
 
         int numberOfClients = 0;
@@ -61,7 +67,6 @@ namespace PuppetMaster
 
         public string ip;
         
-
         public Form1()
         {
             InitializeComponent();
@@ -72,7 +77,25 @@ namespace PuppetMaster
             Clients = new List<Node>();
             Servers = new List<Node>();
             WriteHostDelegate = new WriteHost(WriteHostMethod);
+
+
+            string currentDirectory = Environment.CurrentDirectory;
+            string[] newDirectory = Regex.Split(currentDirectory, "PuppetMaster");
+            string strpath = newDirectory[0] + "Scripts";    //Replace("PuppetMaster", "Scripts");
+
+            string[] filePaths = Directory.GetFiles(strpath, "*.txt",
+                                                     SearchOption.AllDirectories);
+
+            foreach (string path in filePaths) 
+                listBox1.Items.Add(path);
+
+
+            //System.DirectoryServices.DirectoryEntry myDE = new
+            //   System.DirectoryServices.DirectoryEntry(strpath);
+            //tabPage3.Controls.Add(myDE);
+           // string nameGuid = myDE.Name + myDE.Guid.ToString();
             
+
            // WriteUserScriptsDelegate = new WriteUserScripts(WriteUserScriptsMethod);
             
         }
@@ -393,7 +416,7 @@ namespace PuppetMaster
 
         private void button4_Click_1(object sender, EventArgs e)
         {
-            if (listBox3.SelectedItem != null)
+            if (listBox3.Items.Count!=0)
             {
                 foreach (string operation in listBox3.Items)
                 {
@@ -419,6 +442,11 @@ namespace PuppetMaster
         private void startServer(int n)
         {
             //TODO Interface
+
+            serverSemiTable1.Add(n, new DataTable());
+            GenerateServerInterface(n);
+
+
             runningServers.Add(n,new Process());
             string currentDirectory = Environment.CurrentDirectory;
             string path = currentDirectory.Replace("PuppetMaster", "Server");
@@ -426,6 +454,20 @@ namespace PuppetMaster
             runningServers[n].StartInfo.FileName = path;
             runningServers[n].Start();
             numberOfServers++;
+        }
+
+        private void GenerateServerInterface(int serverNumber) 
+        {
+            serverSemiTable1[serverNumber].Columns.Add("Value");
+            serverSemiTable1[serverNumber].Columns.Add("Timestamp");
+            serverSemiTable1[serverNumber].Columns.Add("State");
+
+            //IServerPuppet server = (IServerPuppet)Activator.GetObject(
+            //      typeof(IServerPuppet),
+            //      "tcp://" + SearchServerAdressByName("server-" + serverNumber.ToString()) + "/ServerPuppet");
+
+            //string values = server.GetAll();
+        
         }
 
         private void stopServer(int n)
@@ -766,6 +808,15 @@ namespace PuppetMaster
         private void button11_Click(object sender, EventArgs e)
         {
             stopCentral();
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            if (textBox3.Text != null) 
+            {
+                DataColumn column = new DataColumn();
+                column.ColumnName = "";
+            }
         }
     }
 

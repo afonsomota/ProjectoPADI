@@ -34,6 +34,7 @@
             this.button5 = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.label6 = new System.Windows.Forms.Label();
             this.button11 = new System.Windows.Forms.Button();
             this.button10 = new System.Windows.Forms.Button();
             this.listBox1 = new System.Windows.Forms.ListBox();
@@ -56,12 +57,17 @@
             this.listBox3 = new System.Windows.Forms.ListBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.listView1 = new System.Windows.Forms.ListView();
+            this.Key = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Node = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Value = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Timestamp = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.State = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.button12 = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.pageSetupDialog1 = new System.Windows.Forms.PageSetupDialog();
             this.eventLog1 = new System.Diagnostics.EventLog();
-            this.label6 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage3.SuspendLayout();
@@ -151,6 +157,17 @@
             this.tabPage1.Text = "Basic Controls";
             this.tabPage1.UseVisualStyleBackColor = true;
             this.tabPage1.Click += new System.EventHandler(this.tabPage1_Click);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.label6.Location = new System.Drawing.Point(481, 242);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(127, 20);
+            this.label6.TabIndex = 34;
+            this.label6.Text = "Central Directory";
+            this.label6.Click += new System.EventHandler(this.label6_Click_1);
             // 
             // button11
             // 
@@ -363,6 +380,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.listView1);
             this.tabPage3.Controls.Add(this.textBox3);
             this.tabPage3.Controls.Add(this.button12);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
@@ -373,16 +391,31 @@
             this.tabPage3.Text = "Servers Info";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // listView1
+            // 
+            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.Key,
+            this.Node,
+            this.Value,
+            this.Timestamp,
+            this.State});
+            this.listView1.Location = new System.Drawing.Point(325, 12);
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(262, 52);
+            this.listView1.TabIndex = 2;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
+            // 
             // textBox3
             // 
-            this.textBox3.Location = new System.Drawing.Point(110, 21);
+            this.textBox3.Location = new System.Drawing.Point(112, 12);
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(197, 20);
             this.textBox3.TabIndex = 1;
             // 
             // button12
             // 
-            this.button12.Location = new System.Drawing.Point(17, 19);
+            this.button12.Location = new System.Drawing.Point(17, 12);
             this.button12.Name = "button12";
             this.button12.Size = new System.Drawing.Size(75, 23);
             this.button12.TabIndex = 0;
@@ -401,17 +434,6 @@
             // eventLog1
             // 
             this.eventLog1.SynchronizingObject = this;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
-            this.label6.Location = new System.Drawing.Point(481, 242);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(127, 20);
-            this.label6.TabIndex = 34;
-            this.label6.Text = "Central Directory";
-            this.label6.Click += new System.EventHandler(this.label6_Click_1);
             // 
             // Form1
             // 
@@ -470,6 +492,12 @@
         private System.Windows.Forms.Button button12;
         private System.Diagnostics.EventLog eventLog1;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ColumnHeader Key;
+        private System.Windows.Forms.ColumnHeader Node;
+        private System.Windows.Forms.ColumnHeader Value;
+        private System.Windows.Forms.ColumnHeader Timestamp;
+        private System.Windows.Forms.ColumnHeader State;
     }
 }
 

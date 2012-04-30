@@ -25,7 +25,9 @@ namespace Client
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
             int port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
-            string name = args[0];
+            string name = null;
+            if (args.Length > 0) name = args[0];
+            else name = "Debug" + port.ToString();
 
             Console.WriteLine("Ciente: " + name);
 

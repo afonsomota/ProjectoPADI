@@ -89,6 +89,7 @@ namespace PuppetMaster
             foreach (string path in filePaths) 
                 listBox1.Items.Add(path);
 
+            this.listBox1.MouseDoubleClick += new MouseEventHandler(listBox1_MouseDoubleClick);
 
             //System.DirectoryServices.DirectoryEntry myDE = new
             //   System.DirectoryServices.DirectoryEntry(strpath);
@@ -411,10 +412,13 @@ namespace PuppetMaster
             {
                 List<string> operations = new List<string>();
                 string scriptLine = null;
-                string scriptPath = arg[2];
+                string scriptPath = "";
+                for (int i = 2; i < arg.Length; i++)
+                {
+                    scriptPath += arg[i] + " ";
+                }
                 StreamReader userscript = new StreamReader(scriptPath);
 
-                listBox3.Items.Clear();
                 while ((scriptLine = userscript.ReadLine()) != null)
                 {
                     operations.Add(scriptLine);
@@ -422,6 +426,7 @@ namespace PuppetMaster
                 while (SearchClientAdressByName(arg[1]) == null) { }
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet), "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+                cliente.Runscript(operations);
             }
         
         }
@@ -734,6 +739,26 @@ namespace PuppetMaster
             DumpClient(clientName);
         }
 
+        void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+
+            int index = this.listBox1.IndexFromPoint(e.Location);
+
+            if (index != System.Windows.Forms.ListBox.NoMatches)
+            {
+
+                if (listBox3.Items.Count != 0)
+                {
+                    foreach (string operation in listBox3.Items)
+                    {
+                        RunInstruction(operation);
+                    }
+                }
+
+            }
+
+        }
+
         void DumpClient(string clientName)
         {
             int aux = 1;
@@ -826,12 +851,18 @@ namespace PuppetMaster
         {
             if (textBox3.Text != null) 
             {
+
                 DataColumn column = new DataColumn();
                 column.ColumnName = "";
             }
         }
 
         private void label6_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }

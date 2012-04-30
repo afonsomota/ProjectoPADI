@@ -61,6 +61,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.pageSetupDialog1 = new System.Windows.Forms.PageSetupDialog();
             this.eventLog1 = new System.Diagnostics.EventLog();
+            this.label6 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage3.SuspendLayout();
@@ -117,6 +118,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.label6);
             this.tabPage1.Controls.Add(this.button11);
             this.tabPage1.Controls.Add(this.button10);
             this.tabPage1.Controls.Add(this.listBox1);
@@ -152,7 +154,7 @@
             // 
             // button11
             // 
-            this.button11.Location = new System.Drawing.Point(710, 402);
+            this.button11.Location = new System.Drawing.Point(710, 242);
             this.button11.Name = "button11";
             this.button11.Size = new System.Drawing.Size(72, 23);
             this.button11.TabIndex = 33;
@@ -162,7 +164,7 @@
             // 
             // button10
             // 
-            this.button10.Location = new System.Drawing.Point(608, 402);
+            this.button10.Location = new System.Drawing.Point(608, 242);
             this.button10.Name = "button10";
             this.button10.Size = new System.Drawing.Size(72, 23);
             this.button10.TabIndex = 32;
@@ -193,7 +195,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
-            this.label1.Location = new System.Drawing.Point(481, 245);
+            this.label1.Location = new System.Drawing.Point(481, 298);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(61, 20);
             this.label1.TabIndex = 0;
@@ -213,7 +215,7 @@
             // listCliOnline
             // 
             this.listCliOnline.FormattingEnabled = true;
-            this.listCliOnline.Location = new System.Drawing.Point(485, 301);
+            this.listCliOnline.Location = new System.Drawing.Point(485, 354);
             this.listCliOnline.Name = "listCliOnline";
             this.listCliOnline.Size = new System.Drawing.Size(116, 82);
             this.listCliOnline.TabIndex = 1;
@@ -232,7 +234,7 @@
             // 
             // stopCliButton
             // 
-            this.stopCliButton.Location = new System.Drawing.Point(608, 301);
+            this.stopCliButton.Location = new System.Drawing.Point(608, 354);
             this.stopCliButton.Name = "stopCliButton";
             this.stopCliButton.Size = new System.Drawing.Size(72, 82);
             this.stopCliButton.TabIndex = 5;
@@ -255,7 +257,7 @@
             // listServOnline
             // 
             this.listServOnline.FormattingEnabled = true;
-            this.listServOnline.Location = new System.Drawing.Point(707, 301);
+            this.listServOnline.Location = new System.Drawing.Point(707, 354);
             this.listServOnline.Name = "listServOnline";
             this.listServOnline.Size = new System.Drawing.Size(132, 82);
             this.listServOnline.TabIndex = 7;
@@ -263,7 +265,7 @@
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(485, 275);
+            this.textBox2.Location = new System.Drawing.Point(485, 328);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(114, 20);
             this.textBox2.TabIndex = 27;
@@ -272,7 +274,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
-            this.label3.Location = new System.Drawing.Point(703, 245);
+            this.label3.Location = new System.Drawing.Point(703, 298);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(67, 20);
             this.label3.TabIndex = 8;
@@ -281,7 +283,7 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(707, 275);
+            this.button8.Location = new System.Drawing.Point(707, 328);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(194, 20);
             this.button8.TabIndex = 26;
@@ -291,7 +293,7 @@
             // 
             // stopServButton
             // 
-            this.stopServButton.Location = new System.Drawing.Point(845, 301);
+            this.stopServButton.Location = new System.Drawing.Point(845, 354);
             this.stopServButton.Name = "stopServButton";
             this.stopServButton.Size = new System.Drawing.Size(56, 82);
             this.stopServButton.TabIndex = 11;
@@ -301,7 +303,7 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(608, 273);
+            this.button7.Location = new System.Drawing.Point(608, 326);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(72, 23);
             this.button7.TabIndex = 25;
@@ -400,6 +402,17 @@
             // 
             this.eventLog1.SynchronizingObject = this;
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.label6.Location = new System.Drawing.Point(481, 242);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(127, 20);
+            this.label6.TabIndex = 34;
+            this.label6.Text = "Central Directory";
+            this.label6.Click += new System.EventHandler(this.label6_Click_1);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -456,6 +469,7 @@
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.Button button12;
         private System.Diagnostics.EventLog eventLog1;
+        private System.Windows.Forms.Label label6;
     }
 }
 

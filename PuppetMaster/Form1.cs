@@ -255,7 +255,19 @@ namespace PuppetMaster
 
         private void listBox1_SelectedIndexChanged_1(object sender, EventArgs e)
         {
+            string scriptLine;
 
+            if (listBox1.SelectedItem != null)
+            {
+                string scriptPath = (string)listBox1.SelectedItem;
+                StreamReader userscript = new StreamReader(scriptPath);
+
+                listBox3.Items.Clear();
+                while ((scriptLine = userscript.ReadLine()) != null)
+                {
+                    listBox3.Items.Add(scriptLine);
+                }
+            }
         }
 
         private void listCliOffline_SelectedIndexChanged(object sender, EventArgs e)
@@ -817,6 +829,11 @@ namespace PuppetMaster
                 DataColumn column = new DataColumn();
                 column.ColumnName = "";
             }
+        }
+
+        private void label6_Click_1(object sender, EventArgs e)
+        {
+
         }
     }
 

@@ -63,8 +63,7 @@ namespace PuppetMaster
         int numberOfClients = 0;
         int numberOfServers = 1;
 
-        public Process CentralDirectory = new Process();
-
+        public Process CentralDirectory = null;
         public string ip;
         
         public Form1()
@@ -433,13 +432,20 @@ namespace PuppetMaster
 
         private void button4_Click_1(object sender, EventArgs e)
         {
-            if (listBox3.Items.Count!=0)
+            RunScript();
+        }
+
+        public void RunScript() 
+        {
+            KillAll();
+            if (listBox3.Items.Count != 0)
             {
                 foreach (string operation in listBox3.Items)
                 {
                     RunInstruction(operation);
                 }
             }
+        
         }
             
         private void stopCentral()
@@ -449,6 +455,7 @@ namespace PuppetMaster
         
         private void startCentral()
         {
+            CentralDirectory = new Process();
             string currentDirectory = Environment.CurrentDirectory;
             string path = currentDirectory.Replace("PuppetMaster", "CentralDirectory");
             path += "/CentralDirectory.exe";
@@ -746,17 +753,8 @@ namespace PuppetMaster
 
             if (index != System.Windows.Forms.ListBox.NoMatches)
             {
-
-                if (listBox3.Items.Count != 0)
-                {
-                    foreach (string operation in listBox3.Items)
-                    {
-                        RunInstruction(operation);
-                    }
-                }
-
+                RunScript(); 
             }
-
         }
 
         void DumpClient(string clientName)
@@ -793,6 +791,13 @@ namespace PuppetMaster
 
         private void button9_Click(object sender, EventArgs e)
         {
+            KillAll();
+
+        }
+
+        private void KillAll() 
+        {
+
             Process[] procs = Process.GetProcessesByName("Client");
             foreach (Process p in procs) { p.Kill(); }
             listCliOnline.Items.Clear();
@@ -801,7 +806,31 @@ namespace PuppetMaster
             foreach (Process p in procs) { p.Kill(); }
             listServOnline.Items.Clear();
 
-            if (CentralDirectory != null) CentralDirectory.Kill();
+            if (CentralDirectory!=null) CentralDirectory.Kill();
+
+            //Cleaning Up Interface & Stuff
+            runningProcesses.Clear();
+            runningServers = new Dictionary<int, Process>();
+            clientsOperations.Clear();
+            clientRegistersValueListbox.Clear();
+            clientRegistersValueListboxLabel.Clear();
+            clientListBoxDumpButton.Clear();
+            clientListBoxToUpperButton.Clear();
+            clientListBoxLowerButton.Clear();
+            clientListBoxLowerTextBox.Clear();
+            clientListBoxUpperTextBox.Clear();
+            clientRegistersValueListboxConcatRegister1.Clear();
+            clientRegistersValueListboxConcatRegister2.Clear();
+            clientListBoxConcatButton.Clear();
+            clientListBoxPutRegisterTextBox.Clear();
+            clientListBoxPutRegisterTextBox2.Clear();
+            clientListBoxPutRegisterButton.Clear();
+            clientListBoxGetKeyTextBox.Clear();
+            clientListBoxGetKeyTextBox2.Clear();
+            clientListBoxGetKeyButton.Clear();
+
+            Clients.Clear();
+            Servers.Clear();
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -867,62 +896,18 @@ namespace PuppetMaster
                     Dictionary<string, ListViewItem> linhas = new Dictionary<string, ListViewItem>();
 
                     ListView listView6 = new ListView();
-                    listView6.Bounds = new Rectangle(new Point(10, 10), new Size(300, 200));
-                    // Set the view to show details.
+                    listView6.Bounds = new Rectangle(new Point(340, 380), new Size(520, 200));
                     listView6.View = View.Details;
-                    // Allow the user to edit item text.
                     listView6.LabelEdit = true;
-                    // Allow the user to rearrange columns.
                     listView6.AllowColumnReorder = true;
-                    // Display check boxes.
-                   // listView6.CheckBoxes = true;
-                    // Select the item and subitems when selection is made.
                     listView6.FullRowSelect = true;
-                    // Display grid lines.
                     listView6.GridLines = true;
-                    // Sort the items in the list in ascending order.
-                    //listView6.Sorting = SortOrder.Ascending;
-                   // ListViewItem item1 = new ListViewItem("item1");
-                    //item1.SubItems.Add("1");
-                    //item1.SubItems.Add("2");
-                    //item1.SubItems.Add("3");
-                   // ListViewItem item2 = new ListViewItem("item2");
-                    //item2.SubItems.Add("4");
-                    //item2.SubItems.Add("5");
-                    //item2.SubItems.Add("6");
-                    //ListViewItem item3 = new ListViewItem("item3");
-                    //item3.SubItems.Add("7");
-                    //item3.SubItems.Add("8");
-                    //item3.SubItems.Add("9");
-                    listView6.Columns.Add("Server", -2, HorizontalAlignment.Left);
-                    listView6.Columns.Add("Value", -2, HorizontalAlignment.Left);
+                    listView6.Columns.Add("Locations of Key", -2, HorizontalAlignment.Left);
+                    listView6.Columns.Add("Values of Key", -2, HorizontalAlignment.Left);
                     listView6.Columns.Add("Timestamp", -2, HorizontalAlignment.Left);
-                    listView6.Columns.Add("Status", -2, HorizontalAlignment.Center);
+                    listView6.Columns.Add("Transactional Status", -2, HorizontalAlignment.Center);
 
-                   // listView6.Items.AddRange(new ListViewItem[] { item1, item2, item3 });
-                    this.tabPage3.Controls.Add(listView6);
-                    //listView2.GridLines = true;
-                    //listView2.Columns.Add("Server",-2, HorizontalAlignment.Left);
-                    //listView2.Columns.Add("Value");
-                    //listView2.Columns.Add("Timestamp");
-                    //listView2.Columns.Add("State");
-
-                    //ListViewItem lvi = new ListViewItem("Server1",0);
-                    //lvi.Text = "ServerLol1";
-                    //lvi.SubItems.Add("ServerLol");
-                    //lvi.SubItems.Add("Value");
-                    //lvi.SubItems.Add("Timestamp");
-                    //lvi.SubItems.Add("State");
-
-                    //listView2.Items.Add(lvi);
-
-
-                    //ListViewItem server = new ListViewItem("server");
-                    //ListViewItem value = new ListViewItem("value");
-                    //ListViewItem timestamp = new ListViewItem("timestamp");
-                    //ListViewItem state = new ListViewItem("state");
-
-                   // server.SubItems.Add("server");
+                    this.tabPage2.Controls.Add(listView6);
 
                     while (aux <= output.Length-2)
                     {
@@ -931,7 +916,7 @@ namespace PuppetMaster
                         {
                             foreach (Node node in Servers)
                             {
-                                if (node.IP + ":" + node.Port == output[0])
+                                if (node.IP + ":" + node.Port == output[aux])
                                 {
                                     serverLol = node.Name;
                                 }
@@ -945,17 +930,19 @@ namespace PuppetMaster
 
                         else {
                             linhas.Add(serverLol + aux, new ListViewItem(serverLol));
+                            linhas[serverLol + aux].SubItems.Add(output[aux]);
                             linhas[serverLol + aux].SubItems.Add(output[aux + 1]);
                             linhas[serverLol + aux].SubItems.Add(output[aux + 2]);
-                            linhas[serverLol + aux].SubItems.Add(output[aux + 3]);
                             aux = aux + 2;
                         }
                         aux++;
                     }
+
                     foreach (KeyValuePair<string,ListViewItem> linha in linhas)
                     {
                         listView6.Items.Add(linha.Value);
                     }
+                    linhas.Clear();
                    }
                 }
             
@@ -972,6 +959,11 @@ namespace PuppetMaster
         }
 
         private void textBox3_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label8_Click(object sender, EventArgs e)
         {
 
         }

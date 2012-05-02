@@ -1,0 +1,113 @@
+
+%
+%  $Description: Author guidelines and sample document in LaTeX 2.09$ 
+%
+%  $Author: ienne $
+%  $Date: 1995/09/15 15:20:59 $
+%  $Revision: 1.4 $
+%
+% !TEX encoding = UTF-8 Unicode
+
+\documentclass[times, 10pt,twocolumn]{article} 
+\usepackage{latex8}
+\usepackage{times}
+\usepackage[utf8x]{inputenc}
+\usepackage {graphicx}
+
+
+%\documentstyle[times,art10,twocolumn,latex8]{article}
+
+%------------------------------------------------------------------------- 
+% take the % away on next line to produce the final camera-ready version 
+\pagestyle{empty}
+
+%------------------------------------------------------------------------- 
+\begin{document}
+
+\title{\LaTeX\ Author Guidelines 
+       for {\boldmath $8.5 \times 11$-Inch} Proceedings Manuscripts}
+
+\author{Bernardo Sim√µes\\ Afonso Oliveira\\ Rui Francisco\\
+Instituto Superior T√©cnico\\Plataformas para Aplica√ß√µes Distribu√≠das da Internet\\
+% For a paper whose authors are all at the same institution, 
+% omit the following lines up until the closing ``}''.
+% Additional authors and addresses can be added with ``\and'', 
+% just like the second author.
+}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+No projecto de PADI (Plataformas para Aplica√ß√µes Distribu√≠das na Internet), foi-nos pedido para projectar e implementar uma PADITable, um sistema distribu√≠do que gere em mem√≥ria vol√°til conjuntos de chave-valor que suportam as duas opera√ß√µes fundamentais \emph{get} e \emph{put} de forma at√≥mica.
+Este documento contem a descri√ß√£o dos protocolos implementados para a nossa solu√ß√£o deste sistema, onde discutimos formas de processamento de transac√ß√µes at√≥micas, topologia da rede e gest√£o dos servidores, clientes e uma directoria central. Seguidas de uma avalia√ß√£o das mesmas referindo vantagens e desvantagens de cada implementa√ß√£o e s√£o apresentados resultados.
+\end{abstract}
+
+
+
+%------------------------------------------------------------------------- 
+\Section{Introdução}
+
+Este artigo permite descrever a solu√ß√£o para a implementa√ß√£o da \emph{PADITable}, um sistema distribu√≠do para gerir o armazenamento vol√°til de conjuntos chave-valor. Este sistema √© constitu√≠do por 4 tipos de n√≥s: uma directoria central (referida em frente como o n√≥ CD (\emph{Central Directory}), um conjunto de servidores e um conjunto de clientes que s√£o controlados por um \emph{puppet master}. Os conjuntos chave-valor est√£o armazenados nos servidores que s√£o operados pelos clientes usando opera√ß√µes de \emph{put} e \emph{get}. A directoria central tem a informa√ß√£o dos clientes e servidores ligados √† rede e o \emph{puppet master} √© respons√°vel por controlar os clientes a fim de testar e fazer \emph{debug} do sistema.
+
+Como todos os sistemas distribu√≠dos √© necess√°rio saber onde colocar determinada informa√ß√£o. Como tal √© necess√°rio um algoritmo para dividir diferentes chaves pelos servidores existentes de maneira a no futuro se saber melhor onde se encontra cada chave. A este problema segue-se o problema de que os servidores do sistema podem iniciar-se em alturas diferentes, o que faz com que a distribui√ß√£o anterior de chaves fique desactualizada. Ser√° ent√£o necess√°rio mover a localiza√ß√£o de algumas chaves a fim de tornar o sistema mais e melhor distribu√≠do.
+
+Quando um cliente precisar de executar opera√ß√µes de \emph{put} e \emph{get} ir√° necessitar de saber a localiza√ß√£o dos servidores com as chaves a que quer aceder ou ent√£o ser√° necess√°rio um sistema para reencaminhar os pedidos para o servidor certo. A solu√ß√£o para este problema dever√° usar o menor n√∫mero de comunica√ß√µes poss√≠vel a fim de ser uma solu√ß√£o optimizada.
+
+Uma vez que o cliente saiba a localiza√ß√£o dos servidores que necessita aceder, ele ter√° de assegurar que uma transac√ß√£o completa se executa de maneira sequencial de maneira a evitar estados inconsistentes.
+
+A fim de se aumentar a disponibilidade do sistema e aumentar a capacidade de acesso a uma chave o sistema ir√° ser replicado. Onde e como replicar a informa√ß√£o √© um factor que deve ser tomado em conta e que ter√° impacto no desempenho do sistema. Esta replica√ß√£o dever√° tornar o sistema acess√≠vel em caso de falha de qualquer servidor. A informa√ß√£o replicada dever√° estar sempre consistente de maneira a evitar que sejam lidos valores desactualizados.
+
+O sistema dever√° estar preparado para que em cada chave sejam guardados v√°rios valores, cada um associado a uma marca temporal. O sistema guarda assim um historial de valores antigos. Esta situa√ß√£o pode ser usada para diminuir o n√∫mero de opera√ß√µes apenas de leitura que falham.
+
+Na sec√ß√£o \ref{secSol} ir√£o ser identificadas e descritas as solu√ß√µes para os requisitos do sistema e os problemas que estes levantam. De seguida na sec√ß√£o \ref{secAdv} ir√£o ser descritas as vantagens das solu√ß√µes optadas. Nesta sec√ß√£o ser√£o tamb√©m apresentados resultados de \emph{benchmarks} ao sistema implementado, descrevendo o impacto das decis√µes tomadas nos valores obtidos.
+
+\begin{figure}[h]
+\centering
+	 \includegraphics[width=0.35\textwidth]{replication}
+   \caption{Replicação da Informação.}
+\end{figure}
+%------------------------------------------------------------------------- 
+\Section{Solu√ß√£o}
+
+Please read the following carefully.
+
+%------------------------------------------------------------------------- 
+\SubSection{Algoritmos de Coloca√ß√£o de Dados}
+
+%------------------------------------------------------------------------- 
+\SubSection{Encaminhamento}
+
+%------------------------------------------------------------------------- 
+\SubSection{Protocolo de Transac√ß√µes e Consist√™ncia de R√©plicas}
+
+\begin{figure}[h]
+\centering
+	 \includegraphics[width=0.35\textwidth]{TransactionDiagram}
+   \caption{Example of caption.}
+\end{figure}
+
+%------------------------------------------------------------------------ 
+\SubSection{Falhas do Servidor}
+
+%------------------------------------------------------------------------- 
+\SubSection{Multi-Vers√£o}
+
+%------------------------------------------------------------------------- 
+
+\Section{Vantagens e Desvantagens da Solu√ß√£o}
+\Subsection{Coloca√ß√£o e Localiza√ß√£o da Informa√ß√£o}
+\Subsection{Vantagens do Protocolo Transaccional}
+\Subsection{Vantagens da Consist√™ncia das R√©plicas}
+\Subsection{Vantagens da Multi-Vers√µes}
+
+\Section{Conclus√£o}
+\Subsection{Transac√ß√µes}
+
+%------------------------------------------------------------------------- 
+\nocite{ex1,ex2}
+\bibliographystyle{latex8}
+\bibliography{latex8}
+
+\end{document}
+

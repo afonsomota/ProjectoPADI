@@ -341,6 +341,7 @@ namespace Client
         List<Node> Nodes;
         TransactionContext Tctx;
         ICentralDirectory Central;
+        bool readOnlyTransaction = false;
 
         public Transaction()
         {
@@ -373,25 +374,29 @@ namespace Client
             bool allCanLock = true;
             bool allLocked = true;
             int serversDown = 0;
-            foreach (Node n in nodes)
-            {
-                try
+            if(!readOnlyTransaction)
+                foreach (Node n in nodes)
                 {
-                    IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
-                    if (!server.CanLock(Tctx.Txid, key)) allCanLock = false;
+                    try
+                    {
+                        IServer server = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
+                        char canLock = server.CanLock(Tctx.Txid, key);
+                        Console.WriteLine("CanLock returned: " + canLock);
+                        if (canLock == 'n') allCanLock = false;
+                        else if (canLock == 'r') readOnlyTransaction = true;
+                    }
+                    catch
+                    {
+                        serversDown++;
+                        Central.ServerDown(n);
+                    }
                 }
-                catch
-                {
-                    serversDown++;
-                    Central.ServerDown(n);
-                }
-            }
             if (!allCanLock || serversDown == 2)
             {
                 Abort();
                 return null;
             }
-            else
+            else if(!readOnlyTransaction)
             {
                 serversDown = 0;
                 foreach (Node n in nodes)
@@ -432,20 +437,24 @@ namespace Client
                 nodes = GetAndLockKey(key);
                 AccessedKeys.Add(key);
             }
+            Console.WriteLine("Get(" + key + ");");
             if (nodes != null)
             {
                 IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
                 string value;
                 try
                 {
-                    value = serv.Get(Tctx.Txid, key);
+                    if (readOnlyTransaction) value = serv.GetStable(key);
+                    else value = serv.Get(Tctx.Txid, key);
+                    Console.WriteLine("Value= " + value);
                 }
                 catch
                 {
                     IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
                     try
                     {
-                        value = servBackup.Get(Tctx.Txid, key);
+                        if (readOnlyTransaction) value = serv.GetStable(key);
+                        else value = serv.Get(Tctx.Txid, key);
                         Central.ServerDown(nodes[0]);
                     }
                     catch
@@ -465,6 +474,10 @@ namespace Client
 
         public bool PutValue(string key, string value)
         {
+            if (readOnlyTransaction) {
+                Abort();
+                return false;
+            }
             List<Node> nodes = null;
             if (AccessedKeys.Contains(key))
             {
@@ -478,7 +491,7 @@ namespace Client
             if (nodes != null)
             {
                 IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
-                bool success;
+                bool success = true;
                 try
                 {
                     success = serv.Put(Tctx.Txid, key, value);
@@ -488,7 +501,7 @@ namespace Client
                     IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
                     try
                     {
-                        success = servBackup.Put(Tctx.Txid, key, value);
+                        success = servBackup.Put(Tctx.Txid, key, value) && success;
                         Central.ServerDown(nodes[0]);
                     }
                     catch

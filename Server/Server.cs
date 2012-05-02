@@ -414,6 +414,9 @@ namespace Server
         
         
         public bool AreKeysFree(int txid, string key) {
+            if (ReadOnlyTransation.ContainsKey(txid) && ReadOnlyTransation[txid]) {
+                Console.WriteLine("Continues to be readonly...");
+                return true; }
             Dictionary<string,List< TableValue>> objectsToLock = new Dictionary<string, List<TableValue>>();
             uint hash = MD5Hash(key);
             foreach (Semitable st in Semitables)
@@ -437,6 +440,7 @@ namespace Server
                                 else return false;
                             }else{
                                 ReadOnlyTransation.Add(txid,true);
+                                Console.WriteLine("ReadOnly created...");
                                 return true;
                             }
                         }
@@ -444,11 +448,6 @@ namespace Server
                         {
                             max_timestamp = tv.Timestamp;
                             max_tv = tv;
-                        }
-                        if (tv.Value == null)
-                        {
-                            valueToAdd = tv;
-                            break;
                         }
                     }
                     if (valueToAdd == null)
@@ -860,6 +859,26 @@ namespace Server
             return null;
         }
 
+         public string GetStable(string key)
+        {
+            foreach (Semitable st in Semitables)
+                if (st.ContainsKey(key)){
+                    int max_timestamp = -1;
+                    TableValue max_tv = null;
+                    foreach (TableValue tv in st[key]){
+                        if (tv.Timestamp > max_timestamp){
+                            if (tv.State.State == KeyState.FREE) {
+                                max_timestamp = tv.Timestamp;
+                                max_tv = tv;
+                            }
+                        }
+                    }
+                    if(max_tv!= null) return max_tv.Value;
+                    else return null;
+                }
+            return null;
+        }
+
         public Dictionary<string, List<TableValue>> GetAll() { 
 
             Dictionary<string, List<TableValue>> all = new Dictionary<string, List<TableValue>>();
@@ -931,9 +950,12 @@ namespace Server
             }
         }
 
-        public bool CanLock(int txid, string key) {
+        public char CanLock(int txid, string key) {
             lock (locker) {
-                return ctx.AreKeysFree(txid,key);
+                if (ctx.AreKeysFree(txid, key)) {
+                    if (ctx.ReadOnlyTransation.ContainsKey(txid) && ctx.ReadOnlyTransation[txid]) return 'r';
+                    else return 'y';
+                }else return 'n';
             }
         }
 
@@ -955,21 +977,23 @@ namespace Server
             return ret;
         }
 
+        public string GetStable(string key) { 
+            return ctx.GetStable(key);
+        }
+
         public bool Put(int txid, string key, string new_value)
         {
             if (ctx.EligibleForWrite(txid, key))
             {
                 if (ctx.ReadOnlyTransation.ContainsKey(txid))
                 {
+                    Console.WriteLine(txid + " Has readOnly.");
                     if (ctx.ReadOnlyTransation[txid])
                     {
+                        Console.WriteLine(txid + " Is readOnly.");
                         ctx.ReadOnlyTransation[txid] = false;
                         return false;
                     }
-                }
-                else
-                {
-                    ctx.ReadOnlyTransation.Add(txid, false);
                 }
                 ctx.Put(txid, key, new_value, false);
                 return true;
@@ -980,20 +1004,16 @@ namespace Server
         public bool PutInner(int txid, string key, string new_value) {
             if (ctx.EligibleForWrite(txid, key))
             {
-
                 if (ctx.ReadOnlyTransation.ContainsKey(txid))
                 {
+                    Console.WriteLine(txid + "Has readOnly.");
                     if (ctx.ReadOnlyTransation[txid])
                     {
+                        Console.WriteLine(txid + "Is readOnly.");
                         ctx.ReadOnlyTransation[txid] = false;
                         return false;
                     }
                 }
-                else
-                {
-                    ctx.ReadOnlyTransation.Add(txid, false);
-                }
-                
                 ctx.Put(txid, key, new_value, true);
                 return true;
             }

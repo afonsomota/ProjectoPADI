@@ -217,9 +217,10 @@ namespace CommonInterfaces
         string GetAll(string key);
 
         //Cliente
-        bool CanLock(int txid, string key);
+        char CanLock(int txid, string key);
         bool Lock(int txid, string key);
         string Get(int txid, string key);
+        string GetStable(string key);
         bool Put(int txid, string key, string new_value);
         bool Abort(int txid);
         bool CanCommit(int txid);

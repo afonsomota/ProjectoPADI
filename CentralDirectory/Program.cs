@@ -428,7 +428,7 @@ namespace CentralDirectory
                {
                    Server = node;
                }
-               Send(ListClient, ListServer);
+               //Send(ListClient, ListServer);
                return true;
            }
        }

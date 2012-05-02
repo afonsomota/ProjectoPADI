@@ -1,0 +1,34 @@
+CONNECT central
+CONNECT server-1
+CONNECT server-2
+CONNECT server-3
+CONNECT server-4
+CONNECT server-5
+CONNECT server-6
+CONNECT server-7
+CONNECT server-8
+CONNECT server-9
+CONNECT server-10
+CONNECT C1
+BEGINTX C1
+PUTVAL C1 afonso V
+PUTVAL C1 qwerty V
+PUTVAL C1 asdfgh V
+PUTVAL C1 zxcvbn V
+PUTVAL C1 batata V
+PUTVAL C1 cidade V
+PUTVAL C1 queima V
+PUTVAL C1 pintar V
+PUTVAL C1 alegre V
+PUTVAL C1 poiuyt V
+PUTVAL C1 clkjhh V
+PUTVAL C1 mnbvcx V
+PUTVAL C1 potato V
+PUTVAL C1 contar V
+PUTVAL C1 sesamo V
+PUTVAL C1 simple V
+PUTVAL C1 marble V
+PUTVAL C1 chitah V
+PUTVAL C1 FSYMCA V
+PUTVAL C1 couves V
+COMMITTX C1

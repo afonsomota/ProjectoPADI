@@ -55,8 +55,6 @@
             this.stopServButton = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.button6 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.listBox3 = new System.Windows.Forms.ListBox();
@@ -144,8 +142,6 @@
             this.tabPage1.Controls.Add(this.stopServButton);
             this.tabPage1.Controls.Add(this.button7);
             this.tabPage1.Controls.Add(this.button1);
-            this.tabPage1.Controls.Add(this.button6);
-            this.tabPage1.Controls.Add(this.button2);
             this.tabPage1.Controls.Add(this.button5);
             this.tabPage1.Controls.Add(this.button4);
             this.tabPage1.Controls.Add(this.listBox3);
@@ -338,33 +334,13 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(687, 181);
+            this.button1.Location = new System.Drawing.Point(797, 174);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(104, 35);
             this.button1.TabIndex = 12;
             this.button1.Text = "Enter New Script";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
-            // 
-            // button6
-            // 
-            this.button6.Location = new System.Drawing.Point(6, 181);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(104, 35);
-            this.button6.TabIndex = 24;
-            this.button6.Text = "Enter and Run Script";
-            this.button6.UseVisualStyleBackColor = true;
-            this.button6.Click += new System.EventHandler(this.button6_Click);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(797, 181);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(104, 35);
-            this.button2.TabIndex = 13;
-            this.button2.Text = "Select Script";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click_1);
             // 
             // button5
             // 
@@ -461,8 +437,6 @@
         private System.Windows.Forms.Button stopServButton;
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button6;
-        private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.ListBox listBox3;

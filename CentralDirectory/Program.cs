@@ -24,8 +24,7 @@ namespace CentralDirectory
 
         static void Main(string[] args)
         {
-            TcpChannel channel = new TcpChannel(9090);
-            ChannelServices.RegisterChannel(channel, true);
+            
 
             CentralDirectory central = new CentralDirectory();
             CentralDirectoryRemoting.ctx = central;
@@ -68,6 +67,7 @@ namespace CentralDirectory
        uint max = UInt32.MaxValue;
        object insertLocker =  new System.Object();
        public object nodesListLocker = new System.Object();
+       public TcpChannel channel = null;
 
 
        public CentralDirectory()
@@ -75,6 +75,8 @@ namespace CentralDirectory
            listServer = new List<CommonInterfaces.Node>();
            listClient = new List<CommonInterfaces.Node>();
            tableOfLocation = new List<Interval>();
+           channel = new TcpChannel(9090);
+           ChannelServices.RegisterChannel(channel, true);
 
        }
 
@@ -615,6 +617,13 @@ namespace CentralDirectory
             }
             return keyInfo;
         }
+
+        public void KillCentralDirectory() {
+
+            ChannelServices.UnregisterChannel(ctx.channel);
+        
+        }
+
 
         public void ServerDown(CommonInterfaces.Node server)
         {

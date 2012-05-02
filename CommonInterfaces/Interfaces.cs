@@ -191,6 +191,9 @@ namespace CommonInterfaces
 
     public interface ICentralDirectory {
 
+        //Puppet
+        void KillCentralDirectory();
+
         //Servidor
         void RegisterServer(Node server);
 

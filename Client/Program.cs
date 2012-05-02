@@ -43,7 +43,7 @@ namespace Client
               "tcp://localhost:9090/CentralDirectory");
 
             Node node = new Node(host, port, name,NodeType.Client);
-            cd.RegisterClient(node);
+            //cd.RegisterClient(node);
             Client clt = new Client(node,channel,puppet,cd);
             ClientPuppet.ctx = clt;
             ClientRemoting.ctx = clt;
@@ -211,6 +211,7 @@ namespace Client
 
         public void KillClientThread()
         {
+            ChannelServices.UnregisterChannel(ctx.Channel);
             Thread.Sleep(50);
             Environment.Exit(0);
         }

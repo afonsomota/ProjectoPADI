@@ -54,6 +54,8 @@ namespace PuppetMaster
         public Dictionary<string, TextBox> clientListBoxGetKeyTextBox2 = new Dictionary<string, TextBox>();
         public Dictionary<string, Button> clientListBoxGetKeyButton = new Dictionary<string, Button>();
 
+        ListView listView6 = null;
+
         //Server Interface
         public Dictionary<int, DataTable> serverSemiTable1 = new Dictionary<int, DataTable>();
         public Dictionary<int, DataTable> serverSemiTable2 = new Dictionary<int, DataTable>();
@@ -302,6 +304,7 @@ namespace PuppetMaster
                 IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
                     typeof(IClientPuppet),
                 "tcp://" + SearchClientAdressByName(arg[1]) + "/ClientPuppet");
+
                 cliente.BeginTx();
             }
             else if (operation.StartsWith("COMMITTX"))
@@ -384,7 +387,7 @@ namespace PuppetMaster
                         string port = arg[2].Split(urlDelim)[1];
                         startServer(Int32.Parse(argt[1]), Int32.Parse(port)); 
                     }else startServer(Int32.Parse(argt[1]));
-                    //while (SearchServerAdressByName(arg[1]) == null) { }
+                   
                 }
                 else if (arg[1] == "central" || arg[1] == "CENTRAL")
                 {
@@ -397,7 +400,7 @@ namespace PuppetMaster
                         string port = arg[2].Split(urlDelim)[1];
                         startClient(arg[1],Int32.Parse(port)); 
                     }else startClient(arg[1],0);
-                
+                    while (true) { if (SearchClientAdressByName(arg[1]) != null) break; }
                 }
             }
             else if (operation.StartsWith("DISCONNECT"))
@@ -457,12 +460,19 @@ namespace PuppetMaster
                     RunInstruction(operation);
                 }
             }
-        
         }
             
         private void stopCentral()
         {
-            CentralDirectory.Kill();
+            if (CentralDirectory != null)
+            {
+                ICentralDirectory central = (ICentralDirectory)Activator.GetObject(
+                  typeof(ICentralDirectory),
+                  "tcp://localhost:9090/CentralDirectory");
+                central.KillCentralDirectory();
+                CentralDirectory.Kill();
+            }
+            CentralDirectory = null;
         }
         
         private void startCentral()
@@ -812,24 +822,39 @@ namespace PuppetMaster
         {
             KillAll();
 
+
         }
 
         private void KillAll() 
         {
 
-            Process[] procs = Process.GetProcessesByName("Client");
-            foreach (Process p in procs) { p.Kill(); }
-            listCliOnline.Items.Clear();
 
-            procs = Process.GetProcessesByName("Server");
+            ////           SECOND KILL ALL    ///////
+            numberOfClients = 0;
+            foreach (Node client in Clients)
+            {
+                IClientPuppet cliente = (IClientPuppet)Activator.GetObject(
+            typeof(IClientPuppet),
+            "tcp://" + SearchClientAdressByName(client.Name) + "/ClientPuppet");
+                cliente.KillClient();
+            }
+            foreach (Node client in Clients)
+            {
+                stopClient(client.Name);
+            }
+
+            //Process[] procs = Process.GetProcessesByName("Client");
+            //foreach (Process p in procs) { p.Kill(); }
+            //listCliOnline.Items.Clear();
+
+            Process[] procs = Process.GetProcessesByName("Server");
             foreach (Process p in procs) { p.Kill(); }
             listServOnline.Items.Clear();
 
-            if (CentralDirectory!=null) CentralDirectory.Kill();
-
+            stopCentral();
             //Cleaning Up Interface & Stuff
             runningProcesses.Clear();
-            runningServers = new Dictionary<int, Process>();
+            runningServers.Clear();
             clientsOperations.Clear();
             clientRegistersValueListbox.Clear();
             clientRegistersValueListboxLabel.Clear();
@@ -847,9 +872,10 @@ namespace PuppetMaster
             clientListBoxGetKeyTextBox.Clear();
             clientListBoxGetKeyTextBox2.Clear();
             clientListBoxGetKeyButton.Clear();
-
+            if (listView6 != null) listView6.Clear();
             Clients.Clear();
             Servers.Clear();
+    
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -899,6 +925,7 @@ namespace PuppetMaster
 
         private void button12_Click(object sender, EventArgs e)
         {
+            ClearListView();
             if (textBox3.Text != null)
             {
                 if (CentralDirectory != null)
@@ -914,7 +941,7 @@ namespace PuppetMaster
                     int aux = 0;
                     Dictionary<string, ListViewItem> linhas = new Dictionary<string, ListViewItem>();
 
-                    ListView listView6 = new ListView();
+                    listView6 = new ListView();
                     listView6.Bounds = new Rectangle(new Point(340, 380), new Size(520, 200));
                     listView6.View = View.Details;
                     listView6.LabelEdit = true;
@@ -928,43 +955,57 @@ namespace PuppetMaster
 
                     this.tabPage2.Controls.Add(listView6);
 
-                    while (aux <= output.Length-2)
+                    if (output.Length != 3)
                     {
-
-                        if (output[aux].Contains(":"))
+                        while (aux <= output.Length - 2)
                         {
-                            foreach (Node node in Servers)
+
+                            if (output[aux].Contains(":"))
                             {
-                                if (node.IP + ":" + node.Port == output[aux])
+                                foreach (Node node in Servers)
                                 {
-                                    serverLol = node.Name;
+                                    if (node.IP + ":" + node.Port == output[aux])
+                                    {
+                                        serverLol = node.Name;
+                                    }
                                 }
+                                linhas.Add(serverLol + aux, new ListViewItem(serverLol));
+                                linhas[serverLol + aux].SubItems.Add(output[aux + 1]);
+                                linhas[serverLol + aux].SubItems.Add(output[aux + 2]);
+                                linhas[serverLol + aux].SubItems.Add(output[aux + 3]);
+                                aux = aux + 3;
                             }
-                            linhas.Add(serverLol + aux, new ListViewItem(serverLol));
-                            linhas[serverLol + aux].SubItems.Add(output[aux + 1]);
-                            linhas[serverLol + aux].SubItems.Add(output[aux + 2]);
-                            linhas[serverLol + aux].SubItems.Add(output[aux + 3]);
-                            aux = aux + 3;
+
+                            else
+                            {
+                                linhas.Add(serverLol + aux, new ListViewItem(serverLol));
+                                linhas[serverLol + aux].SubItems.Add(output[aux]);
+                                linhas[serverLol + aux].SubItems.Add(output[aux + 1]);
+                                linhas[serverLol + aux].SubItems.Add(output[aux + 2]);
+                                aux = aux + 2;
+                            }
+                            aux++;
                         }
 
-                        else {
-                            linhas.Add(serverLol + aux, new ListViewItem(serverLol));
-                            linhas[serverLol + aux].SubItems.Add(output[aux]);
-                            linhas[serverLol + aux].SubItems.Add(output[aux + 1]);
-                            linhas[serverLol + aux].SubItems.Add(output[aux + 2]);
-                            aux = aux + 2;
+                        foreach (KeyValuePair<string, ListViewItem> linha in linhas)
+                        {
+                            listView6.Items.Add(linha.Value);
                         }
-                        aux++;
+                        linhas.Clear();
                     }
-
-                    foreach (KeyValuePair<string,ListViewItem> linha in linhas)
-                    {
-                        listView6.Items.Add(linha.Value);
-                    }
-                    linhas.Clear();
-                   }
+                }
                 }
             
+        }
+
+        private void ClearListView() 
+        {
+            if (listView6 != null) {
+                this.tabPage2.Controls.Remove(listView6);
+                listView6.Dispose();
+            } 
+            
+        
         }
 
         private void label6_Click_1(object sender, EventArgs e)

@@ -1,0 +1,41 @@
+CONNECT central
+CONNECT server-1
+CONNECT server-2
+CONNECT server-3
+CONNECT server-4
+CONNECT server-5
+CONNECT server-6
+CONNECT server-7
+CONNECT server-8
+CONNECT server-9
+CONNECT server-10
+CONNECT C1
+BEGINTX C1
+PUTVAL C1 K1 V
+PUTVAL C1 K2 V
+PUTVAL C1 K3 V
+PUTVAL C1 K4 V
+PUTVAL C1 K5 V
+PUTVAL C1 ALFREDO V
+PUTVAL C1 alfredo V
+PUTVAL C1 aLfReDo V
+PUTVAL C1 Mesa V
+PUTVAL C1 Cadeira V
+PUTVAL C1 Tomada V
+PUTVAL C1 Porta V
+PUTVAL C1 Vidro V
+PUTVAL C1 Madeira V
+PUTVAL C1 Portugal V
+PUTVAL C1 Brasil V
+PUTVAL C1 Bissau V
+PUTVAL C1 Angola V
+PUTVAL C1 Moçambique V
+PUTVAL C1 Goa V
+PUTVAL C1 Macau V
+PUTVAL C1 Timor V
+PUTVAL C1 Conquistador_Não_É_Um_País V
+PUTVAL C1 Espanha V
+PUTVAL C1 França V
+PUTVAL C1 Itália V
+PUTVAL C1 anticonstitucionalmente V
+COMMITTX C1

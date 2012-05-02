@@ -18,12 +18,13 @@ namespace Client
 
         static void Main(string[] args)
         {
-
-            TcpChannel channel = new TcpChannel(0);
+            int port = 0;
+            if (args.Length > 1) port = Int32.Parse(args[1]);
+            TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
 
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
-            int port = new System.Uri(channelData.ChannelUris[0]).Port;
+            port = new System.Uri(channelData.ChannelUris[0]).Port;
             string host = new System.Uri(channelData.ChannelUris[0]).Host;
             string name = null;
             if (args.Length > 0) name = args[0];

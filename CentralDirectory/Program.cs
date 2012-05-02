@@ -609,7 +609,8 @@ namespace CentralDirectory
                     keyInfo += n.IP + ":"+ n.Port.ToString()+"\n";
                     keyInfo += link.GetAll(key);
                 }
-                catch { 
+                catch {
+                    Console.WriteLine("Exception in GetAll: tcp://" + n.IP + ":" + n.Port.ToString() + "/Server");
                 }
             }
             return keyInfo;

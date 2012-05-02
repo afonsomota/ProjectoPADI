@@ -379,14 +379,26 @@ namespace PuppetMaster
                 {
                     char[] lol = { '-' };
                     string[] argt = arg[1].Split(lol);
-                    startServer(Int32.Parse(argt[1]));
+                    if (arg.Length > 2) {
+                        char[] urlDelim = { ':' };
+                        string port = arg[2].Split(urlDelim)[1];
+                        startServer(Int32.Parse(argt[1]), Int32.Parse(port)); 
+                    }else startServer(Int32.Parse(argt[1]));
                     //while (SearchServerAdressByName(arg[1]) == null) { }
                 }
-                else if (arg[1] == "central" || arg[1]=="CENTRAL")
+                else if (arg[1] == "central" || arg[1] == "CENTRAL")
                 {
                     startCentral();
                 }
-                else startClient(arg[1]);
+                else {
+                    if (arg.Length > 2)
+                    {
+                        char[] urlDelim = { ':' };
+                        string port = arg[2].Split(urlDelim)[1];
+                        startClient(arg[1],Int32.Parse(port)); 
+                    }else startClient(arg[1],0);
+                
+                }
             }
             else if (operation.StartsWith("DISCONNECT"))
             {
@@ -465,16 +477,22 @@ namespace PuppetMaster
 
         private void startServer(int n)
         {
-            //TODO Interface
-
-            //serverSemiTable1.Add(n, new DataTable());
-            //GenerateServerInterface(n);
-
-
             runningServers.Add(n,new Process());
             string currentDirectory = Environment.CurrentDirectory;
             string path = currentDirectory.Replace("PuppetMaster", "Server");
             path += "/Server.exe";
+            runningServers[n].StartInfo.FileName = path;
+            runningServers[n].Start();
+            numberOfServers++;
+        }
+
+        private void startServer(int n, int port)
+        {
+            runningServers.Add(n, new Process());
+            string currentDirectory = Environment.CurrentDirectory;
+            string path = currentDirectory.Replace("PuppetMaster", "Server");
+            path += "/Server.exe";
+            runningServers[n].StartInfo.Arguments = port.ToString() ;
             runningServers[n].StartInfo.FileName = path;
             runningServers[n].Start();
             numberOfServers++;
@@ -516,7 +534,7 @@ namespace PuppetMaster
             if (listBox3.SelectedIndex+1!= listBox3.Items.Count)listBox3.SelectedIndex++;
         }
 
-        private void startClient(string clientName) 
+        private void startClient(string clientName,int port) 
         {   
             string currentDirectory = Environment.CurrentDirectory;
             string path = currentDirectory.Replace("PuppetMaster", "Client");
@@ -544,7 +562,8 @@ namespace PuppetMaster
             GenerateClientDumpListBox(clientName);
             numberOfClients++;
 
-            runningProcesses[clientName].StartInfo.Arguments = clientName;
+            if(port==0)runningProcesses[clientName].StartInfo.Arguments = clientName;
+            else runningProcesses[clientName].StartInfo.Arguments = clientName + " " + port.ToString();
             runningProcesses[clientName].StartInfo.FileName = path;
             runningProcesses[clientName].Start(); 
         }
@@ -585,7 +604,7 @@ namespace PuppetMaster
             {
                 clientName = textBox2.Text;
             }
-            startClient(clientName);
+            startClient(clientName,0);
         }
 
         private void GenerateClientDumpListBox(string clientName) 

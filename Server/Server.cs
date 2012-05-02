@@ -225,7 +225,12 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            TcpChannel channel = new TcpChannel(0);
+            TcpChannel channel;
+            if (args.Length >= 1) {
+                channel = new TcpChannel(Int32.Parse(args[0])); 
+            }
+            else channel = new TcpChannel(0);
+
             ChannelServices.RegisterChannel(channel, true);
 
             ChannelDataStore channelData = (ChannelDataStore)channel.ChannelData;
@@ -235,7 +240,9 @@ namespace Server
             
             Console.WriteLine("Registering Server on Central Directory...");
             Node node = new Node(host, port, NodeType.Server);
-            Server srv = new Server(node, channel, 5);
+            int k = 5;
+            if (args.Length >= 2) k = Int32.Parse(args[1]);
+            Server srv = new Server(node, channel, k);
             ServerPuppet.ctx = srv;
             ServerRemoting.ctx = srv;
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(ServerPuppet), "ServerPuppet", WellKnownObjectMode.Singleton);
@@ -592,16 +599,23 @@ namespace Server
         }
 
         public string GetAll(string key) {
-            string ret = "";
-            foreach (Semitable st in Semitables) { 
-                if(st.ContainsKey(key)){
-                    foreach (TableValue tv in Semitables[0][key])
+            try
+            {
+                string ret = "";
+                foreach (Semitable st in Semitables)
+                {
+                    if (st.ContainsKey(key))
                     {
-                        ret += (tv.Value + ";" + tv.Timestamp + ";" + tv.State + "\n");
+                        foreach (TableValue tv in st[key])
+                        {
+                            if(tv!=null) ret += (tv.Value + ";" + tv.Timestamp + ";" + tv.State + "\n");
+                        }
                     }
                 }
+                return ret;
             }
-            return ret;
+            catch ( Exception e) { Console.WriteLine("Exception in GetAll: " + e.Message + " " + e.Source); return ""; }
+            
         }
 
         public void PrintSemiTablesValues() {

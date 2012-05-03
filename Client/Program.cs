@@ -344,6 +344,7 @@ namespace Client
         TransactionContext Tctx;
         ICentralDirectory Central;
         bool readOnlyTransaction = false;
+        bool performedPutOperation = false;
 
         public Transaction()
         {
@@ -385,7 +386,10 @@ namespace Client
                         char canLock = server.CanLock(Tctx.Txid, key);
                         Console.WriteLine("CanLock returned: " + canLock);
                         if (canLock == 'n') allCanLock = false;
-                        else if (canLock == 'r') readOnlyTransaction = true;
+                        else if (canLock == 'r') {
+                            if (performedPutOperation) allCanLock = false;
+                            else readOnlyTransaction = true; 
+                        }
                     }
                     catch
                     {
@@ -476,6 +480,7 @@ namespace Client
 
         public bool PutValue(string key, string value)
         {
+            performedPutOperation = true;
             if (readOnlyTransaction) {
                 Abort();
                 return false;
@@ -500,9 +505,9 @@ namespace Client
                 }
                 catch
                 {
-                    IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
                     try
                     {
+                        IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
                         success = servBackup.Put(Tctx.Txid, key, value) && success;
                         Central.ServerDown(nodes[0]);
                     }

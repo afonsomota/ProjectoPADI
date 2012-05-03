@@ -13,6 +13,7 @@
 \usepackage{times}
 \usepackage[utf8x]{inputenc}
 \usepackage {graphicx}
+\usepackage{float}
 
 
 %\documentstyle[times,art10,twocolumn,latex8]{article}
@@ -65,23 +66,23 @@ Na secção \ref{secSol} irão ser identificadas e descritas as soluções para 
 
 \Section{Solução}
 \SubSection{Algoritmos de Colocação de Dados}
-	\begin{figure}[h]
-		\centering
-			 \includegraphics[width=0.35\textwidth]{replication}
-   		\caption{Replicação da Informação.}
-	\end{figure}
-	\begin{figure}[h]
-		\centering
-	 	\includegraphics[width=0.5\textwidth]{replicationAlgorithm}
-   		\caption{Replicação da Informação.}
-	\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.35\textwidth]{replication}
+\caption{Replicação da Informação.}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{replicationAlgorithm}
+\caption{Replicação da Informação.}
+\end{figure}
 \SubSection{Encaminhamento}
 \SubSection{Protocolo de Transacções e Consistência de Réplicas}
-	\begin{figure}[h]
-		\centering
-			 \includegraphics[width=0.35\textwidth]{TransactionDiagram}
-  		 \caption{Protocolo Transaccional}
-	\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.35\textwidth]{TransactionDiagram}
+ \caption{Protocolo Transaccional}
+\end{figure}
 \SubSection{Falhas do Servidor}
 \SubSection{Multi-Versões}
 
@@ -90,10 +91,10 @@ Na secção \ref{secSol} irão ser identificadas e descritas as soluções para 
 \Section{Vantagens e Desvantagens da Solução}
 \SubSection{Colocação e Localização da Informação}
 \begin{figure}[h]
-		\centering
-		\includegraphics[width=0.6\textwidth]{graficoChavesServidor}
-  		 \caption{Gráfico a Representar o Desvio Padrão do Numero de Chaves por Servidor e Semi-Tabela}
-	\end{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{graficoChavesServidor}
+ \caption{Gráfico a Representar o Desvio Padrão do Numero de Chaves por Servidor e Semi-Tabela}
+\end{figure}
 \SubSection{Protocolo de Transacções}
 \SubSection{Falhas do Servidores}
 \SubSection{Multi-Versão}

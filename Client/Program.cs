@@ -374,6 +374,7 @@ namespace Client
                 if (!Nodes.Contains(n))
                     Nodes.Add(n);
             NodesLocation.Add(key, nodes);
+            Console.WriteLine(nodes);
             bool allCanLock = true;
             bool allLocked = true;
             int serversDown = 0;
@@ -391,8 +392,9 @@ namespace Client
                             else readOnlyTransaction = true; 
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        Console.WriteLine(e.Message);
                         serversDown++;
                         Central.ServerDown(n);
                     }
@@ -446,21 +448,22 @@ namespace Client
             Console.WriteLine("Get(" + key + ");");
             if (nodes != null)
             {
-                IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
                 string value;
                 try
                 {
+                    IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
                     if (readOnlyTransaction) value = serv.GetStable(key);
                     else value = serv.Get(Tctx.Txid, key);
                     Console.WriteLine("Value= " + value);
                 }
                 catch
                 {
-                    IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
                     try
                     {
-                        if (readOnlyTransaction) value = serv.GetStable(key);
-                        else value = serv.Get(Tctx.Txid, key);
+                    IServer servBackup = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[1].IP + ":" + nodes[1].Port.ToString() + "/Server");
+                    
+                        if (readOnlyTransaction) value = servBackup.GetStable(key);
+                        else value = servBackup.Get(Tctx.Txid, key);
                         Central.ServerDown(nodes[0]);
                     }
                     catch
@@ -497,10 +500,10 @@ namespace Client
             }
             if (nodes != null)
             {
-                IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
                 bool success = true;
                 try
                 {
+                    IServer serv = (IServer)Activator.GetObject(typeof(IServer), "tcp://" + nodes[0].IP + ":" + nodes[0].Port.ToString() + "/Server");
                     success = serv.Put(Tctx.Txid, key, value);
                 }
                 catch

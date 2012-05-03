@@ -68,6 +68,7 @@ namespace CentralDirectory
        object insertLocker =  new System.Object();
        public object nodesListLocker = new System.Object();
        public TcpChannel channel = null;
+       public object getServersLocker = new System.Object();
 
 
        public CentralDirectory()
@@ -492,35 +493,6 @@ namespace CentralDirectory
                
         }
 
-        //falta completar
-        /*public Dictionary<string, List<CommonInterfaces.Node>> GetServers(List<string> keys)
-        {
-            Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
-            List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
-            Random rd = new Random();
-            
-            CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
-            transactionsContext.Txid = rd.Next();
-
-            for (int i = 0; i < keys.Count(); i++)
-            {   
-                string aux2 = keys[i];
-                string aux = MD5Hash(keys[i]);
-                int aux5 = Convert.ToInt32(aux); //verificar
-                for(int j = 0; j < tableOfLocation.Count(); j++){
-                    if(tableOfLocation[i].max > aux5 && tableOfLocation[i].min < aux5){
-                        listaux.Add(getNode(tableOfLocation[i].IP[0]));
-                        listaux.Add(getNode(tableOfLocation[i].IP[1]));
-                        server.Add(aux2,listaux);
-
-                    }
-            }
-    }
-            transactionsContext.NodesLocation = server;
-            return server;
-        }
-        */
-
         
         
         public TransactionContext BeginTx(){
@@ -541,45 +513,22 @@ namespace CentralDirectory
 
         public List<Node> GetServers(string key)
         {
-            //Dictionary<string, List<CommonInterfaces.Node>> server = new Dictionary<string, List<CommonInterfaces.Node>>();
-            //Random rd = new Random();
-
-            //CommonInterfaces.TransactionContext transactionsContext = new CommonInterfaces.TransactionContext();
-            //transactionsContext.Txid=txid;
-            //txid++;
-            //Console.WriteLine("transacao identificador" + transactionsContext.Txid);
-            //Console.WriteLine(txid);
-            //List<string> keys = new List<string>();
-
-
-            //Dictionary<int, Operation> opsd = new Dictionary<int, Operation>();
-            //int o = 0;
-            //foreach (Operation op in ops) {
-              //  opsd.Add(++o, op);
-                //if(!keys.Contains(op.Key)) keys.Add(op.Key);
-                //if (op.Type == OpType.PUT)
-                //{
-            List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
-                    if (ctx.firstTime == false)
-                    {
-                        ctx.division();
-                        ctx.firstTime = true;
-                    }
-                //}
-                    
-            //}
-
-            //for (int i = 0; i < keys.Count(); i++)
-            //{
-                //string key = keys[i];
+            lock (ctx.getServersLocker)
+            {
+                List<CommonInterfaces.Node> listaux = new List<CommonInterfaces.Node>();
+                if (ctx.firstTime == false)
+                {
+                    ctx.division();
+                    ctx.firstTime = true;
+                }
                 uint hash = CentralDirectory.HashFunction(key);
-                
-                
+
+
                 for (int j = 0; j < ctx.Location.Count(); j++)
                 {
                     if (ctx.Location[j].max > hash && ctx.Location[j].min <= hash)
                     {
-                        
+
                         Console.WriteLine("For key " + key + " hash is " + hash);
                         if (ctx.Location[j].order)
                         {
@@ -595,7 +544,8 @@ namespace CentralDirectory
                                 listaux.Add(ctx.Location[j].IP[0]);
                             }
                         }
-                        else {
+                        else
+                        {
                             if (ctx.Location[j].IP.Count == 2)
                             {
                                 listaux.Add(ctx.Location[j].IP[1]);
@@ -608,13 +558,12 @@ namespace CentralDirectory
                                 listaux.Add(ctx.Location[j].IP[0]);
                             }
                         }
-                        
-                        
+
+
                     }
                 }
-            //}
-            
-            return listaux;
+                return listaux;
+            }
         }
 
         public string GetAll(string key) {

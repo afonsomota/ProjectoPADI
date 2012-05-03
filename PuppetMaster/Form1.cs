@@ -456,7 +456,9 @@ namespace PuppetMaster
 
         public void RunScript() 
         {
+            
             KillAll();
+
             if (listBox3.Items.Count != 0)
             {
                 foreach (string operation in listBox3.Items)
@@ -473,7 +475,7 @@ namespace PuppetMaster
                 ICentralDirectory central = (ICentralDirectory)Activator.GetObject(
                   typeof(ICentralDirectory),
                   "tcp://localhost:9090/CentralDirectory");
-                central.KillCentralDirectory();
+                //central.KillCentralDirectory();
                 CentralDirectory.Kill();
             }
             CentralDirectory = null;
@@ -879,6 +881,7 @@ namespace PuppetMaster
             if (listView6 != null) listView6.Clear();
             Clients.Clear();
             Servers.Clear();
+            Thread.Sleep(1000);
     
         }
 

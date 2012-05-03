@@ -279,6 +279,10 @@ namespace CentralDirectory
                                  (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15]);
            return interval;
        }
+       public static uint HashFunction(string key)
+       {
+           return MD5Hash(key);
+       }
 
         public void Restructure(uint semiTable,Node d){
 
@@ -434,6 +438,17 @@ namespace CentralDirectory
                return true;
            }
        }
+       public static uint SHA1Hash(string input)
+       {
+           SHA1 sha = new SHA1CryptoServiceProvider();
+           byte[] data = System.Text.Encoding.ASCII.GetBytes(input);
+           byte[] hash = sha.ComputeHash(data);
+           uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12] ^ hash[16]) << 24) +
+                                  (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13] ^ hash[17]) << 16) +
+                                 (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14] ^ hash[18]) << 8) +
+                                 (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15] ^ hash[19]);
+           return interval;
+       }
 
 
     }
@@ -557,7 +572,7 @@ namespace CentralDirectory
             //for (int i = 0; i < keys.Count(); i++)
             //{
                 //string key = keys[i];
-                uint hash = CentralDirectory.MD5Hash(key);
+                uint hash = CentralDirectory.HashFunction(key);
                 
                 
                 for (int j = 0; j < ctx.Location.Count(); j++)

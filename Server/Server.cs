@@ -307,6 +307,7 @@ namespace Server
             }
         }
 
+
         public void UpdateReplica(Node newNode) {
             foreach (Semitable st in Semitables)
                 st.Replica = newNode;
@@ -425,7 +426,7 @@ namespace Server
                 Console.WriteLine("Continues to be readonly...");
                 return true; }
             Dictionary<string,List< TableValue>> objectsToLock = new Dictionary<string, List<TableValue>>();
-            uint hash = MD5Hash(key);
+            uint hash = HashFunction(key);
             foreach (Semitable st in Semitables)
             {
                 if (hash >= st.MinInterval && hash <= st.MaxInterval) {
@@ -572,7 +573,7 @@ namespace Server
                 }
                 else
                 {
-                    uint hash = MD5Hash(key);
+                    uint hash = HashFunction(key);
                     if (hash >= st.MinInterval && hash <= st.MaxInterval)
                     {
 
@@ -679,7 +680,7 @@ namespace Server
         public bool EligibleForWrite(int txid,string key) {
             foreach (Semitable st in Semitables)
             {
-                uint hash = MD5Hash(key);
+                uint hash = HashFunction(key);
                 if (hash >= st.MinInterval && hash <= st.MaxInterval)
                 {
                     bool hasKey = false;
@@ -715,7 +716,7 @@ namespace Server
         {
             foreach (Semitable st in Semitables)
             {
-                uint hash = MD5Hash(key);
+                uint hash = HashFunction(key);
                 if (hash >= st.MinInterval && hash <= st.MaxInterval)
                 {
                     bool hasKey = false;
@@ -757,7 +758,7 @@ namespace Server
                     Console.WriteLine("Cleaning Table: " + side.ToString());
                     List<string> keysToDelete = new List<string>();
                     foreach (string key in st.Keys) {
-                        uint hash = MD5Hash(key);
+                        uint hash = HashFunction(key);
                         if ((side == 0 && hash >= div) || (side == 1 && hash < div))
                         {
                             keysToDelete.Add(key);
@@ -781,7 +782,7 @@ namespace Server
                     new_semitables[0] = new Semitable(st.MinInterval, div - 1, st.Replica);
                     new_semitables[1] = new Semitable(div, st.MaxInterval,Info); 
                     foreach(string key in st.Keys){
-                        uint hash =  MD5Hash(key);
+                        uint hash =  HashFunction(key);
                         if (hash < div){
                             new_semitables[0].Add(key, st[key]);
                         }
@@ -806,12 +807,17 @@ namespace Server
             return interval;
         }
 
+
+        public uint HashFunction(string key) {
+            return MD5Hash(key);
+        }
+
         public Dictionary<uint, int> SemiTablesCount() {
             Dictionary<uint, int> semiCount = new Dictionary<uint, int>();
             foreach (Semitable st in Semitables) {
                 List<uint> hashs = new List<uint>();
                 foreach (string key in st.Keys) {
-                    uint hash = MD5Hash(key);
+                    uint hash = HashFunction(key);
                     hashs.Add(hash);
                 }
                 hashs.Sort();
@@ -905,7 +911,17 @@ namespace Server
             return all;
         }
 
-       
+        public uint SHA1Hash(string input)
+        {
+            SHA1 sha = new SHA1CryptoServiceProvider();
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(input);
+            byte[] hash = sha.ComputeHash(data);
+            uint interval = (uint)((hash[0] ^ hash[4] ^ hash[8] ^ hash[12] ^ hash[16]) << 24) +
+                                   (uint)((hash[1] ^ hash[5] ^ hash[9] ^ hash[13] ^ hash[17]) << 16) +
+                                  (uint)((hash[2] ^ hash[6] ^ hash[10] ^ hash[14] ^ hash[18]) << 8) +
+                                  (uint)(hash[3] ^ hash[7] ^ hash[11] ^ hash[15] ^ hash[19]);
+            return interval;
+        }
 
        
     }
@@ -1093,6 +1109,8 @@ namespace Server
         {
             return ctx.GetAll(key);
         }
+
+        
 
     }
 

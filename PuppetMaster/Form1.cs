@@ -382,7 +382,7 @@ namespace PuppetMaster
                 {
                     char[] lol = { '-' };
                     string[] argt = arg[1].Split(lol);
-                    if (arg.Length > 2) {
+                    if (arg.Length > 2 && arg[2]!="") {
                         char[] urlDelim = { ':' };
                         string port = arg[2].Split(urlDelim)[1];
                         startServer(Int32.Parse(argt[1]), Int32.Parse(port)); 
@@ -400,7 +400,7 @@ namespace PuppetMaster
                         string port = arg[2].Split(urlDelim)[1];
                         startClient(arg[1],Int32.Parse(port)); 
                     }else startClient(arg[1],0);
-                    while (true) { if (SearchClientAdressByName(arg[1]) != null) break; }
+                  //  while (true) { if (SearchClientAdressByName(arg[1]) != null) break; }
                 }
             }
             else if (operation.StartsWith("DISCONNECT"))
@@ -955,7 +955,7 @@ namespace PuppetMaster
 
                     this.tabPage2.Controls.Add(listView6);
 
-                    if (output.Length != 3)
+                    if (output.Length > 3)
                     {
                         while (aux <= output.Length - 2)
                         {

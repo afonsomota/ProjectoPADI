@@ -1,3 +1,7 @@
+/////		PADITable: Projecto de PADI IST-Taguspark 2011 MERC-MEIC 		//////////
+////        Bernardo Simões;   Afonso Oliveira;     Rui Francisco           /////////
+
+
 0. Quick Start
 
 1ºCorrer o programa "PuppetMaster->bin->Release->PuppetMaster.exe"

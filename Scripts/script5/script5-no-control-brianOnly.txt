@@ -3,7 +3,7 @@ CONNECT SERVER-1
 CONNECT SERVER-2
 CONNECT C1
 CONNECT C2
-EXESCRIPT C1 C:\Users\Afonso\Documents\Visual Studio 2010\Projects\ProjectoPADI\Scripts\script5\c1.txt
-EXESCRIPT C2 C:\Users\Afonso\Documents\Visual Studio 2010\Projects\ProjectoPADI\Scripts\script5\c2.txt
+EXESCRIPT C1 script5\c1.txt
+EXESCRIPT C2 script5\c2.txt
 DUMP C1
 DUMP C2

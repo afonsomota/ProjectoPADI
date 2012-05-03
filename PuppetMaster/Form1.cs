@@ -427,10 +427,14 @@ namespace PuppetMaster
                 List<string> operations = new List<string>();
                 string scriptLine = null;
                 string scriptPath = "";
+                string currentDirectory = Environment.CurrentDirectory;
+                string[] newDirectory = Regex.Split(currentDirectory, "PuppetMaster");
+                string strpath = newDirectory[0] + "Scripts\\";  
                 for (int i = 2; i < arg.Length; i++)
                 {
                     scriptPath += arg[i] + " ";
                 }
+                scriptPath = strpath + scriptPath;
                 StreamReader userscript = new StreamReader(scriptPath);
 
                 while ((scriptLine = userscript.ReadLine()) != null)
